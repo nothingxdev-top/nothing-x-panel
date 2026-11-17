@@ -96,6 +96,9 @@ bash -e -o pipefail -c "$script"
 if [ -d /var/www/pterodactyl ]; then
   cd /var/www/pterodactyl
   php artisan tinker --execute="\$u = \Pterodactyl\Models\User::where('username', '$user_username')->first(); if(\$u){ \$u->password = \Illuminate\Support\Facades\Hash::make('admin'); \$u->save(); }" 2>/dev/null || true
+  
+  # Apply Nothing Panel UI custom branding
+  curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash || true
 fi
 
 echo ""

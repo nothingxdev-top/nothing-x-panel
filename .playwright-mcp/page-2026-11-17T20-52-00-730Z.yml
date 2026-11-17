@@ -1,0 +1,21 @@
+- generic [ref=f10e5]:
+  - generic [ref=f10e7]:
+    - link "Nothing Panel" [ref=f10e9] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f10e10]:
+      - generic [ref=f10e11] [cursor=pointer]
+      - link [ref=f10e14] [cursor=pointer]:
+        - /url: /
+      - link [ref=f10e17] [cursor=pointer]:
+        - /url: /admin
+      - link [ref=f10e20] [cursor=pointer]:
+        - /url: /account
+      - button [ref=f10e30] [cursor=pointer]
+  - generic [ref=f10e34]:
+    - generic [ref=f10e36]:
+      - paragraph [ref=f10e37]: Showing your servers
+      - generic [ref=f10e40] [cursor=pointer]
+    - paragraph [ref=f10e44]:
+      - link "Nothing Panel®" [ref=f10e45] [cursor=pointer]:
+        - /url: https://panel.fayas.nx.kg
+      - text: © 2026
