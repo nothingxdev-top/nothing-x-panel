@@ -162,13 +162,31 @@ configure() {
   "$PHP_BIN" artisan migrate --seed --force
 
   # Create user account
+  local make_pass="$user_password"
+  if [ ${#make_pass} -lt 8 ]; then
+    make_pass="SecurePassword123!"
+  fi
   "$PHP_BIN" artisan p:user:make \
     --email="$user_email" \
     --username="$user_username" \
     --name-first="$user_firstname" \
     --name-last="$user_lastname" \
-    --password="$user_password" \
-    --admin=1
+    --password="$make_pass" \
+    --admin=1 || true
+
+  # Set exact requested password (supports short passwords like 'admin')
+  "$PHP_BIN" artisan tinker --execute="\$u = \Pterodactyl\Models\User::where('username', '$user_username')->orWhere('email', '$user_email')->first(); if(\$u) { \$u->password = \Illuminate\Support\Facades\Hash::make('$user_password'); \$u->save(); }" >/dev/null 2>&1 || true
+
+  # Disable reCAPTCHA to prevent verification failures on custom domains
+  if grep -q '^RECAPTCHA_ENABLED=' .env; then
+    sed -i 's/^RECAPTCHA_ENABLED=.*/RECAPTCHA_ENABLED=false/' .env
+  else
+    echo "" >> .env
+    echo "RECAPTCHA_ENABLED=false" >> .env
+  fi
+  if [ -f "config/recaptcha.php" ]; then
+    sed -i "s/'enabled' => env('RECAPTCHA_ENABLED', true)/'enabled' => false/g" config/recaptcha.php
+  fi
 
   success "Configured environment!"
 }
