@@ -479,6 +479,15 @@ perform_install() {
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
+  # Install Nothing Panel Domain Manager (np-domain)
+  output "Installing Nothing Panel Domain Manager (np-domain)..."
+  curl -fsSL "$GITHUB_URL/scripts/np-domain.sh" -o /usr/local/bin/np-domain 2>/dev/null || true
+  chmod +x /usr/local/bin/np-domain 2>/dev/null || true
+
+  # Apply Nothing Panel UI branding
+  output "Applying Nothing Panel custom branding & theme..."
+  curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash || true
+
   if [ -n "${INSTALL_SETTINGS:-}" ]; then
     check_install_settings
     printf 'CONFIGURE_FIREWALL=%s\nCONFIGURE_LETSENCRYPT=%s\nASSUME_SSL=%s\nFQDN=%s\nEMAIL=%s\nPANEL_MAJOR_VERSION=%s\n' \

@@ -83,6 +83,8 @@ while [ "$done" == false ]; do
     "Install the Panel" \
     "Install Wings (Game Server Node)" \
     "Install Panel + Wings on the same machine" \
+    "Domain Manager (np-domain - Map domain to port)" \
+    "Rebrand / Apply Nothing UI Theme" \
     "Uninstall Panel or Wings" \
     "──────── Advanced / Canary ────────" \
     "Install Panel (canary/dev version)" \
@@ -94,6 +96,8 @@ while [ "$done" == false ]; do
     "panel"
     "wings"
     "panel;wings"
+    "domain_manager"
+    "rebrand"
     "uninstall"
     ""
     "panel_canary"
@@ -103,7 +107,7 @@ while [ "$done" == false ]; do
   )
 
   # Skip the separator option
-  if [ "$MENU_RESULT" == "4" ]; then
+  if [ "$MENU_RESULT" == "6" ]; then
     continue
   fi
 
@@ -111,6 +115,20 @@ while [ "$done" == false ]; do
 
   if [ -z "$action" ]; then
     continue
+  fi
+
+  if [ "$action" == "domain_manager" ]; then
+    if [ -f "/usr/local/bin/np-domain" ]; then
+      /usr/local/bin/np-domain
+    else
+      curl -fsSL "$GITHUB_URL/scripts/np-domain.sh" | bash
+    fi
+    exit 0
+  fi
+
+  if [ "$action" == "rebrand" ]; then
+    curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash
+    exit 0
   fi
 
   done=true

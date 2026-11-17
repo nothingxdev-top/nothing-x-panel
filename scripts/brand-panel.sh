@@ -21,9 +21,16 @@ fi
 
 echo "Applying Nothing Panel custom branding..."
 
-# 1. Update APP_NAME in .env
+# 1. Update APP_NAME & read PANEL_URL from .env
 sed -i '/^APP_NAME=/d' "$PANEL_DIR/.env"
 sed -i '1i APP_NAME="Nothing Panel"' "$PANEL_DIR/.env"
+
+APP_URL_LINE=$(grep '^APP_URL=' "$PANEL_DIR/.env" | head -1 || true)
+PANEL_URL=$(echo "$APP_URL_LINE" | cut -d '=' -f2 | tr -d '"' | tr -d "'" | tr -d ' ' || true)
+if [ -z "$PANEL_URL" ]; then
+  PANEL_URL="https://panel.fayas.nx.kg"
+fi
+export PANEL_URL
 
 # 2. Deploy Nothing X Logo SVG
 cat << 'EOF' > "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
@@ -169,6 +176,8 @@ fi
 python3 - << 'PYEOF'
 import glob, os
 
+panel_url = os.environ.get('PANEL_URL', 'https://panel.fayas.nx.kg').encode('utf-8')
+
 for f in glob.glob('/var/www/pterodactyl/public/assets/*.js'):
     with open(f, 'rb') as fp:
         raw = fp.read()
@@ -177,7 +186,7 @@ for f in glob.glob('/var/www/pterodactyl/public/assets/*.js'):
         (b'Pterodactyl\xc2\xae', b'Nothing Panel\xc2\xae'),
         (b'Pterodactyl\xe2\x84\xa2', b'Nothing Panel\xe2\x84\xa2'),
         (b'Pterodactyl Software', b'Nothing Panel'),
-        (b'https://pterodactyl.io', b'https://panel.fayas.nx.kg'),
+        (b'https://pterodactyl.io', panel_url),
         (b'\xc2\xa9 2015 - ', b'\xc2\xa9 '),
         (b'\xc2\xa9 2026 2026', b'\xc2\xa9 2026'),
         (b'\xc2\xa9 2026 ', b'\xc2\xa9 '),
