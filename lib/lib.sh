@@ -1099,7 +1099,7 @@ if [ "$SUPPORTED" == false ]; then
 fi
 
 export PHP_BIN
-PHP_BIN=$(command -v php8.3 2>/dev/null || command -v php 2>/dev/null)
+PHP_BIN=$(command -v php8.3 2>/dev/null || command -v php 2>/dev/null || echo "php")
 if [ -z "$PHP_BIN" ]; then
   PHP_BIN="php"
 fi

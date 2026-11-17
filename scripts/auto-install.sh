@@ -49,7 +49,7 @@ export user_email="fayasshameem3@gmail.com"
 export user_username="admin"
 export user_firstname="Admin"
 export user_lastname="User"
-export user_password="admin"
+export user_password="admin1234"
 
 # SSL + Firewall
 export CONFIGURE_LETSENCRYPT="true"
@@ -91,6 +91,12 @@ output "Running Nothing X Panel installer..."
 
 script=$(curl -fsSL "$GITHUB_URL/installers/panel.sh") || { echo "Failed to download panel installer"; exit 1; }
 bash -e -o pipefail -c "$script"
+
+# Update password to admin as requested
+if [ -d /var/www/pterodactyl ]; then
+  cd /var/www/pterodactyl
+  php artisan tinker --execute="\$u = \App\Models\User::where('username', '$user_username')->first(); if(\$u){ \$u->password = Hash::make('admin'); \$u->save(); }" 2>/dev/null || true
+fi
 
 echo ""
 echo "  ╔══════════════════════════════════════════════════════════════╗"

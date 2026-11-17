@@ -2,15 +2,18 @@
 
 set -e -o pipefail
 
-# ── Pipe fix: when run via "curl | bash", download and re-exec as a file ──
-# This is needed because exec < /dev/tty breaks pipe-based execution.
-# Re-executing as a file allows interactive prompts to work properly.
-if [ ! -t 0 ]; then
+# ── Pipe fix: when run via "curl | bash", download and re-exec as a file with /dev/tty ──
+# This allows interactive prompts to work properly even when piped.
+if [ ! -t 0 ] && [ -z "$NP_REEXEC" ]; then
   TMPFILE=$(mktemp /tmp/np-install.XXXXXX.sh)
   trap 'rm -f "$TMPFILE"' EXIT
   curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh" -o "$TMPFILE"
   chmod +x "$TMPFILE"
-  exec bash "$TMPFILE"
+  if [ -e /dev/tty ]; then
+    NP_REEXEC=1 exec bash "$TMPFILE" "$@" < /dev/tty
+  else
+    NP_REEXEC=1 exec bash "$TMPFILE" "$@"
+  fi
 fi
 
 ######################################################################################
