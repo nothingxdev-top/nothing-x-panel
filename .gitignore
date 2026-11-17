@@ -1,1 +1,6 @@
 .vagrant
+
+.playwright-mcp/
+scratch/
+*.pyc
+__pycache__/

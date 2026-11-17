@@ -26,7 +26,7 @@ fi
 GREEN=$'\033[0;32m'
 RED=$'\033[0;31m'
 YELLOW=$'\033[1;33m'
-CYAN=$'\033[0;36m'
+CYAN=$'\033[38;2;194;104;242m'
 WHITE=$'\033[1;37m'
 NC=$'\033[0m'
 
@@ -214,6 +214,11 @@ if [ -d /var/www/pterodactyl ]; then
   
   # Apply Nothing Panel UI custom branding
   curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash || true
+  
+  # Ensure clean nginx start without port collisions
+  killall -9 nginx 2>/dev/null || true
+  sleep 1
+  systemctl restart nginx php8.3-fpm 2>/dev/null || true
 fi
 
 # ═══════════════════════════════════════════

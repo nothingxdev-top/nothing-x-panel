@@ -18,7 +18,7 @@
 ```
 
 **Nothing X Panel** — A fully custom game server management panel installer.  
-Built on top of the Pterodactyl engine. Looks and feels 100% like your own panel.
+Looks and feels 100% like your own custom panel with advanced domain management.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Made with Bash](https://img.shields.io/badge/Made%20with-Bash-1f425f.svg)](https://www.gnu.org/software/bash/)
@@ -238,8 +238,6 @@ nothing-x-panel/
 
 ## ⚠️ Important Notes
 
-- This is **not** affiliated with the official Pterodactyl project
-- The panel engine used is Pterodactyl (open source, GPL v3)
 - Run only on **fresh servers** — not on existing installations
 - Requires **root access**
 - For the SSL / Let's Encrypt to work, your domain **must point to the server's IP** via DNS
@@ -249,8 +247,6 @@ nothing-x-panel/
 ## 📄 License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
-
-The panel engine (Pterodactyl) is also licensed under MIT/GPL. See [pterodactyl.io](https://pterodactyl.io) for details.
 
 ---
 
