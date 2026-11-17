@@ -95,7 +95,7 @@ bash -e -o pipefail -c "$script"
 # Update password to admin as requested
 if [ -d /var/www/pterodactyl ]; then
   cd /var/www/pterodactyl
-  php artisan tinker --execute="\$u = \App\Models\User::where('username', '$user_username')->first(); if(\$u){ \$u->password = Hash::make('admin'); \$u->save(); }" 2>/dev/null || true
+  php artisan tinker --execute="\$u = \Pterodactyl\Models\User::where('username', '$user_username')->first(); if(\$u){ \$u->password = \Illuminate\Support\Facades\Hash::make('admin'); \$u->save(); }" 2>/dev/null || true
 fi
 
 echo ""
