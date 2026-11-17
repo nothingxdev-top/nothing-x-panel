@@ -33,16 +33,18 @@ Built on top of the Pterodactyl engine. Looks and feels 100% like your own panel
 Run this on your **Ubuntu/Debian Linux server** as root:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh)
+curl -fsSL https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh | sudo bash
 ```
 
 Or using wget:
 
 ```bash
-bash <(wget -qO- https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh)
+wget -qO- https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh | sudo bash
 ```
 
 > **Requirements:** Ubuntu 22.04 / 24.04 or Debian 12 / 13 — Root access required.
+
+> **Note:** `sudo bash <(curl ...)` may not work on some Ubuntu versions due to `/dev/fd` restrictions. Use the pipe method above.
 
 ---
 
