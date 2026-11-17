@@ -369,6 +369,7 @@ fi
 
 # 6. Configure Nginx Cache-Control (Force Fresh Bundles)
 python3 - << 'PYEOF'
+import os
 nginx_file = "/etc/nginx/sites-available/pterodactyl.conf"
 if os.path.exists(nginx_file):
     with open(nginx_file, "r") as f:
