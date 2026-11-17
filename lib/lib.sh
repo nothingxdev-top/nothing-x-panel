@@ -553,7 +553,7 @@ install_packages() {
   # Eval needed for proper expansion of arguments
   case "$OS" in
   ubuntu | debian)
-    eval apt-get -y $args install "$1"
+    eval DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a apt-get -y $args install "$1"
     ;;
   rocky | almalinux)
     eval dnf -y $args install "$1"

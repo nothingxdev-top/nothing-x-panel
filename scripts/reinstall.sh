@@ -33,6 +33,8 @@ NC=$'\033[0m'
 export GITHUB_SOURCE="master"
 export GITHUB_BASE_URL="https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel"
 export GITHUB_URL="$GITHUB_BASE_URL/$GITHUB_SOURCE"
+export DEBIAN_FRONTEND="noninteractive"
+export NEEDRESTART_MODE="a"
 
 # ═══════════════════════════════════════════
 # PRE-CONFIGURED SETTINGS
@@ -69,6 +71,11 @@ echo ""
 # OS check
 source /etc/os-release 2>/dev/null || true
 echo -e "  ${GREEN}✔${NC} OS: $PRETTY_NAME"
+
+# Disable needrestart prompts
+mkdir -p /etc/needrestart/conf.d 2>/dev/null || true
+echo '$nrconf{restart} = "a";' > /etc/needrestart/conf.d/autorestart.conf 2>/dev/null || true
+echo '$nrconf{kernelhints} = 0;' >> /etc/needrestart/conf.d/autorestart.conf 2>/dev/null || true
 
 # Check DNS for domain
 echo -n "  Checking DNS for $FQDN ... "
