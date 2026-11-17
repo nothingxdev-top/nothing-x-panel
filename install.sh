@@ -2,17 +2,15 @@
 
 set -e -o pipefail
 
-# ── Stdin fix: when piped (curl | bash), redirect stdin from terminal ──
-# This allows interactive menus/prompts to work even when piped
+# ── Pipe fix: when run via "curl | bash", download and re-exec as a file ──
+# This is needed because exec < /dev/tty breaks pipe-based execution.
+# Re-executing as a file allows interactive prompts to work properly.
 if [ ! -t 0 ]; then
-  if [ -e /dev/tty ]; then
-    exec < /dev/tty
-  else
-    echo "ERROR: No terminal (tty) available. Run the script directly:"
-    echo "  curl -fsSL https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh -o /tmp/np-install.sh"
-    echo "  sudo bash /tmp/np-install.sh"
-    exit 1
-  fi
+  TMPFILE=$(mktemp /tmp/np-install.XXXXXX.sh)
+  trap 'rm -f "$TMPFILE"' EXIT
+  curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh" -o "$TMPFILE"
+  chmod +x "$TMPFILE"
+  exec bash "$TMPFILE"
 fi
 
 ######################################################################################
