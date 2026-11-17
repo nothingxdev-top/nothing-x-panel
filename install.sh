@@ -2,6 +2,19 @@
 
 set -e -o pipefail
 
+# ── Stdin fix: when piped (curl | bash), redirect stdin from terminal ──
+# This allows interactive menus/prompts to work even when piped
+if [ ! -t 0 ]; then
+  if [ -e /dev/tty ]; then
+    exec < /dev/tty
+  else
+    echo "ERROR: No terminal (tty) available. Run the script directly:"
+    echo "  curl -fsSL https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh -o /tmp/np-install.sh"
+    echo "  sudo bash /tmp/np-install.sh"
+    exit 1
+  fi
+fi
+
 ######################################################################################
 #                                                                                    #
 # Project 'nothing-panel-installer'                                                  #
