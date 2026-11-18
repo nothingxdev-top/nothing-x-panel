@@ -12,10 +12,13 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-PANEL_DIR="/var/www/pterodactyl"
-
-if [ ! -d "$PANEL_DIR" ]; then
-  echo "ERROR: Panel directory not found at $PANEL_DIR"
+PANEL_DIR=""
+if [ -d "/var/www/nothing" ]; then
+  PANEL_DIR="/var/www/nothing"
+elif [ -d "/var/www/pterodactyl" ]; then
+  PANEL_DIR="/var/www/pterodactyl"
+else
+  echo "ERROR: Panel directory not found"
   exit 1
 fi
 
@@ -42,6 +45,7 @@ if [ -z "$PANEL_URL" ]; then
   PANEL_URL="https://panel.fayas.nx.kg"
 fi
 export PANEL_URL
+export PANEL_DIR
 
 # 2. Neutralize the dinosaur SVG (1x1 transparent)
 mkdir -p "$PANEL_DIR/public/assets/svgs"
@@ -56,8 +60,9 @@ python3 - << 'PYEOF'
 import glob, os
 
 panel_url = os.environ.get('PANEL_URL', 'https://panel.fayas.nx.kg')
+panel_dir = os.environ.get('PANEL_DIR', '/var/www/nothing')
 
-for path in glob.glob('/var/www/pterodactyl/public/assets/*.js'):
+for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
     with open(path, 'r', encoding='utf-8', errors='ignore') as f:
         content = f.read()
 
@@ -100,9 +105,10 @@ PYEOF
 WRAPPER="$PANEL_DIR/resources/views/templates/wrapper.blade.php"
 if [ -f "$WRAPPER" ]; then
   python3 - << 'PYEOF'
-import re
+import os, re
 
-wrapper_path = "/var/www/pterodactyl/resources/views/templates/wrapper.blade.php"
+panel_dir = os.environ.get('PANEL_DIR', '/var/www/nothing')
+wrapper_path = os.path.join(panel_dir, "resources/views/templates/wrapper.blade.php")
 with open(wrapper_path, "r", encoding="utf-8") as f:
     wrapper = f.read()
 
@@ -249,9 +255,10 @@ if [ -f "$ADMIN_BLADE" ]; then
   sed -i "s@Copyright &copy; 2015 - {{ date('Y') }}@Copyright &copy; {{ date('Y') }}@g" "$ADMIN_BLADE"
 
   python3 - << 'PYEOF'
-import re
+import os, re
 
-admin_blade = "/var/www/pterodactyl/resources/views/layouts/admin.blade.php"
+panel_dir = os.environ.get('PANEL_DIR', '/var/www/nothing')
+admin_blade = os.path.join(panel_dir, "resources/views/layouts/admin.blade.php")
 with open(admin_blade, "r", encoding="utf-8") as f:
     admin_content = f.read()
 

@@ -51,7 +51,7 @@ disable_service() {
 
 rm_panel_files() {
   output "Removing panel files..."
-  rm -rf /var/www/pterodactyl
+  rm -rf /var/www/nothing /var/www/pterodactyl
   rm -f /var/log/nginx/pterodactyl.app-access.log* /var/log/nginx/pterodactyl.app-error.log*
   case "$OS" in
   ubuntu | debian)

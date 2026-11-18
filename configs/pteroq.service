@@ -1,8 +1,8 @@
-# Pterodactyl Queue Worker File
+# Nothing Panel Queue Worker File
 # ----------------------------------
 
 [Unit]
-Description=Pterodactyl Queue Worker
+Description=Nothing Panel Queue Worker
 After=redis-server.service
 
 [Service]
@@ -10,8 +10,9 @@ After=redis-server.service
 # Some systems use `apache` or `nginx` as the user and group.
 User=<user>
 Group=<user>
+WorkingDirectory=/var/www/nothing
 Restart=always
-ExecStart=/usr/bin/php /var/www/pterodactyl/artisan queue:work --queue=high,standard,low --sleep=3 --tries=3
+ExecStart=/usr/bin/php /var/www/nothing/artisan queue:work --queue=high,standard,low --sleep=3 --tries=3
 StartLimitInterval=180
 StartLimitBurst=30
 RestartSec=5s

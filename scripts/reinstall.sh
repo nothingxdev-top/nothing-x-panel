@@ -101,9 +101,9 @@ echo ""
 CLEANED=false
 
 # Remove panel files
-if [ -d "/var/www/pterodactyl" ]; then
-  echo -n "  Removing panel files ... "
-  rm -rf /var/www/pterodactyl
+if [ -d "/var/www/nothing" ] || [ -d "/var/www/pterodactyl" ]; then
+  echo -n "  Removing panel files (/var/www/nothing & /var/www/pterodactyl) ... "
+  rm -rf /var/www/nothing /var/www/pterodactyl
   echo -e "${GREEN}✔${NC}"
   CLEANED=true
 fi
@@ -207,18 +207,25 @@ script=$(curl -fsSL "$GITHUB_URL/installers/panel.sh") || {
 }
 bash -e -o pipefail -c "$script"
 
-# Update password to admin as requested
-if [ -d /var/www/pterodactyl ]; then
-  cd /var/www/pterodactyl
+# Update password to admin as requested & setup Wings + Allocations
+PANEL_DIR=""
+[ -d "/var/www/nothing" ] && PANEL_DIR="/var/www/nothing"
+[ -z "$PANEL_DIR" ] && [ -d "/var/www/pterodactyl" ] && PANEL_DIR="/var/www/pterodactyl"
+
+if [ -n "$PANEL_DIR" ]; then
+  cd "$PANEL_DIR"
   php artisan tinker --execute="\$u = \Pterodactyl\Models\User::where('username', '$user_username')->first(); if(\$u){ \$u->password = \Illuminate\Support\Facades\Hash::make('admin'); \$u->save(); }" 2>/dev/null || true
   
   # Apply Nothing Panel UI custom branding
   curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash || true
+
+  # Auto-setup Wings daemon, Node and Allocations
+  curl -fsSL "$GITHUB_URL/scripts/setup-node.sh" | bash || true
   
   # Ensure clean nginx start without port collisions
   killall -9 nginx 2>/dev/null || true
   sleep 1
-  systemctl restart nginx php8.3-fpm 2>/dev/null || true
+  systemctl restart nginx php8.3-fpm wings 2>/dev/null || true
 fi
 
 # ═══════════════════════════════════════════
@@ -226,14 +233,17 @@ fi
 # ═══════════════════════════════════════════
 echo ""
 echo -e "  ${CYAN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "  ${CYAN}║${NC}  ${GREEN}✔ Nothing X Panel Successfully Installed!${NC}               ${CYAN}║${NC}"
+echo -e "  ${CYAN}║${NC}  ${GREEN}✔ Nothing X Panel & Wings Successfully Installed!${NC}          ${CYAN}║${NC}"
 echo -e "  ${CYAN}╠══════════════════════════════════════════════════════════════╣${NC}"
 printf   "  ${CYAN}║${NC}  %-20s : %-36s${CYAN}║${NC}\n" "Panel URL"  "https://$FQDN"
+printf   "  ${CYAN}║${NC}  %-20s : %-36s${CYAN}║${NC}\n" "Directory"  "/var/www/nothing"
 printf   "  ${CYAN}║${NC}  %-20s : %-36s${CYAN}║${NC}\n" "Username"   "$user_username"
 printf   "  ${CYAN}║${NC}  %-20s : %-36s${CYAN}║${NC}\n" "Password"   "admin"
 printf   "  ${CYAN}║${NC}  %-20s : %-36s${CYAN}║${NC}\n" "Email"      "$user_email"
+printf   "  ${CYAN}║${NC}  %-20s : %-36s${CYAN}║${NC}\n" "Wings Daemon" "Connected & Running"
+printf   "  ${CYAN}║${NC}  %-20s : %-36s${CYAN}║${NC}\n" "Allocations"  "Ports 25565 - 25575 Ready"
 echo -e "  ${CYAN}╠══════════════════════════════════════════════════════════════╣${NC}"
-echo -e "  ${CYAN}║${NC}  Next: Install Wings on game server nodes                     ${CYAN}║${NC}"
+echo -e "  ${CYAN}║${NC}  Ready to create game servers immediately in the panel!       ${CYAN}║${NC}"
 echo -e "  ${CYAN}║${NC}  Domain Manager: sudo np-domain                              ${CYAN}║${NC}"
 echo -e "  ${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""

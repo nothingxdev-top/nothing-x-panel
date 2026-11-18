@@ -28,7 +28,7 @@ export RM_WINGS=false
 main() {
   welcome ""
 
-  if [ -d "/var/www/pterodactyl" ]; then
+  if [ -d "/var/www/nothing" ] || [ -d "/var/www/pterodactyl" ]; then
     output "Panel installation detected."
     select_menu "Remove Nothing Panel?" \
       "No - Keep the panel" \

@@ -96,7 +96,7 @@ check_FQDN_SSL() {
 
 main() {
   # check if we can detect an already existing installation
-  if [ -d "/var/www/pterodactyl" ]; then
+  if [ -d "/var/www/nothing" ] || [ -d "/var/www/pterodactyl" ]; then
     error "An existing Panel installation was detected. This script only supports fresh installations."
     output "You can remove existing installations by running the uninstall script."
     output "Upgrade guide: https://docs.pterodactyl.io/v2/upgrading/upgrading-from-v1"

@@ -175,7 +175,7 @@ np-domain
 
 ### Panel is installed at:
 ```
-/var/www/pterodactyl/
+/var/www/nothing/
 ```
 
 ### Wings config:

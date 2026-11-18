@@ -93,12 +93,19 @@ script=$(curl -fsSL "$GITHUB_URL/installers/panel.sh") || { echo "Failed to down
 bash -e -o pipefail -c "$script"
 
 # Update password to admin as requested
-if [ -d /var/www/pterodactyl ]; then
-  cd /var/www/pterodactyl
+PANEL_DIR=""
+[ -d "/var/www/nothing" ] && PANEL_DIR="/var/www/nothing"
+[ -z "$PANEL_DIR" ] && [ -d "/var/www/pterodactyl" ] && PANEL_DIR="/var/www/pterodactyl"
+
+if [ -n "$PANEL_DIR" ]; then
+  cd "$PANEL_DIR"
   php artisan tinker --execute="\$u = \Pterodactyl\Models\User::where('username', '$user_username')->first(); if(\$u){ \$u->password = \Illuminate\Support\Facades\Hash::make('admin'); \$u->save(); }" 2>/dev/null || true
   
   # Apply Nothing Panel UI custom branding
   curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash || true
+
+  # Auto-setup Wings daemon, Node and Allocations
+  curl -fsSL "$GITHUB_URL/scripts/setup-node.sh" | bash || true
 fi
 
 echo ""

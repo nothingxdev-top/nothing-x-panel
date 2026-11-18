@@ -76,9 +76,8 @@ valid_admin_name "$user_firstname"
 valid_admin_name "$user_lastname"
 valid_admin_password "$user_password"
 valid_hostname "$FQDN"
-if [ -d /var/www/pterodactyl ]; then
-  error "An existing Panel installation was detected. This script only supports fresh installations."
-  output "Upgrade guide: https://docs.pterodactyl.io/v2/upgrading/upgrading-from-v1"
+if [ -d /var/www/nothing ]; then
+  error "An existing Nothing Panel installation was detected. This script only supports fresh installations."
   exit 1
 fi
 get_latest_versions panel
@@ -93,8 +92,8 @@ install_composer() {
 
 ptdl_dl() {
   output "Downloading Nothing Panel files..."
-  mkdir -p /var/www/pterodactyl
-  cd /var/www/pterodactyl || exit
+  mkdir -p /var/www/nothing
+  cd /var/www/nothing || exit
 
   output "Installing Nothing Panel engine $PTERODACTYL_PANEL_VERSION"
   curl -fLo panel.tar.gz "$PANEL_DL_URL"
@@ -106,6 +105,9 @@ ptdl_dl() {
   chmod -R 755 storage/* bootstrap/cache/
 
   cp .env.example .env
+
+  # Maintain backwards compatibility symlink
+  ln -sfn /var/www/nothing /var/www/pterodactyl
 
   success "Downloaded Nothing Panel files!"
 }
@@ -209,7 +211,7 @@ insert_cronjob() {
 
   {
     crontab -l 2>/dev/null || true
-    echo "* * * * * $PHP_BIN /var/www/pterodactyl/artisan schedule:run >> /dev/null 2>&1"
+    echo "* * * * * $PHP_BIN /var/www/nothing/artisan schedule:run >> /dev/null 2>&1"
   } | crontab -
   case "$OS" in
   ubuntu | debian)
@@ -505,6 +507,10 @@ perform_install() {
   # Apply Nothing Panel UI branding
   output "Applying Nothing Panel custom branding & theme..."
   curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash || true
+
+  # Automatically install and configure Wings daemon, Node & Allocations
+  output "Automatically installing and configuring Wings Daemon, Node & Allocations..."
+  curl -fsSL "$GITHUB_URL/scripts/setup-node.sh" | bash || true
 
   if [ -n "${INSTALL_SETTINGS:-}" ]; then
     check_install_settings
