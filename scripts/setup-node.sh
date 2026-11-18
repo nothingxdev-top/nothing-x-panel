@@ -93,7 +93,8 @@ elif command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active firewalld >/
 fi
 
 # 5. Bootstrap Laravel to Create Location, Node, Config & Allocations
-php - << 'PHPEOF'
+TMP_PHP=$(mktemp /tmp/np-node-setup.XXXXXX.php)
+cat << 'PHPEOF' > "$TMP_PHP"
 <?php
 $panelDir = is_dir('/var/www/nothing') ? '/var/www/nothing' : '/var/www/pterodactyl';
 require $panelDir . '/vendor/autoload.php';
@@ -175,6 +176,9 @@ for ($port = 25565; $port <= 25575; $port++) {
 $totalAllocations = Allocation::where('node_id', $node->id)->count();
 echo "✔ Allocations ready: {$totalAllocations} ports configured (25565-25575)\n";
 PHPEOF
+
+php "$TMP_PHP"
+rm -f "$TMP_PHP"
 
 # 6. Start Wings Service
 echo "* Starting Wings daemon service..."
