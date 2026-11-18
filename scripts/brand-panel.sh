@@ -47,8 +47,14 @@ fi
 export PANEL_URL
 export PANEL_DIR
 
-# 2. Neutralize the dinosaur SVG (1x1 transparent)
-mkdir -p "$PANEL_DIR/public/assets/svgs"
+# 2. Deploy Brand Logo, Favicons & Neutralize dinosaur SVG
+mkdir -p "$PANEL_DIR/public/assets" "$PANEL_DIR/public/favicons" "$PANEL_DIR/public/assets/svgs"
+curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/logo.png" -o "$PANEL_DIR/public/assets/logo.png" 2>/dev/null || true
+curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/logo.png" -o "$PANEL_DIR/public/favicons/apple-touch-icon.png" 2>/dev/null || true
+curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/logo.png" -o "$PANEL_DIR/public/favicons/favicon-32x32.png" 2>/dev/null || true
+curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/favicon.ico" -o "$PANEL_DIR/public/favicons/favicon.ico" 2>/dev/null || true
+chmod 644 "$PANEL_DIR/public/assets/logo.png" 2>/dev/null || true
+
 cat << 'EOF' > "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
 <svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"></svg>
 EOF
@@ -152,6 +158,19 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 padding: 2.5rem 2rem !important;
                 display: block !important;
             }
+            /* BRAND LOGO ON LOGIN CARD */
+            div[class*="LoginFormContainer___StyledDiv"]::before {
+                content: "";
+                display: block;
+                width: 96px;
+                height: 96px;
+                margin: 0 auto 1.5rem auto;
+                background: url("/assets/logo.png") no-repeat center center;
+                background-size: cover;
+                border-radius: 20px;
+                box-shadow: 0 0 25px rgba(220, 38, 38, 0.45), 0 0 12px rgba(194, 104, 242, 0.4);
+                border: 1.5px solid rgba(220, 38, 38, 0.35);
+            }
             div[class*="LoginFormContainer___StyledDiv3"] {
                 width: 100% !important;
                 flex: none !important;
@@ -211,16 +230,33 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 6px 30px rgba(194, 104, 242, 0.8) !important;
                 filter: brightness(1.1) !important;
             }
-            /* Select menus */
-            select {
-                background-color: #0b0817 !important;
-                border: 1.5px solid #281f3d !important;
-                color: #ffffff !important;
+            /* ADVANCED CUSTOM SELECT MENUS */
+            select, .form-control select {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                background-color: #0d0918 !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23C268F2' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: right 1rem center !important;
+                background-size: 12px 12px !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
                 border-radius: 10px !important;
+                color: #ffffff !important;
+                padding: 0.75rem 2.5rem 0.75rem 1rem !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                font-size: 0.95rem !important;
             }
-            select:focus {
+            select:focus, .form-control select:focus {
                 border-color: #C268F2 !important;
-                box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
+                box-shadow: 0 0 18px rgba(194, 104, 242, 0.55) !important;
+                outline: none !important;
+            }
+            option {
+                background-color: #120e24 !important;
+                color: #ffffff !important;
+                padding: 10px !important;
             }
             /* Links */
             a {
@@ -279,6 +315,17 @@ admin_css = """<!-- Nothing Admin Theme -->
                 border-right: 1px solid rgba(194, 104, 242, 0.25) !important;
                 color: #C268F2 !important;
                 font-weight: 800 !important;
+            }
+            .skin-blue .main-header .logo::before {
+                content: "";
+                display: inline-block;
+                width: 26px;
+                height: 26px;
+                margin-right: 8px;
+                vertical-align: middle;
+                background: url("/assets/logo.png") no-repeat center center;
+                background-size: cover;
+                border-radius: 6px;
             }
             .skin-blue .main-sidebar {
                 background-color: #0a0715 !important;
@@ -339,13 +386,26 @@ admin_css = """<!-- Nothing Admin Theme -->
             }
             .form-control, .select2-selection {
                 background-color: #0b0817 !important;
-                border: 1px solid #281f3d !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
                 color: #ffffff !important;
                 border-radius: 8px !important;
             }
-            .form-control:focus {
+            .form-control:focus, .select2-container--default.select2-container--open .select2-selection--single {
                 border-color: #C268F2 !important;
-                box-shadow: 0 0 10px rgba(194, 104, 242, 0.4) !important;
+                box-shadow: 0 0 14px rgba(194, 104, 242, 0.5) !important;
+            }
+            .select2-dropdown {
+                background-color: #120e24 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                border-radius: 8px !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+            }
+            .select2-results__option {
+                color: #e2d9f3 !important;
+            }
+            .select2-container--default .select2-results__option--highlighted[aria-selected] {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                color: #ffffff !important;
             }
             .main-footer {
                 background: #0a0715 !important;

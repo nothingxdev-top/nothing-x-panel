@@ -80,11 +80,12 @@ done=false
 while [ "$done" == false ]; do
 
   select_menu "Nothing Panel Installer — What would you like to do?" \
-    "Install the Panel" \
-    "Install Wings (Game Server Node)" \
-    "Install Panel + Wings on the same machine" \
+    "Install Panel + Wings (Automatic 1-Click Setup - Recommended)" \
+    "Install the Panel only" \
+    "Install Wings (Game Server Node) only" \
+    "Update Panel (Preserve Data & Database)" \
     "Domain Manager (np-domain - Map domain to port)" \
-    "Rebrand / Apply Nothing UI Theme" \
+    "Rebrand / Apply Nothing UI Theme & Logo" \
     "Uninstall Panel or Wings" \
     "──────── Advanced / Canary ────────" \
     "Install Panel (canary/dev version)" \
@@ -94,8 +95,9 @@ while [ "$done" == false ]; do
 
   actions=(
     "panel"
+    "panel"
     "wings"
-    "panel;wings"
+    "update"
     "domain_manager"
     "rebrand"
     "uninstall"
@@ -107,7 +109,7 @@ while [ "$done" == false ]; do
   )
 
   # Skip the separator option
-  if [ "$MENU_RESULT" == "6" ]; then
+  if [ "$MENU_RESULT" == "7" ]; then
     continue
   fi
 
@@ -115,6 +117,11 @@ while [ "$done" == false ]; do
 
   if [ -z "$action" ]; then
     continue
+  fi
+
+  if [ "$action" == "update" ]; then
+    curl -fsSL "$GITHUB_URL/scripts/update-panel.sh" | bash
+    exit 0
   fi
 
   if [ "$action" == "domain_manager" ]; then
