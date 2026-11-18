@@ -55,8 +55,11 @@ curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/ma
 curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/favicon.ico" -o "$PANEL_DIR/public/favicons/favicon.ico" 2>/dev/null || true
 chmod 644 "$PANEL_DIR/public/assets/logo.png" 2>/dev/null || true
 
+# Render Vynoxis logo inside pterodactyl.svg so even cached or fallback references show the logo
 cat << 'EOF' > "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
-<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1"></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <image href="/assets/logo.png" width="512" height="512" />
+</svg>
 EOF
 chmod 644 "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
 chown www-data:www-data "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
@@ -86,6 +89,11 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         content = content.replace(target_footer, 'null && o.createElement(x,{$_css7:{textAlign:"center"')
         changed = True
 
+    # Force dark card background in auth bundle inline style
+    if 'backgroundColor:"rgba(255, 255, 255, var(--tw-bg-opacity))"' in content:
+        content = content.replace('backgroundColor:"rgba(255, 255, 255, var(--tw-bg-opacity))"', 'backgroundColor:"rgba(18, 14, 34, 1)"')
+        changed = True
+
     for old, new in [
         ('Pterodactyl Software', 'Nothing Panel'),
         ('https://pterodactyl.io', panel_url),
@@ -110,6 +118,8 @@ PYEOF
 # 4. Inject Modern Custom Theme into wrapper.blade.php
 WRAPPER="$PANEL_DIR/resources/views/templates/wrapper.blade.php"
 if [ -f "$WRAPPER" ]; then
+  sed -i "s@config('app.name', 'Pterodactyl')@config('app.name', 'Nothing Panel')@g" "$WRAPPER"
+
   python3 - << 'PYEOF'
 import os, re
 
@@ -132,15 +142,24 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
             body {
                 background: #08060f !important;
-                background-image: radial-gradient(circle at 50% 10%, rgba(194, 104, 242, 0.16) 0%, transparent 60%) !important;
+                background-image: radial-gradient(circle at 50% 10%, rgba(194, 104, 242, 0.18) 0%, transparent 60%) !important;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+                color: #f1f5f9 !important;
             }
-            /* MASCOT AND FOOTER REMOVAL */
+            /* MASCOT AND FOOTER REMOVAL (Target all styled component classes & DOM elements) */
+            .sc-cyh04c-4,
+            .sc-cyh04c-5,
+            .sc-cyh04c-7,
+            .sc-cyh04c-8,
+            [class*="sc-cyh04c-4"],
+            [class*="sc-cyh04c-5"],
+            [class*="sc-cyh04c-7"],
+            [class*="sc-cyh04c-8"],
             div[class*="LoginFormContainer___StyledDiv2"],
             img[src*="pterodactyl"],
             img[alt*="pterodactyl"],
             p[class*="LoginFormContainer___StyledP"],
-            a[href*="pterodactyl.io"] {
+            a[href*="pterodactyl"] {
                 display: none !important;
                 visibility: hidden !important;
                 height: 0 !important;
@@ -148,36 +167,44 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 opacity: 0 !important;
             }
             /* CENTER AND STYLE THE LOGIN CARD */
-            div[class*="LoginFormContainer___StyledDiv"] {
+            .sc-cyh04c-3,
+            [class*="sc-cyh04c-3"],
+            div[class*="LoginFormContainer___StyledDiv"],
+            #app form > div,
+            #app form {
                 max-width: 440px !important;
-                margin: 4rem auto 2rem auto !important;
+                margin: 3.5rem auto 2rem auto !important;
                 background-color: #120e22 !important;
-                border: 1px solid rgba(194, 104, 242, 0.4) !important;
+                background: #120e22 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
                 box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 35px rgba(194, 104, 242, 0.25) !important;
                 border-radius: 16px !important;
                 padding: 2.5rem 2rem !important;
                 display: block !important;
             }
             /* BRAND LOGO ON LOGIN CARD */
+            .sc-cyh04c-3::before,
+            [class*="sc-cyh04c-3"]::before,
             div[class*="LoginFormContainer___StyledDiv"]::before {
                 content: "";
                 display: block;
-                width: 96px;
-                height: 96px;
+                width: 100px;
+                height: 100px;
                 margin: 0 auto 1.5rem auto;
                 background: url("/assets/logo.png") no-repeat center center;
-                background-size: cover;
+                background-size: contain;
                 border-radius: 20px;
-                box-shadow: 0 0 25px rgba(220, 38, 38, 0.45), 0 0 12px rgba(194, 104, 242, 0.4);
-                border: 1.5px solid rgba(220, 38, 38, 0.35);
+                filter: drop-shadow(0 0 16px rgba(194, 104, 242, 0.65));
             }
-            div[class*="LoginFormContainer___StyledDiv3"] {
+            div[class*="LoginFormContainer___StyledDiv3"],
+            .sc-cyh04c-6,
+            [class*="sc-cyh04c-6"] {
                 width: 100% !important;
                 flex: none !important;
                 color: #f1f5f9 !important;
             }
             /* Login Title */
-            h2[class*="LoginFormContainer"], h2 {
+            h2[class*="LoginFormContainer"], h2, .sc-cyh04c-1, [class*="sc-cyh04c-1"] {
                 color: #ffffff !important;
                 font-weight: 800 !important;
                 letter-spacing: -0.5px !important;
@@ -193,6 +220,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 letter-spacing: 0.8px !important;
                 text-transform: uppercase !important;
                 margin-bottom: 0.4rem !important;
+                display: block !important;
             }
             /* Inputs */
             input[type="text"], input[type="password"], input[type="email"] {
@@ -203,6 +231,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 padding: 0.85rem 1rem !important;
                 transition: all 0.2s ease !important;
                 font-size: 0.95rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
                 border-color: #C268F2 !important;
@@ -211,7 +241,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 outline: none !important;
             }
             /* Buttons */
-            button, button[type="submit"], .btn-primary, [class*="Button___StyledButton"] {
+            button, button[type="submit"], .btn-primary, [class*="Button___StyledButton"], [class*="Button"] {
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 background-color: #C268F2 !important;
                 color: #ffffff !important;
@@ -225,38 +255,44 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 padding: 0.85rem !important;
                 cursor: pointer !important;
             }
-            button:hover, button[type="submit"]:hover, .btn-primary:hover, [class*="Button___StyledButton"]:hover {
+            button:hover, button[type="submit"]:hover, .btn-primary:hover, [class*="Button___StyledButton"]:hover, [class*="Button"]:hover {
                 transform: translateY(-2px) !important;
                 box-shadow: 0 6px 30px rgba(194, 104, 242, 0.8) !important;
                 filter: brightness(1.1) !important;
             }
-            /* ADVANCED CUSTOM SELECT MENUS */
-            select, .form-control select {
+            /* ALL SELECT MENUS — ULTRA SLEEK #C268F2 CUSTOM STYLING */
+            select, .form-control select, select.form-control, [class*="Select"] select {
                 appearance: none !important;
                 -webkit-appearance: none !important;
                 -moz-appearance: none !important;
-                background-color: #0d0918 !important;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23C268F2' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+                background-color: #0d091a !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23C268F2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
                 background-repeat: no-repeat !important;
                 background-position: right 1rem center !important;
-                background-size: 12px 12px !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                background-size: 14px 14px !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
                 border-radius: 10px !important;
-                color: #ffffff !important;
+                color: #f1e5ff !important;
                 padding: 0.75rem 2.5rem 0.75rem 1rem !important;
                 cursor: pointer !important;
                 transition: all 0.2s ease !important;
                 font-size: 0.95rem !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
             }
-            select:focus, .form-control select:focus {
+            select:focus, .form-control select:focus, select.form-control:focus {
                 border-color: #C268F2 !important;
-                box-shadow: 0 0 18px rgba(194, 104, 242, 0.55) !important;
+                box-shadow: 0 0 20px rgba(194, 104, 242, 0.55) !important;
                 outline: none !important;
+                background-color: #120c24 !important;
             }
-            option {
+            select option, .form-control select option {
                 background-color: #120e24 !important;
+                color: #f1e5ff !important;
+                padding: 10px 14px !important;
+            }
+            select option:hover, select option:checked {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 color: #ffffff !important;
-                padding: 10px !important;
             }
             /* Links */
             a {
@@ -268,7 +304,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 text-shadow: 0 0 8px rgba(194, 104, 242, 0.6) !important;
             }
             /* Flash & Error boxes */
-            div[class*="FlashMessageRender"] {
+            div[class*="FlashMessageRender"], .sc-cyh04c-2, [class*="sc-cyh04c-2"] {
                 border-radius: 10px !important;
             }
         </style>
@@ -280,9 +316,16 @@ with open(wrapper_path, "w", encoding="utf-8") as f:
 PYEOF
 fi
 
+wrapper = wrapper.replace("</head>", custom_css, 1)
+with open(wrapper_path, "w", encoding="utf-8") as f:
+    f.write(wrapper)
+PYEOF
+fi
+
 # 5. Rebrand Admin Views & Inject Admin UI Theme
 ADMIN_BLADE="$PANEL_DIR/resources/views/layouts/admin.blade.php"
 if [ -f "$ADMIN_BLADE" ]; then
+  sed -i "s@config('app.name', 'Pterodactyl')@config('app.name', 'Nothing Panel')@g" "$ADMIN_BLADE"
   sed -i 's@https://pterodactyl\.io/@#@g' "$ADMIN_BLADE"
   sed -i 's@https://pterodactyl\.io@#@g' "$ADMIN_BLADE"
   sed -i 's@Pterodactyl Software@Nothing Panel@g' "$ADMIN_BLADE"
@@ -315,17 +358,19 @@ admin_css = """<!-- Nothing Admin Theme -->
                 border-right: 1px solid rgba(194, 104, 242, 0.25) !important;
                 color: #C268F2 !important;
                 font-weight: 800 !important;
+                font-size: 1.25rem !important;
             }
             .skin-blue .main-header .logo::before {
                 content: "";
                 display: inline-block;
-                width: 26px;
-                height: 26px;
-                margin-right: 8px;
+                width: 30px;
+                height: 30px;
+                margin-right: 10px;
                 vertical-align: middle;
                 background: url("/assets/logo.png") no-repeat center center;
-                background-size: cover;
-                border-radius: 6px;
+                background-size: contain;
+                border-radius: 8px;
+                filter: drop-shadow(0 0 8px rgba(194, 104, 242, 0.6));
             }
             .skin-blue .main-sidebar {
                 background-color: #0a0715 !important;
@@ -359,8 +404,8 @@ admin_css = """<!-- Nothing Admin Theme -->
             .box {
                 background: #110d22 !important;
                 border: 1px solid rgba(194, 104, 242, 0.25) !important;
-                border-radius: 10px !important;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45) !important;
                 color: #e2d9f3 !important;
             }
             .box-header {
@@ -384,28 +429,119 @@ admin_css = """<!-- Nothing Admin Theme -->
                 transform: translateY(-1px) !important;
                 filter: brightness(1.15) !important;
             }
-            .form-control, .select2-selection {
+            /* ADMINLTE FORM CONTROLS & NATIVE SELECTS */
+            .form-control, input.form-control, textarea.form-control {
                 background-color: #0b0817 !important;
                 border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
                 color: #ffffff !important;
                 border-radius: 8px !important;
             }
-            .form-control:focus, .select2-container--default.select2-container--open .select2-selection--single {
+            .form-control:focus, input.form-control:focus, textarea.form-control:focus {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 14px rgba(194, 104, 242, 0.5) !important;
+                background-color: #0e091e !important;
+            }
+            select.form-control, select {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                background-color: #0d091a !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23C268F2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: right 1rem center !important;
+                background-size: 14px 14px !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
+                border-radius: 8px !important;
+                color: #f1e5ff !important;
+                padding-right: 2.5rem !important;
+                cursor: pointer !important;
+            }
+            select.form-control:focus, select:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
+            }
+            select option {
+                background-color: #120e24 !important;
+                color: #ffffff !important;
+            }
+            /* ADVANCED SELECT2 THEME (#C268F2) */
+            .select2-container--default .select2-selection--single,
+            .select2-container--default .select2-selection--multiple {
+                background-color: #0d091a !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                border-radius: 8px !important;
+                min-height: 38px !important;
+                padding: 4px 8px !important;
+                color: #f1e5ff !important;
+                transition: all 0.2s ease !important;
+            }
+            .select2-container--default .select2-selection--single .select2-selection__rendered {
+                color: #f1e5ff !important;
+                line-height: 28px !important;
+            }
+            .select2-container--default .select2-selection--single .select2-selection__arrow b {
+                border-color: #C268F2 transparent transparent transparent !important;
+                border-width: 6px 5px 0 5px !important;
+            }
+            .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+                border-color: transparent transparent #C268F2 transparent !important;
+                border-width: 0 5px 6px 5px !important;
+            }
+            .select2-container--default.select2-container--focus .select2-selection--single,
+            .select2-container--default.select2-container--open .select2-selection--single,
+            .select2-container--default.select2-container--focus .select2-selection--multiple,
+            .select2-container--default.select2-container--open .select2-selection--multiple {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 18px rgba(194, 104, 242, 0.55) !important;
+                outline: none !important;
             }
             .select2-dropdown {
                 background-color: #120e24 !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
-                border-radius: 8px !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8) !important;
+                border: 1.5px solid #C268F2 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(194, 104, 242, 0.3) !important;
+                overflow: hidden !important;
+            }
+            .select2-container--default .select2-search--dropdown .select2-search__field {
+                background-color: #090613 !important;
+                border: 1px solid rgba(194, 104, 242, 0.4) !important;
+                border-radius: 6px !important;
+                color: #ffffff !important;
+                padding: 6px 10px !important;
+            }
+            .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 10px rgba(194, 104, 242, 0.5) !important;
+                outline: none !important;
             }
             .select2-results__option {
-                color: #e2d9f3 !important;
+                color: #dcc7f5 !important;
+                padding: 8px 12px !important;
+                transition: all 0.15s ease !important;
             }
             .select2-container--default .select2-results__option--highlighted[aria-selected] {
-                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background: linear-gradient(90deg, #C268F2 0%, #8A2BE2 100%) !important;
                 color: #ffffff !important;
+            }
+            .select2-container--default .select2-results__option[aria-selected="true"] {
+                background: rgba(194, 104, 242, 0.25) !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+            /* Custom Scrollbars */
+            ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #090613;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #462575;
+                border-radius: 4px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #C268F2;
             }
             .main-footer {
                 background: #0a0715 !important;
@@ -422,6 +558,12 @@ admin_content = admin_content.replace("</head>", admin_css, 1)
 with open(admin_blade, "w", encoding="utf-8") as f:
     f.write(admin_content)
 PYEOF
+fi
+
+# Update copyright string in lang file
+LANG_STRINGS="$PANEL_DIR/resources/lang/en/strings.php"
+if [ -f "$LANG_STRINGS" ]; then
+  sed -i "s@'copyright' => '&copy; 2015 - :year Pterodactyl Software'@'copyright' => '&copy; 2015 - :year Nothing Panel'@g" "$LANG_STRINGS"
 fi
 
 ADMIN_INDEX="$PANEL_DIR/resources/views/admin/index.blade.php"

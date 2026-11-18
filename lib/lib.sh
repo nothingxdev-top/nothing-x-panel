@@ -139,6 +139,11 @@ draw_box() {
 
 # ----------- Custom Select Menu ----------- #
 
+# Custom Electric Purple theme color for Nothing Panel (#C268F2)
+COLOR_PURPLE="\e[38;2;194;104;242m"
+COLOR_PURPLE_BOLD="\e[1;38;2;194;104;242m"
+COLOR_DARK_PURPLE="\e[38;2;138;43;226m"
+
 # Usage: select_menu "title" "opt1" "opt2" ...
 # Returns selected index in MENU_RESULT (0-based)
 select_menu() {
@@ -148,25 +153,41 @@ select_menu() {
   local count=${#options[@]}
 
   echo ""
-  echo -e "  ${COLOR_CYAN}┌──────────────────────────────────────────────────────────────┐${COLOR_NC}"
-  printf "  ${COLOR_CYAN}│${COLOR_NC}  ${COLOR_WHITE}${COLOR_BOLD}%-60s${COLOR_NC}${COLOR_CYAN}│${COLOR_NC}\n" "$title"
-  echo -e "  ${COLOR_CYAN}├──────────────────────────────────────────────────────────────┤${COLOR_NC}"
+  echo -e "  ${COLOR_PURPLE}╔══════════════════════════════════════════════════════════════════╗${COLOR_NC}"
+  printf "  ${COLOR_PURPLE}║${COLOR_NC}  ${COLOR_WHITE}${COLOR_BOLD}%-64s${COLOR_NC}${COLOR_PURPLE}║${COLOR_NC}\n" "$title"
+  echo -e "  ${COLOR_PURPLE}╠══════════════════════════════════════════════════════════════════╣${COLOR_NC}"
 
+  local selectable_indices=()
   for i in "${!options[@]}"; do
-    printf "  ${COLOR_CYAN}│${COLOR_NC}  ${COLOR_YELLOW}[%d]${COLOR_NC} %-56s${COLOR_CYAN}│${COLOR_NC}\n" "$i" "${options[$i]}"
+    local opt="${options[$i]}"
+    # Check if option is a divider (starts with ─── or contains Advanced)
+    if [[ "$opt" =~ ^[─-]+ ]] || [[ "$opt" =~ "Advanced" ]]; then
+      echo -e "  ${COLOR_PURPLE}╟──────────────────────────────────────────────────────────────────╢${COLOR_NC}"
+      printf "  ${COLOR_PURPLE}║${COLOR_NC}  ${COLOR_PURPLE_BOLD}%-64s${COLOR_NC}${COLOR_PURPLE}║${COLOR_NC}\n" "  $opt"
+      echo -e "  ${COLOR_PURPLE}╟──────────────────────────────────────────────────────────────────╢${COLOR_NC}"
+    else
+      selectable_indices+=("$i")
+      printf "  ${COLOR_PURPLE}║${COLOR_NC}  ${COLOR_PURPLE_BOLD}[%2d]${COLOR_NC} %-59s${COLOR_PURPLE}║${COLOR_NC}\n" "$i" "$opt"
+    fi
   done
 
-  echo -e "  ${COLOR_CYAN}└──────────────────────────────────────────────────────────────┘${COLOR_NC}"
+  echo -e "  ${COLOR_PURPLE}╚══════════════════════════════════════════════════════════════════╝${COLOR_NC}"
   echo ""
 
   local valid=false
   while [ "$valid" == false ]; do
-    printf "  ${COLOR_BOLD}→ Select option [0-$((count - 1))]: ${COLOR_NC}"
+    printf "  ${COLOR_PURPLE_BOLD}❯${COLOR_NC} ${COLOR_BOLD}Select an option [0-$((count - 1))]: ${COLOR_NC}"
     read -r MENU_RESULT
     if [[ "$MENU_RESULT" =~ ^[0-9]+$ ]] && (( MENU_RESULT >= 0 && MENU_RESULT < count )); then
-      valid=true
+      # Make sure user didn't pick a divider
+      local chosen_opt="${options[$MENU_RESULT]}"
+      if [[ "$chosen_opt" =~ ^[─-]+ ]] || [[ "$chosen_opt" =~ "Advanced" ]]; then
+        error "That is a section divider. Please choose a numbered menu option."
+      else
+        valid=true
+      fi
     else
-      error "Invalid option. Please enter a number between 0 and $((count - 1))."
+      error "Invalid selection. Please enter a valid number."
     fi
   done
 }
