@@ -128,7 +128,7 @@ wrapper_path = os.path.join(panel_dir, "resources/views/templates/wrapper.blade.
 with open(wrapper_path, "r", encoding="utf-8") as f:
     wrapper = f.read()
 
-wrapper = re.sub(r"<!-- Nothing Panel Custom UI.*?<\/style>", "", wrapper, flags=re.DOTALL)
+wrapper = re.sub(r"<!-- (Nothing Panel Custom UI|Vercel-Style|Custom Domains).*?</head>", "</head>", wrapper, flags=re.DOTALL)
 wrapper = re.sub(r"</head>\s*</head>", "</head>", wrapper)
 
 custom_css = """<!-- Nothing Panel Custom UI & Branding -->
