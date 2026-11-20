@@ -308,8 +308,28 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-radius: 10px !important;
             }
             /* SERVER MANAGEMENT & SETTINGS CARDS (CUSTOM LUXURY THEME #C268F2) */
-            div[class*="SettingsContainer"],
-            div[class*="ServerContentBlock"],
+            div[class*="ServerContentBlock"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+            div[class*="SettingsContainer"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 1.5rem !important;
+                width: 100% !important;
+            }
+            @media (max-width: 900px) {
+                div[class*="SettingsContainer"] {
+                    grid-template-columns: 1fr !important;
+                }
+            }
+            /* ONLY individual cards get the card styling */
             div[class*="TitledGreyBox"],
             div[class*="ContentBox"] {
                 background-color: #120e24 !important;
@@ -318,10 +338,77 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-radius: 14px !important;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(194, 104, 242, 0.12) !important;
                 transition: all 0.25s ease !important;
+                margin-bottom: 1.5rem !important;
             }
             div[class*="TitledGreyBox"]:hover {
                 border-color: rgba(194, 104, 242, 0.5) !important;
                 box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 22px rgba(194, 104, 242, 0.22) !important;
+            }
+            /* CONSOLE TERMINAL & GRAPHS & STAT BLOCKS */
+            div[class*="ServerConsoleContainer"],
+            div[class*="TerminalContainer"],
+            div[class*="ConsoleContainer"] {
+                background-color: #0b0717 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
+                border-radius: 14px !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+                overflow: hidden !important;
+            }
+            input[class*="CommandInput"],
+            div[class*="ServerConsoleContainer"] input,
+            div[class*="Terminal"] + div input {
+                background-color: #080512 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+            }
+            input[class*="CommandInput"]:focus,
+            div[class*="ServerConsoleContainer"] input:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
+            }
+            /* STAT CARDS (Offline, Disk, Memory) & GRAPH BOXES (CPU Load, Memory, Network) */
+            div[class*="StatBlock"],
+            div[class*="StatBox"],
+            div[class*="ChartBlock"],
+            div[class*="bg-gray-700"],
+            div[class*="bg-gray-800"],
+            div[class*="bg-neutral-700"],
+            div[class*="bg-neutral-800"],
+            div[class*="bg-neutral-900"],
+            .bg-gray-700,
+            .bg-gray-800,
+            .bg-neutral-700,
+            .bg-neutral-800 {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55) !important;
+                transition: all 0.2s ease !important;
+            }
+            div[class*="StatBlock"]:hover,
+            div[class*="StatBox"]:hover,
+            div[class*="ChartBlock"]:hover,
+            div[class*="bg-gray-700"]:hover,
+            div[class*="bg-gray-800"]:hover {
+                border-color: rgba(194, 104, 242, 0.55) !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 16px rgba(194, 104, 242, 0.22) !important;
+            }
+            div[class*="StatBlock"] p,
+            div[class*="StatBox"] p,
+            div[class*="ChartBlock"] p,
+            div[class*="StatBlock"] span,
+            div[class*="StatBox"] span,
+            div[class*="bg-gray-700"] p,
+            div[class*="bg-gray-800"] p {
+                color: #e2d2f7 !important;
+            }
+            div[class*="ChartBlock"] h3,
+            div[class*="ChartBlock"] h4,
+            div[class*="StatBlock"] h3 {
+                color: #ffffff !important;
+                font-weight: 700 !important;
             }
             /* CARD HEADINGS */
             p[class*="TitledGreyBox___StyledP"],
@@ -371,7 +458,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 height: 0 !important;
             }
         </style>
-        <!-- Vercel-Style 1-Click Domain Manager Script -->
+        <!-- Custom Domains & Port Router Script -->
         <script>
         (function() {
             function injectDomainManager() {
@@ -382,32 +469,17 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 const serverId = match[1];
                 if (document.getElementById('np-domain-manager-card')) return;
                 
-                const targets = document.querySelectorAll('div[class*="SettingsContainer"], div[class*="ServerContentBlock"]');
-                let container = null;
-                for (let t of targets) {
-                    if (t.querySelector('div[class*="TitledGreyBox"]')) {
-                        container = t;
-                        break;
-                    }
-                }
-                if (!container && targets.length > 0) container = targets[0];
-                if (!container) {
-                    const boxes = document.querySelectorAll('div[class*="TitledGreyBox"]');
-                    if (boxes.length > 0) container = boxes[0].parentElement;
-                }
-                if (!container) return;
-                
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
-                card.style.cssText = 'grid-column: 1 / -1; width: 100%; margin-top: 1.5rem; background: #120e24; border: 1.5px solid rgba(194, 104, 242, 0.4); border-radius: 14px; padding: 1.5rem 1.75rem; box-shadow: 0 10px 35px rgba(0,0,0,0.7), 0 0 20px rgba(194,104,242,0.15); box-sizing: border-box;';
+                card.style.cssText = 'width: 100% !important; margin-top: 1.5rem !important; background: #120e24 !important; border: 1.5px solid rgba(194, 104, 242, 0.4) !important; border-radius: 14px !important; padding: 1.5rem 1.75rem !important; box-shadow: 0 10px 35px rgba(0,0,0,0.7), 0 0 20px rgba(194,104,242,0.15) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.2); padding-bottom:1rem; margin-bottom:1.25rem;">
                         <div>
                             <div style="display:flex; align-items:center; gap:10px;">
-                                <span style="font-size:1.4rem;">🌐</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                                 <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; letter-spacing:0.5px;">CUSTOM DOMAINS &amp; PORT ROUTING</h3>
-                                <span style="background:rgba(194,104,242,0.22); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.4);">⚡ VERCEL-STYLE 1-CLICK</span>
+                                <span style="background:rgba(194,104,242,0.22); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.4); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
                             </div>
                             <p style="margin:6px 0 0 0; font-size:0.85rem; color:#b7a4d6;">Connect your custom domain directly to this game server without any terminal commands.</p>
                         </div>
@@ -443,11 +515,29 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     </div>
                 `;
                 
-                container.appendChild(card);
+                const settingsGrid = document.querySelector('div[class*="SettingsContainer"]');
+                if (settingsGrid) {
+                    settingsGrid.insertAdjacentElement('afterend', card);
+                } else {
+                    const target = document.querySelector('div[class*="ServerContentBlock"]') || document.querySelector('div[class*="PageContentBlock"]');
+                    if (target) {
+                        target.appendChild(card);
+                    } else {
+                        const boxes = document.querySelectorAll('div[class*="TitledGreyBox"]');
+                        if (boxes.length > 0) {
+                            boxes[boxes.length - 1].parentElement.insertAdjacentElement('afterend', card);
+                        }
+                    }
+                }
                 loadServerDomains(serverId);
                 
-                document.getElementById('np-btn-add-domain').addEventListener('click', function() {
-                    addServerDomain(serverId);
+                const btnAdd = document.getElementById('np-btn-add-domain');
+                if (btnAdd) {
+                    btnAdd.addEventListener('click', function() {
+                        addServerDomain(serverId);
+                    });
+                }
+            }
                 });
             }
 
@@ -493,10 +583,10 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     list.innerHTML = data.domains.map(d => `
                         <div style="display:flex; justify-content:space-between; align-items:center; background:#0b0818; border:1px solid rgba(194,104,242,0.2); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
                             <div style="display:flex; align-items:center; gap:12px;">
-                                <a href="${d.ssl ? 'https://' : 'http://'}${d.domain}" target="_blank" style="font-weight:700; color:#fff; text-decoration:none; font-size:0.95rem;">${d.domain} <span style="font-size:0.75rem; color:#C268F2;">↗</span></a>
-                                <span style="color:#a895c2; font-size:0.82rem;">→ Port ${d.port}</span>
-                                <span style="background:rgba(16,185,129,0.2); color:#10b981; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.4);">● CONNECTED</span>
-                                ${d.ssl ? `<span style="background:rgba(194,104,242,0.2); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(194,104,242,0.4);">🔒 SSL SECURED</span>` : ''}
+                                <a href="${d.ssl ? 'https://' : 'http://'}${d.domain}" target="_blank" style="font-weight:700; color:#fff; text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:4px;">${d.domain} <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>
+                                <span style="color:#a895c2; font-size:0.82rem;">Port ${d.port}</span>
+                                <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(16,185,129,0.2); color:#10b981; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.4);"><span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>CONNECTED</span>
+                                ${d.ssl ? `<span style="display:inline-flex; align-items:center; gap:5px; background:rgba(194,104,242,0.2); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(194,104,242,0.4);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>SSL SECURED</span>` : ''}
                             </div>
                             <button onclick="window.npRemoveDomain('${serverId}', ${d.port})" style="background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:0.75rem; font-weight:700; padding:5px 12px; border-radius:6px; cursor:pointer; text-transform:uppercase;">Remove</button>
                         </div>
@@ -586,7 +676,7 @@ with open(wrapper_path, "w", encoding="utf-8") as f:
 PYEOF
 fi
 
-# 4b. Deploy Vercel-Style 1-Click Domain Manager Backend Controller & Routes
+# 4b. Deploy 1-Click Domain Manager Backend Controller & Routes
 mkdir -p "$PANEL_DIR/app/Http/Controllers/Base"
 curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/DomainManagerController.php" -o "$PANEL_DIR/app/Http/Controllers/Base/DomainManagerController.php" 2>/dev/null || true
 chown www-data:www-data "$PANEL_DIR/app/Http/Controllers/Base/DomainManagerController.php" 2>/dev/null || true
@@ -794,10 +884,23 @@ admin_css = """<!-- Nothing Admin Theme -->
             }
             .select2-dropdown {
                 background-color: #120e24 !important;
+                background: #120e24 !important;
                 border: 1.5px solid #C268F2 !important;
                 border-radius: 10px !important;
                 box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(194, 104, 242, 0.3) !important;
                 overflow: hidden !important;
+            }
+            .select2-container--default .select2-results,
+            .select2-results,
+            .select2-results__options,
+            ul.select2-results__options,
+            .select2-container--default .select2-results > .select2-results__options {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+            }
+            .select2-container--default .select2-search--dropdown {
+                background-color: #120e24 !important;
+                padding: 8px !important;
             }
             .select2-container--default .select2-search--dropdown .select2-search__field {
                 background-color: #090613 !important;
@@ -811,13 +914,17 @@ admin_css = """<!-- Nothing Admin Theme -->
                 box-shadow: 0 0 10px rgba(194, 104, 242, 0.5) !important;
                 outline: none !important;
             }
-            .select2-results__option {
+            .select2-results__option,
+            .select2-container--default .select2-results__option {
+                background-color: #120e24 !important;
                 color: #dcc7f5 !important;
                 padding: 8px 12px !important;
                 transition: all 0.15s ease !important;
             }
-            .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            .select2-container--default .select2-results__option--highlighted[aria-selected],
+            .select2-container--default .select2-results__option:hover {
                 background: linear-gradient(90deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
                 color: #ffffff !important;
             }
             .select2-container--default .select2-results__option[aria-selected="true"] {
