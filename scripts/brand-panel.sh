@@ -307,7 +307,277 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="FlashMessageRender"], .sc-cyh04c-2, [class*="sc-cyh04c-2"] {
                 border-radius: 10px !important;
             }
+            /* SERVER MANAGEMENT & SETTINGS CARDS (CUSTOM LUXURY THEME #C268F2) */
+            div[class*="SettingsContainer"],
+            div[class*="ServerContentBlock"],
+            div[class*="TitledGreyBox"],
+            div[class*="ContentBox"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
+                border-radius: 14px !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(194, 104, 242, 0.12) !important;
+                transition: all 0.25s ease !important;
+            }
+            div[class*="TitledGreyBox"]:hover {
+                border-color: rgba(194, 104, 242, 0.5) !important;
+                box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 22px rgba(194, 104, 242, 0.22) !important;
+            }
+            /* CARD HEADINGS */
+            p[class*="TitledGreyBox___StyledP"],
+            div[class*="TitledGreyBox"] > div:first-child p {
+                color: #e2d2f7 !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.8px !important;
+                text-transform: uppercase !important;
+                font-size: 0.85rem !important;
+            }
+            /* INPUTS AND TEXTAREAS */
+            input[type="text"], input[type="password"], textarea {
+                background-color: #0b0818 !important;
+                border: 1.5px solid #2d1e4d !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+            }
+            input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
+                background-color: #100b22 !important;
+                outline: none !important;
+            }
+            /* BUTTONS IN SERVER PAGES */
+            button, button[type="submit"], [class*="Button"] {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                color: #ffffff !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.8px !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 18px rgba(194, 104, 242, 0.45) !important;
+                border: none !important;
+            }
+            button:hover, [class*="Button"]:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 28px rgba(194, 104, 242, 0.75) !important;
+                filter: brightness(1.1) !important;
+            }
+            /* HIDE PTERODACTYL FOOTER ON SERVER PAGES */
+            div[class*="PageContentBlock"] > div > p,
+            div[class*="PageContentBlock"] p,
+            a[href*="pterodactyl.io"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                height: 0 !important;
+            }
         </style>
+        <!-- Vercel-Style 1-Click Domain Manager Script -->
+        <script>
+        (function() {
+            function injectDomainManager() {
+                const path = window.location.pathname;
+                const match = path.match(/^\/server\/([a-zA-Z0-9]+)\/settings/);
+                if (!match) return;
+                
+                const serverId = match[1];
+                if (document.getElementById('np-domain-manager-card')) return;
+                
+                const targets = document.querySelectorAll('div[class*="SettingsContainer"], div[class*="ServerContentBlock"]');
+                let container = null;
+                for (let t of targets) {
+                    if (t.querySelector('div[class*="TitledGreyBox"]')) {
+                        container = t;
+                        break;
+                    }
+                }
+                if (!container && targets.length > 0) container = targets[0];
+                if (!container) {
+                    const boxes = document.querySelectorAll('div[class*="TitledGreyBox"]');
+                    if (boxes.length > 0) container = boxes[0].parentElement;
+                }
+                if (!container) return;
+                
+                const card = document.createElement('div');
+                card.id = 'np-domain-manager-card';
+                card.style.cssText = 'grid-column: 1 / -1; width: 100%; margin-top: 1.5rem; background: #120e24; border: 1.5px solid rgba(194, 104, 242, 0.4); border-radius: 14px; padding: 1.5rem 1.75rem; box-shadow: 0 10px 35px rgba(0,0,0,0.7), 0 0 20px rgba(194,104,242,0.15); box-sizing: border-box;';
+                
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.2); padding-bottom:1rem; margin-bottom:1.25rem;">
+                        <div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:1.4rem;">🌐</span>
+                                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; letter-spacing:0.5px;">CUSTOM DOMAINS &amp; PORT ROUTING</h3>
+                                <span style="background:rgba(194,104,242,0.22); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.4);">⚡ VERCEL-STYLE 1-CLICK</span>
+                            </div>
+                            <p style="margin:6px 0 0 0; font-size:0.85rem; color:#b7a4d6;">Connect your custom domain directly to this game server without any terminal commands.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:1.25rem; background:#0b0818; padding:1.25rem; border-radius:10px; border:1px solid rgba(194,104,242,0.25);">
+                        <div style="flex:2; min-width:220px;">
+                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Custom Domain</label>
+                            <input type="text" id="np-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; box-sizing:border-box; background:#120e24; border:1.5px solid #322254; color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;" />
+                        </div>
+                        <div style="flex:1; min-width:140px;">
+                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
+                            <select id="np-port-select" style="width:100%; box-sizing:border-box; background:#120e24; border:1.5px solid #322254; color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                                <option value="">Loading ports...</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; padding:10px 6px;">
+                            <input type="checkbox" id="np-ssl-toggle" checked style="cursor:pointer; accent-color:#C268F2; width:16px; height:16px;" />
+                            <label for="np-ssl-toggle" style="font-size:0.82rem; color:#d1b8eb; cursor:pointer; font-weight:600;">Auto-SSL</label>
+                        </div>
+                        <div>
+                            <button id="np-btn-add-domain" style="background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:11px 22px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(194,104,242,0.4); text-transform:uppercase; letter-spacing:0.5px;">+ Connect Domain</button>
+                        </div>
+                    </div>
+
+                    <div id="np-domain-msg" style="display:none; margin-bottom:1rem; padding:10px 14px; border-radius:8px; font-size:0.85rem; font-weight:600;"></div>
+
+                    <div>
+                        <h4 style="margin:0 0 10px 0; font-size:0.8rem; font-weight:700; color:#8e79b0; text-transform:uppercase; letter-spacing:0.8px;">Active Domains</h4>
+                        <div id="np-domains-list">
+                            <div style="color:#7c6999; font-size:0.85rem; font-style:italic; padding:12px 0;">Loading domains...</div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+                loadServerDomains(serverId);
+                
+                document.getElementById('np-btn-add-domain').addEventListener('click', function() {
+                    addServerDomain(serverId);
+                });
+            }
+
+            function getCsrfToken() {
+                const el = document.querySelector('meta[name="csrf-token"]');
+                return el ? el.getAttribute('content') : '';
+            }
+
+            function showMsg(text, isError) {
+                const msg = document.getElementById('np-domain-msg');
+                if (!msg) return;
+                msg.style.display = 'block';
+                msg.style.background = isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)';
+                msg.style.border = isError ? '1px solid #ef4444' : '1px solid #10b981';
+                msg.style.color = isError ? '#fca5a5' : '#a7f3d0';
+                msg.textContent = text;
+                setTimeout(() => { if (msg) msg.style.display = 'none'; }, 6000);
+            }
+
+            function loadServerDomains(serverId) {
+                fetch('/api/server/' + serverId + '/domains', {
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) return;
+                    
+                    const portSelect = document.getElementById('np-port-select');
+                    if (portSelect && data.allocations) {
+                        portSelect.innerHTML = data.allocations.map(a => 
+                            `<option value="${a.port}">Port ${a.port}</option>`
+                        ).join('');
+                    }
+                    
+                    const list = document.getElementById('np-domains-list');
+                    if (!list) return;
+                    
+                    if (!data.domains || data.domains.length === 0) {
+                        list.innerHTML = `<div style="color:#7c6999; font-size:0.85rem; font-style:italic; padding:12px 0;">No custom domains connected yet. Enter your domain above to point directly to your server.</div>`;
+                        return;
+                    }
+                    
+                    list.innerHTML = data.domains.map(d => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:#0b0818; border:1px solid rgba(194,104,242,0.2); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <a href="${d.ssl ? 'https://' : 'http://'}${d.domain}" target="_blank" style="font-weight:700; color:#fff; text-decoration:none; font-size:0.95rem;">${d.domain} <span style="font-size:0.75rem; color:#C268F2;">↗</span></a>
+                                <span style="color:#a895c2; font-size:0.82rem;">→ Port ${d.port}</span>
+                                <span style="background:rgba(16,185,129,0.2); color:#10b981; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.4);">● CONNECTED</span>
+                                ${d.ssl ? `<span style="background:rgba(194,104,242,0.2); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(194,104,242,0.4);">🔒 SSL SECURED</span>` : ''}
+                            </div>
+                            <button onclick="window.npRemoveDomain('${serverId}', ${d.port})" style="background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:0.75rem; font-weight:700; padding:5px 12px; border-radius:6px; cursor:pointer; text-transform:uppercase;">Remove</button>
+                        </div>
+                    `).join('');
+                })
+                .catch(e => console.error('Error loading domains:', e));
+            }
+
+            function addServerDomain(serverId) {
+                const input = document.getElementById('np-domain-input');
+                const portSelect = document.getElementById('np-port-select');
+                const sslToggle = document.getElementById('np-ssl-toggle');
+                const btn = document.getElementById('np-btn-add-domain');
+                
+                const domain = input ? input.value.trim() : '';
+                const port = portSelect ? portSelect.value : '';
+                const ssl = sslToggle ? sslToggle.checked : true;
+                
+                if (!domain) {
+                    showMsg('Please enter a valid domain name.', true);
+                    return;
+                }
+                
+                btn.disabled = true;
+                btn.textContent = 'Configuring Nginx & Proxy...';
+                
+                fetch('/api/server/' + serverId + '/domains', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken()
+                    },
+                    body: JSON.stringify({ domain: domain, port: port, ssl: ssl })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    btn.disabled = false;
+                    btn.textContent = '+ Connect Domain';
+                    if (res.success) {
+                        showMsg(res.message, false);
+                        input.value = '';
+                        loadServerDomains(serverId);
+                    } else {
+                        showMsg(res.error || 'Failed to connect domain', true);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    btn.textContent = '+ Connect Domain';
+                    showMsg('Error: ' + err.message, true);
+                });
+            }
+
+            window.npRemoveDomain = function(serverId, port) {
+                if (!confirm('Are you sure you want to remove the domain mapping for port ' + port + '?')) return;
+                
+                fetch('/api/server/' + serverId + '/domains/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken()
+                    },
+                    body: JSON.stringify({ port: port })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        showMsg(res.message, false);
+                        loadServerDomains(serverId);
+                    } else {
+                        showMsg(res.error || 'Failed to remove domain', true);
+                    }
+                })
+                .catch(err => showMsg('Error: ' + err.message, true));
+            };
+
+            setInterval(injectDomainManager, 1000);
+        })();
+        </script>
     </head>"""
 
 wrapper = wrapper.replace("</head>", custom_css, 1)
@@ -316,11 +586,38 @@ with open(wrapper_path, "w", encoding="utf-8") as f:
 PYEOF
 fi
 
-wrapper = wrapper.replace("</head>", custom_css, 1)
-with open(wrapper_path, "w", encoding="utf-8") as f:
-    f.write(wrapper)
+# 4b. Deploy Vercel-Style 1-Click Domain Manager Backend Controller & Routes
+mkdir -p "$PANEL_DIR/app/Http/Controllers/Base"
+curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/DomainManagerController.php" -o "$PANEL_DIR/app/Http/Controllers/Base/DomainManagerController.php" 2>/dev/null || true
+chown www-data:www-data "$PANEL_DIR/app/Http/Controllers/Base/DomainManagerController.php" 2>/dev/null || true
+
+# Add Sudoers rule for www-data to control Nginx & Certbot without password
+cat << 'SUDOEOF' > /etc/sudoers.d/nothing-panel
+www-data ALL=(ALL) NOPASSWD: /bin/mv, /bin/ln, /bin/rm, /usr/sbin/nginx, /bin/systemctl reload nginx, /usr/bin/certbot, /usr/local/bin/np-domain
+SUDOEOF
+chmod 440 /etc/sudoers.d/nothing-panel
+
+# Ensure routes are registered in routes/base.php
+python3 - << 'PYEOF'
+import os
+panel_dir = os.environ.get('PANEL_DIR', '/var/www/nothing')
+base_routes = os.path.join(panel_dir, "routes/base.php")
+if os.path.exists(base_routes):
+    with open(base_routes, "r") as f:
+        routes_content = f.read()
+
+    route_block = """
+Route::prefix('/api/server/{server}/domains')->group(function () {
+    Route::get('/', [Base\\DomainManagerController::class, 'index']);
+    Route::post('/', [Base\\DomainManagerController::class, 'store']);
+    Route::post('/delete', [Base\\DomainManagerController::class, 'destroy']);
+});
+"""
+    if "DomainManagerController" not in routes_content:
+        routes_content = routes_content.replace("Route::get('/{react}'", route_block + "\nRoute::get('/{react}'")
+        with open(base_routes, "w") as f:
+            f.write(routes_content)
 PYEOF
-fi
 
 # 5. Rebrand Admin Views & Inject Admin UI Theme
 ADMIN_BLADE="$PANEL_DIR/resources/views/layouts/admin.blade.php"
