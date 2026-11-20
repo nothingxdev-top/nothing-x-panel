@@ -99,6 +99,12 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         ('https://pterodactyl.io', panel_url),
         ('"Pterodactyl"', '"Nothing Panel"'),
         ('>Pterodactyl<', '>Nothing Panel<'),
+        ('hsla(209, 14%, 37%, 1)', 'rgba(18, 14, 36, 1)'),
+        ('hsla(209, 18%, 30%, 1)', 'rgba(18, 14, 36, 1)'),
+        ('hsla(209, 18%, 30%', 'rgba(18, 14, 36'),
+        ('hsla(211, 12%, 43%', 'rgba(194, 104, 242'),
+        ('hsla(211, 10%, 53%', 'rgba(209, 184, 235'),
+        ('hsla(209, 14%, 37%', 'rgba(209, 184, 235'),
     ]:
         if old in content:
             content = content.replace(old, new)
@@ -308,30 +314,20 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-radius: 10px !important;
             }
             /* SERVER MANAGEMENT & SETTINGS CARDS (CUSTOM LUXURY THEME #C268F2) */
-            div[class*="ServerContentBlock"] {
+            div[class*="ServerContentBlock"],
+            div[class*="PageContentBlock"] {
                 background: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
                 padding: 0 !important;
-            }
-            div[class*="SettingsContainer"] {
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-                display: grid !important;
-                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-                gap: 1.5rem !important;
-                width: 100% !important;
-            }
-            @media (max-width: 900px) {
-                div[class*="SettingsContainer"] {
-                    grid-template-columns: 1fr !important;
-                }
             }
             /* ONLY individual cards get the card styling */
             div[class*="TitledGreyBox"],
-            div[class*="ContentBox"] {
+            div[class*="ContentBox"],
+            div[class*="sc-1e5ycmz-3"],
+            div[class*="sc-1e5ycmz-10"],
+            div[class*="sc-1bh2mfg-0"],
+            div[class*="sc-1prmksw-1"] {
                 background-color: #120e24 !important;
                 background: #120e24 !important;
                 border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
@@ -339,12 +335,47 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(194, 104, 242, 0.12) !important;
                 transition: all 0.25s ease !important;
                 margin-bottom: 1.5rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
             }
             div[class*="TitledGreyBox"]:hover {
                 border-color: rgba(194, 104, 242, 0.5) !important;
                 box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 22px rgba(194, 104, 242, 0.22) !important;
             }
-            /* CONSOLE TERMINAL & GRAPHS & STAT BLOCKS */
+            /* DASHBOARD SERVER ROWS (LUXURY VIOLET & #C268F2 GLOW) */
+            a[href*="/server/"] > div,
+            div[class*="GreyRowBox"],
+            div[class*="sc-1xo9c6v"],
+            div[class*="ServerRow__StatusIndicatorBox"],
+            div[class*="sc-1ibsw91-2"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.3) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+                transition: all 0.2s ease !important;
+            }
+            a[href*="/server/"]:hover > div,
+            div[class*="GreyRowBox"]:hover,
+            div[class*="sc-1xo9c6v"]:hover,
+            div[class*="ServerRow__StatusIndicatorBox"]:hover {
+                border-color: #C268F2 !important;
+                box-shadow: 0 6px 26px rgba(194, 104, 242, 0.45) !important;
+                transform: translateY(-2px) !important;
+            }
+            div[class*="sc-1ibsw91"] p,
+            div[class*="ServerRow"] p {
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+            p[class*="ServerRow___StyledP2"],
+            p[class*="ServerRow___StyledP3"],
+            div[class*="sc-1ibsw91-6"] p,
+            div[class*="sc-1ibsw91-7"] p {
+                color: #d1b8eb !important;
+                font-weight: 500 !important;
+            }
+            /* CONSOLE TERMINAL & COMMAND BAR */
             div[class*="ServerConsoleContainer"],
             div[class*="TerminalContainer"],
             div[class*="ConsoleContainer"] {
@@ -368,18 +399,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
             }
             /* STAT CARDS (Offline, Disk, Memory) & GRAPH BOXES (CPU Load, Memory, Network) */
+            div[class*="stat_block"],
+            div[class*="style-module_V4CSEpa4"],
             div[class*="StatBlock"],
             div[class*="StatBox"],
-            div[class*="ChartBlock"],
+            div.bg-gray-600,
+            div[class*="bg-gray-600"],
+            div.bg-gray-700,
+            div.bg-gray-800,
             div[class*="bg-gray-700"],
-            div[class*="bg-gray-800"],
-            div[class*="bg-neutral-700"],
-            div[class*="bg-neutral-800"],
-            div[class*="bg-neutral-900"],
-            .bg-gray-700,
-            .bg-gray-800,
-            .bg-neutral-700,
-            .bg-neutral-800 {
+            div[class*="bg-gray-800"] {
                 background-color: #120e24 !important;
                 background: #120e24 !important;
                 border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
@@ -387,28 +416,51 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55) !important;
                 transition: all 0.2s ease !important;
             }
+            div[class*="stat_block"]:hover,
+            div[class*="style-module_V4CSEpa4"]:hover,
             div[class*="StatBlock"]:hover,
-            div[class*="StatBox"]:hover,
-            div[class*="ChartBlock"]:hover,
-            div[class*="bg-gray-700"]:hover,
-            div[class*="bg-gray-800"]:hover {
+            div[class*="StatBox"]:hover {
                 border-color: rgba(194, 104, 242, 0.55) !important;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 16px rgba(194, 104, 242, 0.22) !important;
             }
-            div[class*="StatBlock"] p,
-            div[class*="StatBox"] p,
-            div[class*="ChartBlock"] p,
-            div[class*="StatBlock"] span,
-            div[class*="StatBox"] span,
-            div[class*="bg-gray-700"] p,
-            div[class*="bg-gray-800"] p {
-                color: #e2d2f7 !important;
+            div[class*="status_bar"],
+            div[class*="style-module_M2eytJMi"],
+            div[class*="icon"][class*="style-module"] {
+                background-color: #1a1333 !important;
+                background: #1a1333 !important;
+                border-color: rgba(194, 104, 242, 0.35) !important;
             }
+            div[class*="chart_container"],
+            div[class*="style-module_j35sQtg2"],
+            div[class*="ChartBlock"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.3) !important;
+                border-bottom: 4px solid #C268F2 !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+                transition: all 0.2s ease !important;
+            }
+            div[class*="chart_container"]:hover,
+            div[class*="style-module_j35sQtg2"]:hover,
+            div[class*="ChartBlock"]:hover {
+                border-color: #C268F2 !important;
+                box-shadow: 0 10px 32px rgba(194, 104, 242, 0.35) !important;
+            }
+            div[class*="chart_container"] h3,
+            div[class*="style-module_j35sQtg2"] h3,
             div[class*="ChartBlock"] h3,
-            div[class*="ChartBlock"] h4,
             div[class*="StatBlock"] h3 {
                 color: #ffffff !important;
                 font-weight: 700 !important;
+            }
+            div[class*="chart_container"] p,
+            div[class*="style-module_j35sQtg2"] p,
+            div[class*="stat_block"] p,
+            div[class*="stat_block"] span,
+            div[class*="StatBlock"] p,
+            div[class*="StatBox"] p {
+                color: #e2d2f7 !important;
             }
             /* CARD HEADINGS */
             p[class*="TitledGreyBox___StyledP"],
@@ -471,7 +523,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
-                card.style.cssText = 'width: 100% !important; margin-top: 1.5rem !important; background: #120e24 !important; border: 1.5px solid rgba(194, 104, 242, 0.4) !important; border-radius: 14px !important; padding: 1.5rem 1.75rem !important; box-shadow: 0 10px 35px rgba(0,0,0,0.7), 0 0 20px rgba(194,104,242,0.15) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
+                card.style.cssText = 'width: 100% !important; margin-top: 2rem !important; background: #120e24 !important; border: 1.5px solid rgba(194, 104, 242, 0.4) !important; border-radius: 14px !important; padding: 1.5rem 1.75rem !important; box-shadow: 0 10px 35px rgba(0,0,0,0.7), 0 0 20px rgba(194,104,242,0.15) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.2); padding-bottom:1rem; margin-bottom:1.25rem;">
@@ -515,19 +567,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     </div>
                 `;
                 
-                const settingsGrid = document.querySelector('div[class*="SettingsContainer"]');
-                if (settingsGrid) {
-                    settingsGrid.insertAdjacentElement('afterend', card);
-                } else {
-                    const target = document.querySelector('div[class*="ServerContentBlock"]') || document.querySelector('div[class*="PageContentBlock"]');
-                    if (target) {
-                        target.appendChild(card);
-                    } else {
-                        const boxes = document.querySelectorAll('div[class*="TitledGreyBox"]');
-                        if (boxes.length > 0) {
-                            boxes[boxes.length - 1].parentElement.insertAdjacentElement('afterend', card);
-                        }
-                    }
+                const target = document.querySelector('div[class*="ServerContentBlock"]') || document.querySelector('div[class*="PageContentBlock"]');
+                if (target) {
+                    target.appendChild(card);
                 }
                 loadServerDomains(serverId);
                 
@@ -537,8 +579,6 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                         addServerDomain(serverId);
                     });
                 }
-            }
-                });
             }
 
             function getCsrfToken() {
