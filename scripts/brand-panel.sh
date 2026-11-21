@@ -129,7 +129,7 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         ('hsla(209, 14%, 37%, 1)', 'rgba(11, 7, 23, 1)'),
         ('hsla(209, 18%, 30%, 1)', 'rgba(18, 14, 36, 1)'),
         ('hsla(209, 18%, 30%', 'rgba(18, 14, 36'),
-        ('hsla(211, 12%, 43%', 'rgba(194, 104, 242'),
+        ('hsla(211, 12%, 43%', 'rgba(18, 14, 36'),
         ('hsla(211, 10%, 53%', 'rgba(18, 14, 36'),
         ('hsla(209, 14%, 37%', 'rgba(11, 7, 23'),
         ('backgroundColor:"rgba(209, 184, 235', 'backgroundColor:"rgba(11, 7, 23'),
@@ -263,9 +263,12 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             input[type="number"],
             input[type="search"],
             textarea,
+            input[class*="sc-19rce1w"],
+            textarea[class*="sc-19rce1w"],
             div[class*="VariableBox"] input,
             div[class*="VariableBox"] textarea,
             div[class*="StartupContainer"] input,
+            div[class*="StartupContainer"] textarea,
             div[class*="SettingsContainer"] input,
             div[class*="TitledGreyBox"] input {
                 background-color: #0b0717 !important;
@@ -284,6 +287,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             input[type="password"]:focus,
             input[type="email"]:focus,
             textarea:focus,
+            input[class*="sc-19rce1w"]:focus,
             div[class*="VariableBox"] input:focus,
             div[class*="StartupContainer"] input:focus,
             div[class*="SettingsContainer"] input:focus {
@@ -294,8 +298,93 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 color: #ffffff !important;
                 outline: none !important;
             }
-            /* Checkboxes & Radios — Clean Square Sizing with Sharp White Checkmark */
-            input[type="checkbox"],
+            /* ========================================================= */
+            /* SWITCH / TOGGLE COMPONENT RESET (REMOVES FLOATING CIRCLE) */
+            /* ========================================================= */
+            div[class*="Switch"] input,
+            label[class*="Switch"] input,
+            div[class*="sc-1nxt82m"] input,
+            div[class*="Toggle"] input,
+            div[class*="ToggleContainer"] input,
+            [role="switch"] input {
+                display: none !important;
+                opacity: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+                min-width: 0 !important;
+                max-width: 0 !important;
+                min-height: 0 !important;
+                max-height: 0 !important;
+                position: absolute !important;
+                pointer-events: none !important;
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            /* Switch Track */
+            div[class*="Switch__ToggleContainer"],
+            div[class*="sc-1nxt82m-0"],
+            div[class*="sc-1nxt82m-1"] {
+                width: 3.4rem !important;
+                height: 1.85rem !important;
+                position: relative !important;
+                display: inline-block !important;
+                user-select: none !important;
+            }
+            div[class*="Switch__ToggleContainer"] > label,
+            div[class*="sc-1nxt82m-0"] > label,
+            div[class*="sc-1nxt82m-1"] > label {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 9999px !important;
+                background-color: #1a1330 !important;
+                background: #1a1330 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                position: relative !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                box-sizing: border-box !important;
+                margin: 0 !important;
+            }
+            /* Switch Thumb Knob */
+            div[class*="Switch__ToggleContainer"] > label::before,
+            div[class*="sc-1nxt82m-0"] > label::before,
+            div[class*="sc-1nxt82m-1"] > label::before {
+                content: "" !important;
+                position: absolute !important;
+                top: 2px !important;
+                left: 3px !important;
+                right: auto !important;
+                width: 1.35rem !important;
+                height: 1.35rem !important;
+                border-radius: 50% !important;
+                background: #ffffff !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+                transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            }
+            /* Switch Track Checked */
+            div[class*="Switch__ToggleContainer"] > input:checked + label,
+            div[class*="sc-1nxt82m-0"] > input:checked + label,
+            div[class*="sc-1nxt82m-1"] > input:checked + label {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 14px rgba(194, 104, 242, 0.6) !important;
+            }
+            /* Switch Thumb Knob Checked */
+            div[class*="Switch__ToggleContainer"] > input:checked + label::before,
+            div[class*="sc-1nxt82m-0"] > input:checked + label::before,
+            div[class*="sc-1nxt82m-1"] > input:checked + label::before {
+                transform: translateX(1.5rem) !important;
+                left: 3px !important;
+                right: auto !important;
+                background: #ffffff !important;
+            }
+            /* Standard Checkboxes & Radios (Excluding Switches & Toggles) */
+            input[type="checkbox"]:not([role="switch"]):not([class*="Switch"]):not([class*="Toggle"]),
             input[type="radio"],
             input[class*="FileActionCheckbox"],
             label[class*="SelectFileCheckbox"] input,
@@ -322,14 +411,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-sizing: border-box !important;
                 transition: all 0.15s ease !important;
             }
-            input[type="checkbox"]:hover,
+            input[type="checkbox"]:not([role="switch"]):hover,
             input[class*="FileActionCheckbox"]:hover,
             label[class*="SelectFileCheckbox"] input:hover,
             div[class*="file_row"] input[type="checkbox"]:hover {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 8px rgba(194, 104, 242, 0.4) !important;
             }
-            input[type="checkbox"]:checked,
+            input[type="checkbox"]:not([role="switch"]):checked,
             input[class*="FileActionCheckbox"]:checked,
             label[class*="SelectFileCheckbox"] input:checked,
             label[class*="sc-1cv6gsl-1"] input:checked,
@@ -343,7 +432,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 background-repeat: no-repeat !important;
                 box-shadow: 0 0 12px rgba(194, 104, 242, 0.6) !important;
             }
-            input[type="checkbox"]:indeterminate,
+            input[type="checkbox"]:not([role="switch"]):indeterminate,
             input[class*="FileActionCheckbox"]:indeterminate,
             div[class*="FileManagerContainer"] input[type="checkbox"]:indeterminate {
                 background-color: #C268F2 !important;
@@ -508,10 +597,6 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="sc-1e5ycmz-1"],
             div[class*="sc-1e5ycmz-2"],
             div[class*="sc-1e5ycmz-15"],
-            div[class*="sc-1e5ycmz-3"],
-            div[class*="sc-1e5ycmz-10"],
-            div[class*="sc-1bh2mfg-0"],
-            div[class*="sc-1prmksw-1"],
             div[class*="ContentBox"] {
                 background: transparent !important;
                 border: none !important;
@@ -519,10 +604,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 padding: 0 !important;
             }
 
-            /* THE ONE AND ONLY MAIN CARD: TitledGreyBox */
-            div[class*="TitledGreyBox___StyledDiv"],
+            /* THE ONE AND ONLY MAIN CARD: TitledGreyBox & Settings Cards */
+            div.sc-gvsoy-0,
             div[class*="sc-gvsoy-0"],
-            div[class*="TitledGreyBox"] {
+            div[class*="sc-1bh2mfg-0"],
+            div[class*="sc-1prmksw-1"],
+            div[class*="sc-1e5ycmz-3"],
+            div[class*="sc-1e5ycmz-10"],
+            div[class*="TitledGreyBox"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"]) {
                 background-color: #110d22 !important;
                 background: #110d22 !important;
                 border: 1px solid rgba(194, 104, 242, 0.22) !important;
@@ -533,15 +622,19 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-sizing: border-box !important;
                 transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
             }
-            div[class*="TitledGreyBox___StyledDiv"]:hover,
+            div.sc-gvsoy-0:hover,
             div[class*="sc-gvsoy-0"]:hover,
-            div[class*="TitledGreyBox"]:hover {
+            div[class*="sc-1bh2mfg-0"]:hover,
+            div[class*="sc-1prmksw-1"]:hover,
+            div[class*="sc-1e5ycmz-3"]:hover,
+            div[class*="sc-1e5ycmz-10"]:hover {
                 border-color: rgba(194, 104, 242, 0.45) !important;
                 box-shadow: 0 6px 25px rgba(0, 0, 0, 0.55), 0 0 15px rgba(194, 104, 242, 0.15) !important;
             }
 
             /* REMOVE nested header box and borders inside TitledGreyBox */
             div[class*="TitledGreyBox___StyledDiv2"],
+            div.sc-gvsoy-1,
             div[class*="sc-gvsoy-1"] {
                 background: transparent !important;
                 border: none !important;
@@ -551,6 +644,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 margin-bottom: 1.25rem !important;
             }
             div[class*="TitledGreyBox___StyledDiv3"],
+            div.sc-gvsoy-4,
             div[class*="sc-gvsoy-4"] {
                 background: transparent !important;
                 border: none !important;
@@ -558,7 +652,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: none !important;
             }
 
-            /* REMOVE all decorative rectangular outlines & nested borders inside settings & forms */
+            /* REMOVE ALL decorative rectangular outlines & nested borders inside settings & forms */
             div[class*="SettingsContainer___StyledDiv"],
             div[class*="sc-1e5ycmz-4"],
             div[class*="sc-1e5ycmz-5"],
@@ -567,9 +661,13 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="sc-1e5ycmz-8"],
             div[class*="sc-1e5ycmz-9"],
             div[class*="RenameServerBox___StyledDiv"],
+            div[class*="RenameServerBox___StyledDiv2"],
+            div[class*="sc-1bh2mfg-1"],
             div[class*="sc-1bh2mfg-2"],
             div[class*="sc-1bh2mfg-3"],
             div[class*="ReinstallServerBox___StyledDiv"],
+            div[class*="sc-1prmksw-2"],
+            div[class*="sc-1prmksw-3"],
             div[class*="sc-1prmksw-4"],
             div[class*="TitledGreyBox"] form,
             div[class*="TitledGreyBox"] form > div,
@@ -582,6 +680,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="SettingsContainer"] form > div,
             div[class*="ReinstallServerBox"] form > div {
                 background: transparent !important;
+                background-color: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
                 border-radius: 0 !important;
@@ -777,9 +876,32 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 font-size: 0.75rem !important;
                 font-weight: 400 !important;
             }
+            /* Server Row Icon Container (Eliminate Big Purple Blob) */
+            a[href*="/server/"] div.icon,
+            a[class*="ServerRow"] div.icon,
+            div[class*="GreyRowBox"] div.icon,
+            div.icon.mr-4 {
+                background: transparent !important;
+                background-color: transparent !important;
+                width: 2.25rem !important;
+                height: 2.25rem !important;
+                min-width: 2.25rem !important;
+                max-width: 2.25rem !important;
+                padding: 0 !important;
+                border-radius: 8px !important;
+                box-shadow: none !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
             /* Icons */
-            a[href*="/server/"] svg {
+            a[href*="/server/"] svg,
+            a[class*="ServerRow"] div.icon svg,
+            div.icon.mr-4 svg {
                 color: #C268F2 !important;
+                width: 1.35rem !important;
+                height: 1.35rem !important;
+                font-size: 1.35rem !important;
             }
 
             /* ========================================================= */
