@@ -199,12 +199,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 width: 0 !important;
                 opacity: 0 !important;
             }
-            /* CENTER AND STYLE THE LOGIN CARD */
-            .sc-cyh04c-3,
-            [class*="sc-cyh04c-3"],
+            /* CENTER AND STYLE THE LOGIN CARD ONLY ON AUTH / LOGIN CONTAINER */
             div[class*="LoginFormContainer___StyledDiv"],
-            #app form > div,
-            #app form {
+            div[class*="LoginFormContainer"] form {
                 max-width: 440px !important;
                 margin: 3.5rem auto 2rem auto !important;
                 background-color: #120e22 !important;
@@ -446,10 +443,31 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="sc-1bh2mfg-2"],
             div[class*="sc-1bh2mfg-3"],
             div[class*="ReinstallServerBox___StyledDiv"],
-            div[class*="sc-1prmksw-4"] {
+            div[class*="sc-1prmksw-4"],
+            div[class*="TitledGreyBox"] form,
+            div[class*="TitledGreyBox"] form > div,
+            div[class*="TitledGreyBox"] form div,
+            div[class*="TitledGreyBox"] div[class*="FormikFieldWrapper"],
+            div[class*="TitledGreyBox"] div[class*="Field"],
+            div[class*="RenameServerBox"] form,
+            div[class*="RenameServerBox"] form > div,
+            div[class*="RenameServerBox"] div,
+            div[class*="SettingsContainer"] form > div,
+            div[class*="ReinstallServerBox"] form > div {
                 background: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
+                border-radius: 0 !important;
+                max-width: 100% !important;
+            }
+            div[class*="RenameServerBox"] form > div,
+            div[class*="TitledGreyBox"] form > div {
+                margin: 0 0 1.25rem 0 !important;
+                padding: 0 !important;
+            }
+            div[class*="RenameServerBox"] form > div:last-child,
+            div[class*="TitledGreyBox"] form > div:last-child {
+                margin-bottom: 0 !important;
             }
             /* Code badge in debug info */
             code[class*="SettingsContainer___StyledCode"],
@@ -552,9 +570,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* 3. DASHBOARD SERVER ROWS (CLEAN SINGLE CARDS, NO INNER BOXES) */
             /* ========================================================= */
             /* The outer server row link is the ONLY card */
-            a[href*="/server/"],
             a[class*="ServerRow__StatusIndicatorBox"],
-            a[class*="sc-1ibsw91-2"] {
+            a[class*="sc-1ibsw91-2"],
+            div[class*="DashboardContainer"] a[href*="/server/"] {
                 background-color: #110d22 !important;
                 background: #110d22 !important;
                 border: 1px solid rgba(194, 104, 242, 0.22) !important;
@@ -564,19 +582,21 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 margin-bottom: 0.85rem !important;
                 display: grid !important;
             }
-            a[href*="/server/"]:hover,
             a[class*="ServerRow__StatusIndicatorBox"]:hover,
-            a[class*="sc-1ibsw91-2"]:hover {
+            a[class*="sc-1ibsw91-2"]:hover,
+            div[class*="DashboardContainer"] a[href*="/server/"]:hover {
                 border-color: #C268F2 !important;
                 box-shadow: 0 6px 24px rgba(194, 104, 242, 0.35) !important;
                 transform: translateY(-2px) !important;
             }
 
-            /* ALL INNER DIVS INSIDE SERVER ROW MUST BE COMPLETELY PLAIN & BORDERLESS */
-            a[href*="/server/"] div,
-            a[href*="/server/"] > div,
+            /* ALL INNER DIVS AND SPANS INSIDE SERVER ROW MUST BE COMPLETELY PLAIN & BORDERLESS */
+            a[class*="ServerRow__StatusIndicatorBox"] div,
+            a[class*="ServerRow__StatusIndicatorBox"] span:not(.status-bar),
             a[class*="sc-1ibsw91-2"] div,
-            a[class*="sc-1ibsw91-2"] > div,
+            a[class*="sc-1ibsw91-2"] span:not(.status-bar),
+            div[class*="DashboardContainer"] a[href*="/server/"] div,
+            div[class*="DashboardContainer"] a[href*="/server/"] span:not(.status-bar),
             div[class*="sc-1ibsw91-3"],
             div[class*="sc-1ibsw91-4"],
             div[class*="sc-1ibsw91-6"],
@@ -596,6 +616,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border: none !important;
                 box-shadow: none !important;
                 transform: none !important;
+                border-radius: 0 !important;
             }
 
             /* ALL STATS, LABELS & ICONS ALWAYS 100% VISIBLE (FIX HOVER-ONLY BUG) */
@@ -782,21 +803,24 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
         (function() {
             let activeMode = 'nginx'; // 'nginx' or 'cloudflared'
 
-            function findSettingsContainer() {
+            function findSettingsFlexRow() {
                 const all = Array.from(document.querySelectorAll('div, p, h3, h2, h4'));
-                const sftp = all.find(el => el.textContent.trim() === 'SFTP Details' || el.textContent.trim() === 'Server Address');
+                const sftp = all.find(el => el.textContent.trim() === 'SFTP Details' || el.textContent.trim() === 'Server Address' || el.textContent.trim() === 'Change Server Details');
                 if (sftp) {
-                    const card = sftp.closest('div[class*="TitledGreyBox"]') || sftp.closest('div[class*="sc-gvsoy"]');
-                    if (card) {
-                        const colRow = card.closest('div[class*="md:flex"]') || card.parentElement?.parentElement;
-                        if (colRow && colRow.parentElement) return colRow.parentElement;
+                    const cardBox = sftp.closest('div[class*="TitledGreyBox"]') || sftp.closest('div[class*="sc-gvsoy"]');
+                    if (cardBox) {
+                        let row = cardBox.parentElement;
+                        while (row && row !== document.body && !row.classList.contains('ContentContainer')) {
+                            const style = window.getComputedStyle(row);
+                            if (style.display === 'flex' || row.classList.contains('md:flex') || (row.children.length >= 2 && style.display.includes('flex'))) {
+                                return row;
+                            }
+                            row = row.parentElement;
+                        }
+                        return cardBox.parentElement?.parentElement || cardBox.parentElement;
                     }
                 }
-                return document.querySelector('div[class*="ContentContainer"]') ||
-                       document.querySelector('div.my-4') ||
-                       document.querySelector('main') ||
-                       document.querySelector('#app section') ||
-                       document.querySelector('#app');
+                return null;
             }
 
             function injectDomainManager() {
@@ -806,10 +830,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 
                 const serverId = match[1];
                 if (document.getElementById('np-domain-manager-card')) return;
-                
-                const target = findSettingsContainer();
-                if (!target) return;
 
+                const flexRow = findSettingsFlexRow();
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
                 card.style.cssText = 'width: 100% !important; margin-top: 2rem !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
@@ -880,7 +902,17 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     </div>
                 `;
                 
-                target.appendChild(card);
+                if (flexRow) {
+                    flexRow.insertAdjacentElement('afterend', card);
+                } else {
+                    const fallback = document.querySelector('div[class*="ContentContainer"]') ||
+                                     document.querySelector('div.my-4') ||
+                                     document.querySelector('main') ||
+                                     document.querySelector('#app section') ||
+                                     document.querySelector('#app');
+                    if (fallback) fallback.appendChild(card);
+                    else return;
+                }
                 loadServerDomains(serverId);
                 
                 // Tab switcher logic
