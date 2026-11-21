@@ -512,24 +512,34 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             /* ========================================================= */
-            /* 3. DASHBOARD SERVER ROWS (CLEAN SINGLE CARDS)             */
+            /* 3. DASHBOARD SERVER ROWS (CLEAN SINGLE CARDS, NO INNER BOXES) */
             /* ========================================================= */
-            a[href*="/server/"] > div,
-            div[class*="ServerRow__StatusIndicatorBox"],
-            div[class*="sc-1ibsw91-2"] {
+            /* The outer server row link is the ONLY card */
+            a[href*="/server/"],
+            a[class*="ServerRow__StatusIndicatorBox"],
+            a[class*="sc-1ibsw91-2"] {
                 background-color: #110d22 !important;
                 background: #110d22 !important;
                 border: 1px solid rgba(194, 104, 242, 0.22) !important;
-                border-radius: 10px !important;
+                border-radius: 12px !important;
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
                 transition: all 0.2s ease !important;
+                margin-bottom: 0.85rem !important;
+                display: grid !important;
             }
-            a[href*="/server/"]:hover > div,
-            div[class*="ServerRow__StatusIndicatorBox"]:hover {
+            a[href*="/server/"]:hover,
+            a[class*="ServerRow__StatusIndicatorBox"]:hover,
+            a[class*="sc-1ibsw91-2"]:hover {
                 border-color: #C268F2 !important;
-                box-shadow: 0 6px 22px rgba(194, 104, 242, 0.35) !important;
+                box-shadow: 0 6px 24px rgba(194, 104, 242, 0.35) !important;
                 transform: translateY(-2px) !important;
             }
+
+            /* ALL INNER DIVS INSIDE SERVER ROW MUST BE COMPLETELY PLAIN & BORDERLESS */
+            a[href*="/server/"] div,
+            a[href*="/server/"] > div,
+            a[class*="sc-1ibsw91-2"] div,
+            a[class*="sc-1ibsw91-2"] > div,
             div[class*="sc-1ibsw91-3"],
             div[class*="sc-1ibsw91-4"],
             div[class*="sc-1ibsw91-6"],
@@ -548,18 +558,43 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 background: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
+                transform: none !important;
             }
+
+            /* ALL STATS, LABELS & ICONS ALWAYS 100% VISIBLE (FIX HOVER-ONLY BUG) */
+            a[href*="/server/"] div,
+            a[href*="/server/"] p,
+            a[href*="/server/"] span,
+            a[href*="/server/"] svg {
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            a[href*="/server/"] p,
             div[class*="sc-1ibsw91"] p,
             div[class*="ServerRow"] p {
                 color: #ffffff !important;
-                font-weight: 700 !important;
+                font-weight: 600 !important;
             }
-            p[class*="ServerRow___StyledP2"],
-            p[class*="ServerRow___StyledP3"],
-            div[class*="sc-1ibsw91-6"] p,
-            div[class*="sc-1ibsw91-7"] p {
+            /* Server name styling */
+            a[href*="/server/"] p[class*="break-words"] {
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                font-size: 1.1rem !important;
+            }
+            /* Server IP / Port allocation */
+            a[href*="/server/"] div[class*="lg:col-span-2"] p {
                 color: #d1b8eb !important;
-                font-weight: 500 !important;
+                font-weight: 600 !important;
+            }
+            /* Limit subtitles ("of Unlimited") */
+            a[href*="/server/"] div[class*="flex-1"] p:last-child {
+                color: #a394bf !important;
+                font-size: 0.75rem !important;
+                font-weight: 400 !important;
+            }
+            /* Icons */
+            a[href*="/server/"] svg {
+                color: #C268F2 !important;
             }
 
             /* ========================================================= */
