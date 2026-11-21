@@ -255,8 +255,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 margin-bottom: 0.4rem !important;
                 display: block !important;
             }
-            /* Inputs & Textareas — Sleek Obsidian Dark Background (NO Pastel Purple) */
-            input,
+            /* Inputs & Textareas — Sleek Obsidian Dark Background (Excluding Checkboxes & Radios) */
+            input:not([type="checkbox"]):not([type="radio"]),
             input[type="text"],
             input[type="password"],
             input[type="email"],
@@ -279,7 +279,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 width: 100% !important;
                 box-sizing: border-box !important;
             }
-            input:focus,
+            input:not([type="checkbox"]):not([type="radio"]):focus,
             input[type="text"]:focus,
             input[type="password"]:focus,
             input[type="email"]:focus,
@@ -293,6 +293,73 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 background: #0e0920 !important;
                 color: #ffffff !important;
                 outline: none !important;
+            }
+            /* Checkboxes & Radios — Clean Square Sizing (Never Stretched) */
+            input[type="checkbox"],
+            input[type="radio"],
+            input[class*="FileActionCheckbox"],
+            label[class*="SelectFileCheckbox"] input,
+            label[class*="sc-1cv6gsl-1"] input,
+            div[class*="file_row"] input[type="checkbox"] {
+                width: 18px !important;
+                height: 18px !important;
+                min-width: 18px !important;
+                max-width: 18px !important;
+                min-height: 18px !important;
+                max-height: 18px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 4px !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.5) !important;
+                background: #0b0717 !important;
+                cursor: pointer !important;
+                accent-color: #C268F2 !important;
+                display: inline-block !important;
+                vertical-align: middle !important;
+                box-sizing: border-box !important;
+            }
+            label[class*="SelectFileCheckbox___StyledLabel"],
+            label[class*="sc-1cv6gsl-1"],
+            div[class*="file_row"] label {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 36px !important;
+                min-width: 36px !important;
+                max-width: 36px !important;
+                padding: 0 6px !important;
+                flex: none !important;
+                box-sizing: border-box !important;
+            }
+            /* File Manager Row Sizing & Sleek Hover */
+            div[class*="file_row"],
+            div[class*="style-module_HHpjDvv7"] {
+                display: flex !important;
+                align-items: center !important;
+                padding: 0.55rem 0.85rem !important;
+                border-radius: 8px !important;
+                background: #120e24 !important;
+                border: 1px solid rgba(194, 104, 242, 0.12) !important;
+                margin-bottom: 4px !important;
+                transition: all 0.18s ease !important;
+            }
+            div[class*="file_row"]:hover,
+            div[class*="style-module_HHpjDvv7"]:hover {
+                background: rgba(194, 104, 242, 0.1) !important;
+                border-color: rgba(194, 104, 242, 0.4) !important;
+            }
+            div[class*="file_row"] svg,
+            div[class*="style-module_HHpjDvv7"] svg {
+                color: #C268F2 !important;
+                flex-shrink: 0 !important;
+            }
+            @keyframes npFadeIn {
+                from { opacity: 0; transform: scale(0.97); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes npSpin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
             }
             /* Buttons */
             button, button[type="submit"], .btn-primary, [class*="Button___StyledButton"], [class*="Button"] {
@@ -1322,6 +1389,154 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 });
             });
 
+            // IMAGE PREVIEW MODAL FOR FILE MANAGER (PNG, JPG, GIF, WEBP, SVG)
+            function openImageModal(serverId, filePath, fileName) {
+                let modal = document.getElementById('np-image-preview-modal');
+                if (!modal) {
+                    modal = document.createElement('div');
+                    modal.id = 'np-image-preview-modal';
+                    document.body.appendChild(modal);
+                }
+
+                modal.style.cssText = 'position: fixed; inset: 0; z-index: 9999999; background: rgba(5, 3, 12, 0.85); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; animation: npFadeIn 0.2s ease-out;';
+
+                modal.innerHTML = `
+                    <div style="background: #110d24; border: 1.5px solid rgba(194, 104, 242, 0.45); border-radius: 16px; width: 100%; max-width: 820px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 35px rgba(194,104,242,0.25);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid rgba(194, 104, 242, 0.18); background: #0c081c;">
+                            <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <span style="color: #ffffff; font-weight: 700; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${fileName}</span>
+                                <span id="np-img-meta" style="font-size: 0.72rem; color: #a794c2; background: rgba(194, 104, 242, 0.15); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(194, 104, 242, 0.3);">Loading...</span>
+                            </div>
+                            <button id="np-img-close-btn" style="background: transparent; border: none; color: #a794c2; font-size: 1.6rem; cursor: pointer; padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;">&times;</button>
+                        </div>
+                        <div style="flex: 1; min-height: 260px; max-height: calc(90vh - 140px); overflow: auto; display: flex; align-items: center; justify-content: center; padding: 24px; background: repeating-conic-gradient(#0b0717 0% 25%, #130e28 0% 50%) 50% / 20px 20px; position: relative;">
+                            <div id="np-img-spinner" style="display: flex; flex-direction: column; align-items: center; gap: 12px; color: #C268F2;">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: npSpin 1s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+                                <span style="font-size: 0.85rem; font-weight: 600;">Loading image...</span>
+                            </div>
+                            <img id="np-img-view" style="display: none; max-width: 100%; max-height: calc(90vh - 190px); object-fit: contain; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);" alt="${fileName}" />
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid rgba(194, 104, 242, 0.18); background: #0c081c;">
+                            <span id="np-img-dims" style="color: #8b77a6; font-size: 0.82rem;"></span>
+                            <div style="display: flex; gap: 10px;">
+                                <a id="np-img-download-btn" href="#" download="${fileName}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color: #ffffff; text-decoration: none; box-shadow: 0 2px 10px rgba(194,104,242,0.4);">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Download
+                                </a>
+                                <button id="np-img-close-action" type="button" style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; background: #1a1430; color: #dcc7f5; border: 1px solid rgba(194, 104, 242, 0.3); cursor: pointer;">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                function closeModal() {
+                    modal.style.display = 'none';
+                    const img = document.getElementById('np-img-view');
+                    if (img) img.src = '';
+                }
+
+                document.getElementById('np-img-close-btn').onclick = closeModal;
+                document.getElementById('np-img-close-action').onclick = closeModal;
+                modal.onclick = function(e) {
+                    if (e.target === modal) closeModal();
+                };
+                window.addEventListener('keydown', function escHandler(e) {
+                    if (e.key === 'Escape') {
+                        closeModal();
+                        window.removeEventListener('keydown', escHandler);
+                    }
+                });
+
+                // Request signed download URL from client API
+                fetch('/api/client/servers/' + serverId + '/files/download?file=' + encodeURIComponent(filePath), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    const downloadUrl = res?.attributes?.url;
+                    if (!downloadUrl) throw new Error('Could not retrieve image URL from daemon');
+
+                    const imgEl = document.getElementById('np-img-view');
+                    const spinner = document.getElementById('np-img-spinner');
+                    const metaEl = document.getElementById('np-img-meta');
+                    const dimsEl = document.getElementById('np-img-dims');
+                    const dlBtn = document.getElementById('np-img-download-btn');
+
+                    dlBtn.href = downloadUrl;
+
+                    imgEl.onload = function() {
+                        if (spinner) spinner.style.display = 'none';
+                        imgEl.style.display = 'block';
+                        if (metaEl) metaEl.textContent = `${imgEl.naturalWidth} × ${imgEl.naturalHeight} px`;
+                        if (dimsEl) dimsEl.textContent = `Dimensions: ${imgEl.naturalWidth} × ${imgEl.naturalHeight} pixels`;
+                    };
+                    imgEl.onerror = function() {
+                        if (spinner) spinner.innerHTML = '<span style="color:#ef4444; font-weight:700;">Failed to load image preview</span>';
+                    };
+                    imgEl.src = downloadUrl;
+                })
+                .catch(err => {
+                    const spinner = document.getElementById('np-img-spinner');
+                    if (spinner) spinner.innerHTML = `<span style="color:#ef4444; font-weight:700;">Error: ${err.message}</span>`;
+                });
+            }
+
+            function initFileManagerImagePreview() {
+                const path = window.location.pathname;
+                const match = path.match(/^\/server\/([a-zA-Z0-9]+)\/files/);
+                if (!match) return;
+                const serverId = match[1];
+
+                const imageExts = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.bmp'];
+                const rows = document.querySelectorAll('div[class*="file_row"], div[class*="style-module_HHpjDvv7"]');
+
+                // Determine current directory from URL hash
+                let currentDir = '';
+                if (window.location.hash) {
+                    try {
+                        currentDir = decodeURIComponent(window.location.hash.replace(/^#\/?/, ''));
+                    } catch (e) {
+                        currentDir = window.location.hash.replace(/^#\/?/, '');
+                    }
+                }
+                currentDir = currentDir.replace(/^\/+|\/+$/g, '');
+
+                rows.forEach(row => {
+                    if (row.getAttribute('data-np-img-bound')) return;
+
+                    const detailsEl = row.querySelector('div[class*="details"], a[class*="details"], div[class*="style-module_le7taa7N"], a[class*="style-module_le7taa7N"]');
+                    if (!detailsEl) return;
+
+                    const textNodes = Array.from(detailsEl.querySelectorAll('div, span, p')).filter(el => el.children.length === 0);
+                    let fileName = '';
+                    for (const el of textNodes) {
+                        const t = (el.textContent || '').trim();
+                        if (imageExts.some(ext => t.toLowerCase().endsWith(ext))) {
+                            fileName = t;
+                            break;
+                        }
+                    }
+
+                    if (!fileName) return;
+
+                    row.setAttribute('data-np-img-bound', 'true');
+                    detailsEl.style.cursor = 'pointer';
+                    detailsEl.title = 'Click to view ' + fileName;
+
+                    // Click handler to open image modal
+                    detailsEl.addEventListener('click', function(e) {
+                        // Ignore if user clicked on checkbox or context menu trigger
+                        if (e.target.closest('label') || e.target.closest('input')) return;
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const fullPath = currentDir ? (currentDir + '/' + fileName) : fileName;
+                        openImageModal(serverId, fullPath, fileName);
+                    });
+                });
+            }
+
             // SPA Navigation Interceptors (React Router history.pushState & history.replaceState)
             const _historyPush = history.pushState;
             history.pushState = function() {
@@ -1339,6 +1554,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             function onNavigate() {
                 injectDomainManager();
                 initCustomSelects();
+                initFileManagerImagePreview();
             }
 
             window.addEventListener('popstate', onNavigate);
