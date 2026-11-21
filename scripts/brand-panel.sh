@@ -768,20 +768,77 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: none !important;
             }
 
-            /* SETTINGS PAGE: Full-width grid layout (2 cards side by side, no half-width) */
-            div[class*="SettingsContainer"] > div[class*="grid"],
-            div[class*="SettingsContainer___StyledDiv"]:has(div[class*="TitledGreyBox"]) {
-                display: grid !important;
-                grid-template-columns: 1fr 1fr !important;
-                gap: 1.5rem !important;
+            /* ========================================================= */
+            /* SETTINGS PAGE: CLEAN 2-COLUMN BALANCED LAYOUT             */
+            /* ========================================================= */
+            /* Outer container: 2 equal-width columns on desktop, stacked on mobile */
+            div.sc-1e5ycmz-1,
+            div[class*="SettingsContainer"] > div > div[class*="StyledDiv"] {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 1.75rem !important;
                 width: 100% !important;
+                align-items: flex-start !important;
             }
-            /* Single-column sections (no sibling) go full width */
-            div[class*="ReinstallServerBox"],
-            div[class*="sc-1prmksw-1"]:only-child {
-                grid-column: 1 / -1 !important;
-                max-width: 100% !important;
+            @media (max-width: 900px) {
+                div.sc-1e5ycmz-1,
+                div[class*="SettingsContainer"] > div > div[class*="StyledDiv"] {
+                    flex-direction: column !important;
+                }
+            }
+
+            /* Left column (SFTP Details + Debug Information stacked vertically) */
+            div.sc-1e5ycmz-2,
+            div[class*="SettingsContainer___StyledDiv2"] {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                max-width: 50% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Right column (Change Server Details + Reinstall Server stacked vertically) */
+            div.sc-1e5ycmz-15,
+            div[class*="SettingsContainer___StyledDiv0"] {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                max-width: 50% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            @media (max-width: 900px) {
+                div.sc-1e5ycmz-2,
+                div[class*="SettingsContainer___StyledDiv2"],
+                div.sc-1e5ycmz-15,
+                div[class*="SettingsContainer___StyledDiv0"] {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+            }
+
+            /* Settings cards (SFTP Details, Debug Info, Change Details, Reinstall Server) */
+            div.sc-1e5ycmz-3,
+            div.sc-1e5ycmz-10,
+            div.sc-1bh2mfg-0,
+            div.sc-1prmksw-1,
+            div[class*="SettingsContainer"] div[class*="TitledGreyBox"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"]) {
+                background: #110d22 !important;
+                background-color: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 12px !important;
+                padding: 1.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
                 width: 100% !important;
+                height: auto !important;
             }
 
             /* REMOVE ALL decorative rectangular outlines & nested borders inside settings & forms */
