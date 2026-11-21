@@ -294,13 +294,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 color: #ffffff !important;
                 outline: none !important;
             }
-            /* Checkboxes & Radios — Clean Square Sizing (Never Stretched) */
+            /* Checkboxes & Radios — Clean Square Sizing with Sharp White Checkmark */
             input[type="checkbox"],
             input[type="radio"],
             input[class*="FileActionCheckbox"],
             label[class*="SelectFileCheckbox"] input,
             label[class*="sc-1cv6gsl-1"] input,
-            div[class*="file_row"] input[type="checkbox"] {
+            div[class*="file_row"] input[type="checkbox"],
+            div[class*="FileManagerContainer"] input[type="checkbox"] {
+                appearance: none !important;
+                -webkit-appearance: none !important;
                 width: 18px !important;
                 height: 18px !important;
                 min-width: 18px !important;
@@ -310,13 +313,46 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 padding: 0 !important;
                 margin: 0 !important;
                 border-radius: 4px !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.5) !important;
-                background: #0b0717 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
+                background-color: #0b0717 !important;
+                background-image: none !important;
                 cursor: pointer !important;
-                accent-color: #C268F2 !important;
                 display: inline-block !important;
                 vertical-align: middle !important;
                 box-sizing: border-box !important;
+                transition: all 0.15s ease !important;
+            }
+            input[type="checkbox"]:hover,
+            input[class*="FileActionCheckbox"]:hover,
+            label[class*="SelectFileCheckbox"] input:hover,
+            div[class*="file_row"] input[type="checkbox"]:hover {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 8px rgba(194, 104, 242, 0.4) !important;
+            }
+            input[type="checkbox"]:checked,
+            input[class*="FileActionCheckbox"]:checked,
+            label[class*="SelectFileCheckbox"] input:checked,
+            label[class*="sc-1cv6gsl-1"] input:checked,
+            div[class*="file_row"] input[type="checkbox"]:checked,
+            div[class*="FileManagerContainer"] input[type="checkbox"]:checked {
+                background-color: #C268F2 !important;
+                border-color: #C268F2 !important;
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E") !important;
+                background-size: 13px 13px !important;
+                background-position: center !important;
+                background-repeat: no-repeat !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.6) !important;
+            }
+            input[type="checkbox"]:indeterminate,
+            input[class*="FileActionCheckbox"]:indeterminate,
+            div[class*="FileManagerContainer"] input[type="checkbox"]:indeterminate {
+                background-color: #C268F2 !important;
+                border-color: #C268F2 !important;
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='7' width='10' height='2' rx='1' fill='white'/%3E%3C/svg%3E") !important;
+                background-size: 11px 11px !important;
+                background-position: center !important;
+                background-repeat: no-repeat !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.6) !important;
             }
             label[class*="SelectFileCheckbox___StyledLabel"],
             label[class*="sc-1cv6gsl-1"],
