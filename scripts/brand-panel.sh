@@ -829,28 +829,31 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             function findSettingsFlexRow() {
                 // Exact styled-component class for 2-column flex row in SettingsContainer
-                const styledFlex = document.querySelector('div[class*="sc-1e5ycmz-1"]') ||
+                const styledFlex = document.querySelector('div[class*="SettingsContainer___StyledDiv-sc-1e5ycmz-1"]') ||
+                                   document.querySelector('div[class*="sc-1e5ycmz-1"]') ||
                                    document.querySelector('div[class*="SettingsContainer___StyledDiv"]');
-                if (styledFlex) return styledFlex;
+                if (styledFlex && styledFlex.children.length >= 2) return styledFlex;
 
-                const all = Array.from(document.querySelectorAll('div, p, h3, h2, h4'));
+                const all = Array.from(document.querySelectorAll('div, p, h3, h2, h4, span'));
                 const sftp = all.find(el => {
-                    const t = el.textContent.trim();
-                    return t === 'SFTP Details' || t === 'Server Address' || t === 'Change Server Details';
+                    const t = (el.textContent || '').trim().toLowerCase();
+                    return t === 'sftp details' || t === 'server address' || t === 'change server details' || t === 'reinstall server';
                 });
                 if (sftp) {
-                    const cardBox = sftp.closest('div[class*="TitledGreyBox"]') || sftp.closest('div[class*="sc-gvsoy"]');
-                    if (cardBox) {
-                        let row = cardBox.parentElement;
-                        while (row && row !== document.body && !row.classList.contains('ContentContainer')) {
-                            const style = window.getComputedStyle(row);
-                            if (style.display === 'flex' || row.classList.contains('md:flex') || (row.children.length >= 2 && style.display.includes('flex'))) {
-                                return row;
-                            }
-                            row = row.parentElement;
+                    let el = sftp;
+                    while (el && el !== document.body && !el.classList.contains('ContentContainer')) {
+                        const style = window.getComputedStyle(el);
+                        if (el.classList.contains('md:flex') || style.display === 'flex' || style.display === 'grid') {
+                            if (el.children.length >= 2) return el;
                         }
-                        return cardBox.parentElement?.parentElement || cardBox.parentElement;
+                        el = el.parentElement;
                     }
+                }
+
+                // Fallback to ContentContainer
+                const content = document.querySelector('div[class*="ContentContainer"]');
+                if (content && content.children.length > 0) {
+                    return content.lastElementChild;
                 }
                 return null;
             }
@@ -867,17 +870,19 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 }
                 
                 const serverId = match[1];
+
+                // If card already exists on this server's settings and is connected to DOM, keep it
+                if (existing && existing.getAttribute('data-server-id') === serverId && document.body.contains(existing)) {
+                    return;
+                }
+
                 const flexRow = findSettingsFlexRow();
                 if (!flexRow) {
                     // Settings page is still loading in React, retry on next tick
                     return;
                 }
 
-                // If card already exists and is placed correctly, keep it
                 if (existing) {
-                    if (existing.getAttribute('data-server-id') === serverId && flexRow.nextElementSibling === existing) {
-                        return;
-                    }
                     existing.remove();
                 }
 
@@ -1032,12 +1037,24 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     
                     const portSelect = document.getElementById('np-port-select');
                     const cfPortSelect = document.getElementById('np-cf-port-select');
-                    if (data.allocations) {
+                    if (data.allocations && data.allocations.length > 0) {
                         const optHtml = data.allocations.map(a => 
-                            `<option value="${a.port}">Port ${a.port}</option>`
+                            `<option value="${a.port}">Port ${a.port}${a.is_default ? ' (Primary)' : ''}</option>`
                         ).join('');
-                        if (portSelect) portSelect.innerHTML = optHtml;
-                        if (cfPortSelect) cfPortSelect.innerHTML = optHtml;
+                        [portSelect, cfPortSelect].forEach(sel => {
+                            if (!sel) return;
+                            sel.innerHTML = optHtml;
+                            sel.selectedIndex = 0;
+                            // Reset custom select attribute & clean up wrap so it immediately re-renders with actual ports
+                            sel.removeAttribute('data-np-select');
+                            const prevWrap = sel.nextElementSibling;
+                            if (prevWrap && prevWrap.classList.contains('np-custom-select-wrap')) {
+                                prevWrap.remove();
+                            }
+                            sel.dispatchEvent(new Event('change', { bubbles: true }));
+                            sel.dispatchEvent(new Event('input', { bubbles: true }));
+                        });
+                        initCustomSelects();
                     }
                     
                     const list = document.getElementById('np-domains-list');
@@ -1164,6 +1181,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             // ULTRA-SLEEK CUSTOM SELECT CONTROLLER
             function initCustomSelects() {
+                // Cleanup orphaned custom select wraps
+                document.querySelectorAll('.np-custom-select-wrap').forEach(wrap => {
+                    const prev = wrap.previousElementSibling;
+                    if (!prev || prev.tagName !== 'SELECT' || !document.body.contains(prev)) {
+                        wrap.remove();
+                    }
+                });
+
                 const selects = Array.from(document.querySelectorAll('select:not([data-np-select="true"])'));
                 selects.forEach(select => {
                     if (select.offsetParent === null && select.style.display === 'none') return;
@@ -1204,6 +1229,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     function syncOptions() {
                         menu.innerHTML = '';
                         const opts = Array.from(select.options);
+                        if (opts.length > 0 && select.selectedIndex < 0) {
+                            select.selectedIndex = 0;
+                        }
                         const selOpt = select.options[select.selectedIndex];
                         labelSpan.textContent = selOpt ? selOpt.text : (opts[0] ? opts[0].text : 'Select...');
 
@@ -1241,6 +1269,10 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                             menu.appendChild(item);
                         });
                     }
+
+                    // Dynamically sync options if select elements or text changes
+                    const optObserver = new MutationObserver(() => syncOptions());
+                    optObserver.observe(select, { childList: true, subtree: true, characterData: true });
 
                     function openSelect() {
                         document.querySelectorAll('.np-custom-select-menu').forEach(m => m.style.display = 'none');
@@ -1290,13 +1322,36 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 });
             });
 
-            // Run check frequently (300ms) and on popstate for instant SPA responsiveness
-            setInterval(injectDomainManager, 300);
-            setInterval(initCustomSelects, 300);
-            window.addEventListener('popstate', function() {
+            // SPA Navigation Interceptors (React Router history.pushState & history.replaceState)
+            const _historyPush = history.pushState;
+            history.pushState = function() {
+                const res = _historyPush.apply(this, arguments);
+                window.dispatchEvent(new Event('np:locationchange'));
+                return res;
+            };
+            const _historyReplace = history.replaceState;
+            history.replaceState = function() {
+                const res = _historyReplace.apply(this, arguments);
+                window.dispatchEvent(new Event('np:locationchange'));
+                return res;
+            };
+
+            function onNavigate() {
                 injectDomainManager();
                 initCustomSelects();
+            }
+
+            window.addEventListener('popstate', onNavigate);
+            window.addEventListener('np:locationchange', onNavigate);
+
+            // Interval safety net for fast route rendering
+            setInterval(onNavigate, 250);
+
+            // MutationObserver on document body to catch instant tab switches without refresh
+            const bodyObserver = new MutationObserver(() => {
+                onNavigate();
             });
+            bodyObserver.observe(document.body, { childList: true, subtree: true });
         })();
         </script>
     </head>"""
