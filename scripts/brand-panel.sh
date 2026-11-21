@@ -191,6 +191,9 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         ('backgroundColor:"rgba(209, 184, 235', 'backgroundColor:"rgba(11, 7, 23'),
         ('rgba(209, 184, 235, var(--tw-bg-opacity))', 'rgba(11, 7, 23, var(--tw-bg-opacity))'),
         ('rgba(209, 184, 235', 'rgba(11, 7, 23'),
+        ('container@pterodactyl~', 'container@nothing~'),
+        ('[Pterodactyl Daemon]:', '[Nothing Daemon]:'),
+        ('Pterodactyl Daemon', 'Nothing Daemon'),
     ]:
         if old in content:
             content = content.replace(old, new)
@@ -213,6 +216,21 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
             f.write(content)
         print(f"  ✔ Patched bundle: {os.path.basename(path)}")
 PYEOF
+
+# Update Console.tsx terminal prelude
+CONSOLE_TSX="$PANEL_DIR/resources/scripts/components/server/console/Console.tsx"
+if [ -f "$CONSOLE_TSX" ]; then
+    sed -i "s/container@pterodactyl~/container@nothing~/g" "$CONSOLE_TSX"
+fi
+
+# Update Wings config for daemon name (Nothing Daemon)
+if [ -f "/etc/pterodactyl/config.yml" ]; then
+    sed -i "s/app_name: Pterodactyl/app_name: Nothing/g" /etc/pterodactyl/config.yml
+    sed -i "s/app_name: "Pterodactyl"/app_name: "Nothing"/g" /etc/pterodactyl/config.yml
+    if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet wings; then
+        systemctl restart wings || true
+    fi
+fi
 
 # 4. Inject Modern Custom Theme into wrapper.blade.php
 WRAPPER="$PANEL_DIR/resources/views/templates/wrapper.blade.php"
@@ -412,12 +430,10 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* ========================================================= */
             /* SWITCH / TOGGLE COMPONENT RESET (REMOVES FLOATING CIRCLE) */
             /* ========================================================= */
-            div[class*="Switch"] > input,
-            div[class*="sc-1nxt82m"] > input,
-            div.sc-1nxt82m-0 > input,
-            div.sc-1nxt82m-1 > input,
-            div[class*="Toggle"] > input,
-            div[class*="ToggleContainer"] > input,
+            div[class*="Switch"] input[type="checkbox"],
+            div[class*="sc-1nxt82m"] input[type="checkbox"],
+            div[class*="Toggle"] input[type="checkbox"],
+            div[class*="ToggleContainer"] input[type="checkbox"],
             [role="switch"] input {
                 display: none !important;
                 position: absolute !important;
@@ -481,7 +497,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* Switch Track Checked */
             div[class*="Switch__ToggleContainer"] > input:checked + label,
             div[class*="sc-1nxt82m-0"] > input:checked + label,
-            div[class*="sc-1nxt82m-1"] > input:checked + label {
+            div[class*="sc-1nxt82m-1"] > input:checked + label,
+            label.np-toggle-active {
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 background-color: #C268F2 !important;
                 border-color: #C268F2 !important;
@@ -490,7 +507,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* Switch Thumb Knob Checked */
             div[class*="Switch__ToggleContainer"] > input:checked + label::before,
             div[class*="sc-1nxt82m-0"] > input:checked + label::before,
-            div[class*="sc-1nxt82m-1"] > input:checked + label::before {
+            div[class*="sc-1nxt82m-1"] > input:checked + label::before,
+            label.np-toggle-active::before {
                 transform: translateX(1.5rem) !important;
                 left: 3px !important;
                 right: auto !important;
@@ -499,12 +517,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* ========================================================= */
             /* ALL CHECKBOXES: SOLID VISIBLE UNCHECKED & PURPLE CHECKED  */
             /* ========================================================= */
-            input[type="checkbox"]:not([role="switch"]):not([class*="Switch"]):not([class*="Toggle"]),
-            input[type="checkbox"][class*="sc-1cv6gsl-0"],
-            input[type="checkbox"][class*="FileActionCheckbox"],
-            input[type="checkbox"].np-checkbox,
-            div[class*="file_row"] input[type="checkbox"],
-            div[class*="FileManagerContainer"] input[type="checkbox"] {
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]) {
                 appearance: none !important;
                 -webkit-appearance: none !important;
                 -moz-appearance: none !important;
@@ -518,7 +531,6 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 margin: 0 !important;
                 border-radius: 5px !important;
                 border: 1.5px solid #5d447a !important;
-                background: #0b0717 !important;
                 background-color: #0b0717 !important;
                 background-image: none !important;
                 cursor: pointer !important;
@@ -530,34 +542,28 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 outline: none !important;
                 transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
             }
-            input[type="checkbox"]:not([role="switch"]):not([class*="Switch"]):not([class*="Toggle"]):hover,
-            input[type="checkbox"][class*="sc-1cv6gsl-0"]:hover {
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]):hover {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 8px rgba(194, 104, 242, 0.4) !important;
             }
-            input[type="checkbox"]:not([role="switch"]):checked,
-            input[type="checkbox"][class*="sc-1cv6gsl-0"]:checked,
-            input[type="checkbox"][class*="FileActionCheckbox"]:checked,
-            input[type="checkbox"].np-is-checked,
-            div[class*="file_row"] input[type="checkbox"]:checked,
-            div[class*="FileManagerContainer"] input[type="checkbox"]:checked {
-                background: #C268F2 !important;
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]):checked,
+            input[type="checkbox"][name="selectedFiles"]:checked {
                 background-color: #C268F2 !important;
+                background: #C268F2 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 11 8 15 16 6'/%3E%3C/svg%3E") no-repeat center center / 14px 14px !important;
                 border: 1.5px solid #ffffff !important;
                 border-color: #ffffff !important;
-                background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjQgMTAgOCA4IDE2IDYiLz48L3N2Zz4=") !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 11 8 15 16 6'/%3E%3C/svg%3E") !important;
                 background-size: 14px 14px !important;
                 background-position: center center !important;
                 background-repeat: no-repeat !important;
                 box-shadow: 0 0 12px rgba(194, 104, 242, 0.75) !important;
             }
-            input[type="checkbox"]:not([role="switch"]):indeterminate,
-            input[class*="FileActionCheckbox"]:indeterminate,
-            div[class*="FileManagerContainer"] input[type="checkbox"]:indeterminate {
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]):indeterminate,
+            input[class*="FileActionCheckbox"]:indeterminate {
                 background-color: #C268F2 !important;
                 border: 1.5px solid #ffffff !important;
                 border-color: #ffffff !important;
-                background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjgiIHdpZHRoPSIxNCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=") !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='8' width='14' height='4' rx='2' fill='white'/%3E%3C/svg%3E") !important;
                 background-size: 14px 14px !important;
                 background-position: center center !important;
                 background-repeat: no-repeat !important;
@@ -777,7 +783,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* ========================================================= */
             /* Outer container: 2 equal-width columns on desktop, stacked on mobile */
             div.sc-1e5ycmz-1,
-            div[class*="SettingsContainer"] > div > div[class*="StyledDiv"] {
+            div.SettingsContainer___StyledDiv-sc-1e5ycmz-1 {
                 display: flex !important;
                 flex-direction: row !important;
                 gap: 1.75rem !important;
@@ -786,14 +792,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
             @media (max-width: 900px) {
                 div.sc-1e5ycmz-1,
-                div[class*="SettingsContainer"] > div > div[class*="StyledDiv"] {
+                div.SettingsContainer___StyledDiv-sc-1e5ycmz-1 {
                     flex-direction: column !important;
                 }
             }
 
             /* Left column (SFTP Details + Debug Information stacked vertically) */
             div.sc-1e5ycmz-2,
-            div[class*="SettingsContainer___StyledDiv2"] {
+            div.SettingsContainer___StyledDiv2-sc-1e5ycmz-2 {
                 flex: 1 1 50% !important;
                 width: 50% !important;
                 max-width: 50% !important;
@@ -806,7 +812,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             /* Right column (Change Server Details + Reinstall Server stacked vertically) */
             div.sc-1e5ycmz-15,
-            div[class*="SettingsContainer___StyledDiv0"] {
+            div.SettingsContainer___StyledDiv0-sc-1e5ycmz-15 {
                 flex: 1 1 50% !important;
                 width: 50% !important;
                 max-width: 50% !important;
@@ -819,30 +825,101 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             @media (max-width: 900px) {
                 div.sc-1e5ycmz-2,
-                div[class*="SettingsContainer___StyledDiv2"],
+                div.SettingsContainer___StyledDiv2-sc-1e5ycmz-2,
                 div.sc-1e5ycmz-15,
-                div[class*="SettingsContainer___StyledDiv0"] {
+                div.SettingsContainer___StyledDiv0-sc-1e5ycmz-15 {
                     width: 100% !important;
                     max-width: 100% !important;
                 }
             }
 
             /* Settings cards (SFTP Details, Debug Info, Change Details, Reinstall Server) */
-            div.sc-1e5ycmz-3,
-            div.sc-1e5ycmz-10,
-            div.sc-1bh2mfg-0,
-            div.sc-1prmksw-1,
-            div[class*="SettingsContainer"] div[class*="TitledGreyBox"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"]) {
+            div.sc-gvsoy-0,
+            div[class*="TitledGreyBox___StyledDiv"] {
+                display: flex !important;
+                flex-direction: column !important;
                 background: #110d22 !important;
                 background-color: #110d22 !important;
                 border: 1px solid rgba(194, 104, 242, 0.22) !important;
                 border-radius: 12px !important;
                 padding: 1.5rem !important;
-                margin: 0 !important;
+                margin: 0 0 1.5rem 0 !important;
                 box-sizing: border-box !important;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
                 width: 100% !important;
                 height: auto !important;
+            }
+
+            /* Card Header: stays on TOP, full width, with bottom border */
+            div.sc-gvsoy-1,
+            div[class*="TitledGreyBox___StyledDiv2"] {
+                display: block !important;
+                width: 100% !important;
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.15) !important;
+                border-radius: 0 !important;
+                padding: 0 0 0.85rem 0 !important;
+                margin-bottom: 1.25rem !important;
+            }
+
+            /* Card Body: stays BELOW header, full width */
+            div.sc-gvsoy-4,
+            div[class*="TitledGreyBox___StyledDiv3"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+                width: 100% !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* Inputs & Textareas inside settings cards: 100% width */
+            div[class*="TitledGreyBox"] input[type="text"],
+            div[class*="TitledGreyBox"] textarea,
+            div.sc-gvsoy-4 input {
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* SFTP action row (note on left, button on right) */
+            div.sc-1e5ycmz-5,
+            div[class*="SettingsContainer___StyledDiv4"] {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 1rem !important;
+                margin-top: 0.5rem !important;
+            }
+
+            /* Debug info rows (Node on left/badge on right, UUID on left/badge on right) */
+            div.sc-1e5ycmz-11,
+            div.sc-1e5ycmz-13,
+            div[class*="SettingsContainer___StyledDiv8"],
+            div[class*="SettingsContainer___StyledDiv9"] {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 0.5rem 0 !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.1) !important;
+            }
+            div.sc-1e5ycmz-13,
+            div[class*="SettingsContainer___StyledDiv9"] {
+                border-bottom: none !important;
+            }
+
+            /* Rename & Reinstall Server Forms */
+            div[class*="RenameServerBox"] form,
+            div[class*="ReinstallServerBox"] form,
+            form[class*="RenameServerBox"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+                width: 100% !important;
             }
 
             /* REMOVE ALL decorative rectangular outlines & nested borders inside settings & forms */
@@ -1262,6 +1339,90 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
         </style>
         <!-- Custom Domains & Cloudflare Tunnel Router Script -->
         <script>
+        // Clean daemon console output in real-time over WebSocket
+        (function() {
+            const OrigWebSocket = window.WebSocket;
+            if (!OrigWebSocket) return;
+            window.WebSocket = function(url, protocols) {
+                const ws = protocols !== undefined ? new OrigWebSocket(url, protocols) : new OrigWebSocket(url);
+
+                function cleanData(data) {
+                    if (typeof data === 'string' && (data.includes('pterodactyl') || data.includes('Pterodactyl'))) {
+                        return data
+                            .replace(/container@pterodactyl~/g, 'container@nothing~')
+                            .replace(/\[Pterodactyl Daemon\]:/g, '[Nothing Daemon]:')
+                            .replace(/Pterodactyl Daemon/g, 'Nothing Daemon');
+                    }
+                    return data;
+                }
+
+                const origAddEventListener = ws.addEventListener;
+                ws.addEventListener = function(type, listener, options) {
+                    if (type === 'message') {
+                        const wrapped = function(event) {
+                            let ev = event;
+                            if (typeof event.data === 'string' && (event.data.includes('pterodactyl') || event.data.includes('Pterodactyl'))) {
+                                try {
+                                    ev = new MessageEvent('message', {
+                                        data: cleanData(event.data),
+                                        origin: event.origin,
+                                        lastEventId: event.lastEventId,
+                                        source: event.source,
+                                        ports: event.ports
+                                    });
+                                } catch (err) {
+                                    try {
+                                        Object.defineProperty(event, 'data', { value: cleanData(event.data) });
+                                    } catch (e) {}
+                                }
+                            }
+                            return listener.call(this, ev);
+                        };
+                        return origAddEventListener.call(this, type, wrapped, options);
+                    }
+                    return origAddEventListener.call(this, type, listener, options);
+                };
+
+                let userOnMessage = null;
+                Object.defineProperty(ws, 'onmessage', {
+                    get() { return userOnMessage; },
+                    set(handler) {
+                        userOnMessage = handler;
+                        if (!handler) {
+                            return;
+                        }
+                        this._np_wrapped_onmessage = function(event) {
+                            let ev = event;
+                            if (typeof event.data === 'string' && (event.data.includes('pterodactyl') || event.data.includes('Pterodactyl'))) {
+                                try {
+                                    ev = new MessageEvent('message', {
+                                        data: cleanData(event.data),
+                                        origin: event.origin,
+                                        lastEventId: event.lastEventId,
+                                        source: event.source,
+                                        ports: event.ports
+                                    });
+                                } catch (err) {
+                                    try {
+                                        Object.defineProperty(event, 'data', { value: cleanData(event.data) });
+                                    } catch (e) {}
+                                }
+                            }
+                            return handler.call(this, ev);
+                        };
+                        origAddEventListener.call(this, 'message', this._np_wrapped_onmessage);
+                    }
+                });
+
+                return ws;
+            };
+            window.WebSocket.prototype = OrigWebSocket.prototype;
+            window.WebSocket.CONNECTING = OrigWebSocket.CONNECTING;
+            window.WebSocket.OPEN = OrigWebSocket.OPEN;
+            window.WebSocket.CLOSING = OrigWebSocket.CLOSING;
+            window.WebSocket.CLOSED = OrigWebSocket.CLOSED;
+        })();
+
         (function() {
             let activeMode = 'nginx'; // 'nginx' or 'cloudflared'
 
@@ -1278,16 +1439,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 
                 const serverId = match[1];
 
-                // If card already exists on this server's domains and is connected to DOM, keep it
-                if (existing && existing.getAttribute('data-server-id') === serverId && document.body.contains(existing)) {
-                    return;
-                }
-
                 // Mount target from React component in server bundle
                 const mount = document.getElementById('np-domains-view-mount');
                 if (!mount) {
-                    // React component is still mounting — retry with backoff
-                    setTimeout(injectDomainManager, 150);
+                    // React component is still mounting — retry quickly
+                    setTimeout(injectDomainManager, 60);
+                    return;
+                }
+
+                // If card already exists INSIDE mount on this server's domains, keep it
+                if (existing && mount.contains(existing) && existing.getAttribute('data-server-id') === serverId) {
                     return;
                 }
 
@@ -1898,89 +2059,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             };
 
             // ============================================================
-            // CHECKBOX VISUAL STATE — JS inline-style (bypasses styled-components)
+            // TOGGLE / SWITCH SYNC (Uses CSS classes without overriding styles)
             // ============================================================
-            const TICK_SVG = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjQgMTEgOCAxNSAxNiA2Ii8+PC9zdmc+")';
-            const DASH_SVG = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjgiIHdpZHRoPSIxNCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=")';
-
-            function applyCheckboxStyle(cb) {
-                // Skip switch/toggle inputs
-                if (cb.getAttribute('role') === 'switch' || cb.closest('[class*="Switch"]') || cb.closest('[class*="Toggle"]') || cb.closest('[class*="sc-1nxt82m"]')) return;
-                if (cb.indeterminate) {
-                    cb.style.setProperty('appearance', 'none', 'important');
-                    cb.style.setProperty('-webkit-appearance', 'none', 'important');
-                    cb.style.setProperty('background-color', '#C268F2', 'important');
-                    cb.style.setProperty('background-image', DASH_SVG, 'important');
-                    cb.style.setProperty('background-size', '14px 14px', 'important');
-                    cb.style.setProperty('background-position', 'center', 'important');
-                    cb.style.setProperty('background-repeat', 'no-repeat', 'important');
-                    cb.style.setProperty('border', '1.5px solid #ffffff', 'important');
-                    cb.style.setProperty('box-shadow', '0 0 12px rgba(194, 104, 242, 0.75)', 'important');
-                    cb.style.setProperty('width', '20px', 'important');
-                    cb.style.setProperty('height', '20px', 'important');
-                    cb.style.setProperty('min-width', '20px', 'important');
-                    cb.style.setProperty('min-height', '20px', 'important');
-                    cb.style.setProperty('border-radius', '5px', 'important');
-                    cb.style.setProperty('cursor', 'pointer', 'important');
-                } else if (cb.checked) {
-                    cb.style.setProperty('appearance', 'none', 'important');
-                    cb.style.setProperty('-webkit-appearance', 'none', 'important');
-                    cb.style.setProperty('background-color', '#C268F2', 'important');
-                    cb.style.setProperty('background-image', TICK_SVG, 'important');
-                    cb.style.setProperty('background-size', '14px 14px', 'important');
-                    cb.style.setProperty('background-position', 'center', 'important');
-                    cb.style.setProperty('background-repeat', 'no-repeat', 'important');
-                    cb.style.setProperty('border', '1.5px solid #ffffff', 'important');
-                    cb.style.setProperty('box-shadow', '0 0 12px rgba(194, 104, 242, 0.75)', 'important');
-                    cb.style.setProperty('width', '20px', 'important');
-                    cb.style.setProperty('height', '20px', 'important');
-                    cb.style.setProperty('min-width', '20px', 'important');
-                    cb.style.setProperty('min-height', '20px', 'important');
-                    cb.style.setProperty('border-radius', '5px', 'important');
-                    cb.style.setProperty('cursor', 'pointer', 'important');
-                } else {
-                    cb.style.setProperty('appearance', 'none', 'important');
-                    cb.style.setProperty('-webkit-appearance', 'none', 'important');
-                    cb.style.setProperty('background-color', '#0b0717', 'important');
-                    cb.style.setProperty('background-image', 'none', 'important');
-                    cb.style.setProperty('border', '1.5px solid #5d447a', 'important');
-                    cb.style.setProperty('box-shadow', 'none', 'important');
-                    cb.style.setProperty('width', '20px', 'important');
-                    cb.style.setProperty('height', '20px', 'important');
-                    cb.style.setProperty('min-width', '20px', 'important');
-                    cb.style.setProperty('min-height', '20px', 'important');
-                    cb.style.setProperty('border-radius', '5px', 'important');
-                    cb.style.setProperty('cursor', 'pointer', 'important');
-                }
-            }
-
-            // Listen for change events on all checkboxes
-            document.addEventListener('change', function(e) {
-                if (e.target && e.target.type === 'checkbox') {
-                    applyCheckboxStyle(e.target);
-                }
-            }, true);
-
-            function syncCheckboxes() {
-                document.querySelectorAll('input[type="checkbox"]').forEach(applyCheckboxStyle);
-            }
-
-            // JS-driven toggle/switch state sync (bypasses styled-components)
             function syncToggles() {
                 document.querySelectorAll('div[class*="sc-1nxt82m-0"] > input[type="checkbox"], div[class*="sc-1nxt82m-1"] > input[type="checkbox"], div[class*="Switch"] > input[type="checkbox"], div[class*="Toggle"] > input[type="checkbox"]').forEach(inp => {
                     const label = inp.nextElementSibling;
                     if (!label || label.tagName !== 'LABEL') return;
                     if (inp.checked) {
-                        label.style.setProperty('background', 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)', 'important');
-                        label.style.setProperty('border-color', '#C268F2', 'important');
-                        label.style.setProperty('box-shadow', '0 0 14px rgba(194, 104, 242, 0.6)', 'important');
-                        const knob = label.querySelector('::before') || label;
-                        try { label.style.setProperty('--knob-x', '1.5rem'); } catch(e) {}
+                        label.classList.add('np-toggle-active');
                     } else {
-                        label.style.setProperty('background', '#1a1330', 'important');
-                        label.style.setProperty('border-color', 'rgba(194, 104, 242, 0.4)', 'important');
-                        label.style.setProperty('box-shadow', 'none', 'important');
-                        try { label.style.setProperty('--knob-x', '0'); } catch(e) {}
+                        label.classList.remove('np-toggle-active');
                     }
                 });
             }
@@ -1989,7 +2077,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 if (e.target && e.target.type === 'checkbox') {
                     const parent = e.target.parentElement;
                     if (parent && (parent.className.includes('sc-1nxt82m') || parent.className.includes('Switch') || parent.className.includes('Toggle'))) {
-                        setTimeout(syncToggles, 10);
+                        syncToggles();
                     }
                 }
             }, true);
@@ -1998,7 +2086,6 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 injectDomainManager();
                 initCustomSelects();
                 initFileManagerImagePreview();
-                syncCheckboxes();
                 syncToggles();
             }
 
@@ -2006,7 +2093,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             window.addEventListener('np:locationchange', onNavigate);
 
             // Interval safety net for fast route rendering
-            setInterval(onNavigate, 250);
+            setInterval(onNavigate, 150);
 
             // MutationObserver on document body to catch instant tab switches without refresh
             const bodyObserver = new MutationObserver(() => {
