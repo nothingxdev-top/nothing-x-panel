@@ -55,14 +55,26 @@ curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/ma
 curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/favicon.ico" -o "$PANEL_DIR/public/favicons/favicon.ico" 2>/dev/null || true
 chmod 644 "$PANEL_DIR/public/assets/logo.png" 2>/dev/null || true
 
-# Render Vynoxis logo inside pterodactyl.svg so even cached or fallback references show the logo
-cat << 'EOF' > "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
+# Render Vynoxis logo inside pterodactyl.svg and dinosaur SVGs so no mascot ever displays
+for svg_file in \
+  "$PANEL_DIR/public/assets/svgs/pterodactyl.svg" \
+  "$PANEL_DIR/public/assets/svgs/not_found.svg" \
+  "$PANEL_DIR/public/assets/svgs/server_error.svg" \
+  "$PANEL_DIR/public/assets/svgs/server_installing.svg" \
+  "$PANEL_DIR/resources/scripts/assets/images/pterodactyl.svg" \
+  "$PANEL_DIR/resources/scripts/assets/images/not_found.svg" \
+  "$PANEL_DIR/resources/scripts/assets/images/server_error.svg" \
+  "$PANEL_DIR/resources/scripts/assets/images/server_installing.svg"; do
+  if [ -f "$svg_file" ] || [ -d "$(dirname "$svg_file")" ]; then
+    cat << 'EOF' > "$svg_file"
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
   <image href="/assets/logo.png" width="512" height="512" />
 </svg>
 EOF
-chmod 644 "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
-chown www-data:www-data "$PANEL_DIR/public/assets/svgs/pterodactyl.svg"
+    chmod 644 "$svg_file" 2>/dev/null || true
+    chown www-data:www-data "$svg_file" 2>/dev/null || true
+  fi
+done
 
 # 3. Patch Built React / JS Bundles (Remove Mascot & Footer Elements, Protect PterodactylUser)
 python3 - << 'PYEOF'
@@ -97,8 +109,13 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
     for old, new in [
         ('Pterodactyl Software', 'Nothing Panel'),
         ('https://pterodactyl.io', panel_url),
+        ('"Pterodactyl®"', '""'),
+        ('Pterodactyl®', 'Nothing Panel'),
+        ('Pterodactyl&reg;', 'Nothing Panel'),
         ('"Pterodactyl"', '"Nothing Panel"'),
         ('>Pterodactyl<', '>Nothing Panel<'),
+        ('© 2015 - ', '© '),
+        ('"© 2015 - "', '""'),
         ('hsla(209, 14%, 37%, 1)', 'rgba(18, 14, 36, 1)'),
         ('hsla(209, 18%, 30%, 1)', 'rgba(18, 14, 36, 1)'),
         ('hsla(209, 18%, 30%', 'rgba(18, 14, 36'),
@@ -266,8 +283,13 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 6px 30px rgba(194, 104, 242, 0.8) !important;
                 filter: brightness(1.1) !important;
             }
-            /* ALL SELECT MENUS — ULTRA SLEEK #C268F2 CUSTOM STYLING */
-            select, .form-control select, select.form-control, [class*="Select"] select {
+            /* ALL SELECT MENUS & DROPDOWNS — ULTRA SLEEK #C268F2 CUSTOM STYLING */
+            select,
+            .form-control select,
+            select.form-control,
+            [class*="Select"] select,
+            select[class*="Select"],
+            [class*="Select___StyledSelect"] {
                 appearance: none !important;
                 -webkit-appearance: none !important;
                 -moz-appearance: none !important;
@@ -277,27 +299,57 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 background-position: right 1rem center !important;
                 background-size: 14px 14px !important;
                 border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
-                border-radius: 10px !important;
-                color: #f1e5ff !important;
+                border-radius: 8px !important;
+                color: #ffffff !important;
                 padding: 0.75rem 2.5rem 0.75rem 1rem !important;
                 cursor: pointer !important;
                 transition: all 0.2s ease !important;
                 font-size: 0.95rem !important;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
             }
-            select:focus, .form-control select:focus, select.form-control:focus {
+            select:focus,
+            .form-control select:focus,
+            select.form-control:focus,
+            [class*="Select___StyledSelect"]:focus {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 20px rgba(194, 104, 242, 0.55) !important;
                 outline: none !important;
                 background-color: #120c24 !important;
             }
-            select option, .form-control select option {
+            /* Options list and dropdown menu styling (fixes gray unreadable items) */
+            select option,
+            select optgroup,
+            .form-control select option,
+            [class*="Select"] option,
+            ul[role="listbox"],
+            div[role="listbox"],
+            div[class*="menu"],
+            div[class*="Select__menu"],
+            div[class*="-menu"] {
                 background-color: #120e24 !important;
-                color: #f1e5ff !important;
+                background: #120e24 !important;
+                color: #ffffff !important;
+                border: 1px solid rgba(194, 104, 242, 0.3) !important;
+                border-radius: 8px !important;
+            }
+            select option,
+            li[role="option"],
+            div[role="option"],
+            div[class*="option"],
+            div[class*="Select__option"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                color: #ffffff !important;
                 padding: 10px 14px !important;
             }
-            select option:hover, select option:checked {
+            select option:hover,
+            select option:checked,
+            li[role="option"]:hover,
+            div[role="option"]:hover,
+            div[class*="Select__option"]:hover,
+            div[class*="Select__option--is-focused"] {
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
                 color: #ffffff !important;
             }
             /* Links */
@@ -313,55 +365,189 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="FlashMessageRender"], .sc-cyh04c-2, [class*="sc-cyh04c-2"] {
                 border-radius: 10px !important;
             }
-            /* SERVER MANAGEMENT & SETTINGS CARDS (CUSTOM LUXURY THEME #C268F2) */
+            /* ========================================================= */
+            /* 1. CLEAN SINGLE-CONTAINER ARCHITECTURE (NO NESTED BOXES)   */
+            /* ========================================================= */
             div[class*="ServerContentBlock"],
-            div[class*="PageContentBlock"] {
+            div[class*="PageContentBlock"],
+            div[class*="SettingsContainer"],
+            div[class*="sc-1e5ycmz-1"],
+            div[class*="sc-1e5ycmz-2"],
+            div[class*="sc-1e5ycmz-15"],
+            div[class*="sc-1e5ycmz-3"],
+            div[class*="sc-1e5ycmz-10"],
+            div[class*="sc-1bh2mfg-0"],
+            div[class*="sc-1prmksw-1"],
+            div[class*="ContentBox"] {
                 background: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
                 padding: 0 !important;
             }
-            /* ONLY individual cards get the card styling */
-            div[class*="TitledGreyBox"],
-            div[class*="ContentBox"],
-            div[class*="sc-1e5ycmz-3"],
-            div[class*="sc-1e5ycmz-10"],
-            div[class*="sc-1bh2mfg-0"],
-            div[class*="sc-1prmksw-1"] {
-                background-color: #120e24 !important;
-                background: #120e24 !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
-                border-radius: 14px !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(194, 104, 242, 0.12) !important;
-                transition: all 0.25s ease !important;
+
+            /* THE ONE AND ONLY MAIN CARD: TitledGreyBox */
+            div[class*="TitledGreyBox___StyledDiv"],
+            div[class*="sc-gvsoy-0"],
+            div[class*="TitledGreyBox"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+                padding: 1.5rem !important;
                 margin-bottom: 1.5rem !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
+                overflow: hidden !important;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
             }
+            div[class*="TitledGreyBox___StyledDiv"]:hover,
+            div[class*="sc-gvsoy-0"]:hover,
             div[class*="TitledGreyBox"]:hover {
-                border-color: rgba(194, 104, 242, 0.5) !important;
-                box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 22px rgba(194, 104, 242, 0.22) !important;
+                border-color: rgba(194, 104, 242, 0.45) !important;
+                box-shadow: 0 6px 25px rgba(0, 0, 0, 0.55), 0 0 15px rgba(194, 104, 242, 0.15) !important;
             }
-            /* DASHBOARD SERVER ROWS (LUXURY VIOLET & #C268F2 GLOW) */
+
+            /* REMOVE nested header box and borders inside TitledGreyBox */
+            div[class*="TitledGreyBox___StyledDiv2"],
+            div[class*="sc-gvsoy-1"] {
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.15) !important;
+                border-radius: 0 !important;
+                padding: 0 0 0.85rem 0 !important;
+                margin-bottom: 1.25rem !important;
+            }
+            div[class*="TitledGreyBox___StyledDiv3"],
+            div[class*="sc-gvsoy-4"] {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* REMOVE all decorative rectangular outlines & nested borders inside settings */
+            div[class*="SettingsContainer___StyledDiv"],
+            div[class*="sc-1e5ycmz-4"],
+            div[class*="sc-1e5ycmz-5"],
+            div[class*="sc-1e5ycmz-6"],
+            div[class*="sc-1e5ycmz-7"],
+            div[class*="sc-1e5ycmz-8"],
+            div[class*="sc-1e5ycmz-9"],
+            div[class*="RenameServerBox___StyledDiv"],
+            div[class*="sc-1bh2mfg-2"],
+            div[class*="sc-1bh2mfg-3"],
+            div[class*="ReinstallServerBox___StyledDiv"],
+            div[class*="sc-1prmksw-4"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            /* Code badge in debug info */
+            code[class*="SettingsContainer___StyledCode"],
+            div[class*="sc-1e5ycmz-12"],
+            div[class*="sc-1e5ycmz-14"] {
+                background: rgba(194, 104, 242, 0.12) !important;
+                border: 1px solid rgba(194, 104, 242, 0.25) !important;
+                color: #e2d2f7 !important;
+                border-radius: 6px !important;
+                padding: 3px 8px !important;
+                font-size: 0.82rem !important;
+            }
+
+            /* ========================================================= */
+            /* 2. FILES PAGE CLEANUP (CLEAN STANDARD TABLE LAYOUT)       */
+            /* ========================================================= */
+            div[class*="FileManagerContainer"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            div[class*="FileManagerBreadcrumbs"],
+            div[class*="sc-1yfrkfk"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0.5rem 0 !important;
+                margin-bottom: 0.75rem !important;
+            }
+            /* File rows: Clean table-like rows with only a subtle bottom divider, NO pill-shaped boxes */
+            div[class*="file_row"],
+            div[class*="style-module_HHpjDvv7"] {
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.12) !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 0.75rem 0.5rem !important;
+                margin-bottom: 0 !important;
+                transition: background 0.15s ease !important;
+            }
+            div[class*="file_row"]:hover,
+            div[class*="style-module_HHpjDvv7"]:hover {
+                background: rgba(194, 104, 242, 0.08) !important;
+                border-radius: 6px !important;
+            }
+            /* File details: NO inner pill outlines */
+            div[class*="details"],
+            div[class*="style-module_le7taa7N"],
+            div[class*="FileObjectRow"] > div {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+            /* File name, size, date typography */
+            div[class*="FileObjectRow___StyledDiv2"],
+            div[class*="sc-wrdnyp-1"] {
+                color: #ffffff !important;
+                font-weight: 500 !important;
+            }
+            div[class*="FileObjectRow___StyledDiv3"],
+            div[class*="FileObjectRow___StyledDiv4"],
+            div[class*="sc-wrdnyp-2"],
+            div[class*="sc-wrdnyp-3"] {
+                color: #a394bf !important;
+                font-size: 0.85rem !important;
+            }
+
+            /* ========================================================= */
+            /* 3. DASHBOARD SERVER ROWS (CLEAN SINGLE CARDS)             */
+            /* ========================================================= */
             a[href*="/server/"] > div,
-            div[class*="GreyRowBox"],
-            div[class*="sc-1xo9c6v"],
             div[class*="ServerRow__StatusIndicatorBox"],
             div[class*="sc-1ibsw91-2"] {
-                background-color: #120e24 !important;
-                background: #120e24 !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.3) !important;
-                border-radius: 12px !important;
-                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
                 transition: all 0.2s ease !important;
             }
             a[href*="/server/"]:hover > div,
-            div[class*="GreyRowBox"]:hover,
-            div[class*="sc-1xo9c6v"]:hover,
             div[class*="ServerRow__StatusIndicatorBox"]:hover {
                 border-color: #C268F2 !important;
-                box-shadow: 0 6px 26px rgba(194, 104, 242, 0.45) !important;
+                box-shadow: 0 6px 22px rgba(194, 104, 242, 0.35) !important;
                 transform: translateY(-2px) !important;
+            }
+            div[class*="sc-1ibsw91-3"],
+            div[class*="sc-1ibsw91-4"],
+            div[class*="sc-1ibsw91-6"],
+            div[class*="sc-1ibsw91-7"],
+            div[class*="sc-1ibsw91-8"],
+            div[class*="sc-1ibsw91-10"],
+            div[class*="sc-1ibsw91-11"],
+            div[class*="sc-1ibsw91-13"],
+            div[class*="sc-1ibsw91-15"],
+            div[class*="sc-1ibsw91-17"],
+            div[class*="sc-1ibsw91-18"],
+            div[class*="sc-1ibsw91-20"],
+            div[class*="sc-1ibsw91-21"],
+            div[class*="sc-1ibsw91-23"],
+            div[class*="sc-1ibsw91-24"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
             }
             div[class*="sc-1ibsw91"] p,
             div[class*="ServerRow"] p {
@@ -375,14 +561,37 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 color: #d1b8eb !important;
                 font-weight: 500 !important;
             }
-            /* CONSOLE TERMINAL & COMMAND BAR */
+
+            /* ========================================================= */
+            /* 4. OTHER ROWS (Databases, Schedules, Users, Backups)      */
+            /* ========================================================= */
+            div[class*="GreyRowBox"],
+            div[class*="sc-1xo9c6v"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.2) !important;
+                border-radius: 10px !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+                padding: 1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            div[class*="GreyRowBox"] > div,
+            div[class*="sc-1xo9c6v"] > div {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+
+            /* ========================================================= */
+            /* 5. CONSOLE TERMINAL, STAT CARDS & CHARTS                  */
+            /* ========================================================= */
             div[class*="ServerConsoleContainer"],
             div[class*="TerminalContainer"],
             div[class*="ConsoleContainer"] {
                 background-color: #0b0717 !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
-                border-radius: 14px !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7) !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5) !important;
                 overflow: hidden !important;
             }
             input[class*="CommandInput"],
@@ -398,68 +607,47 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
             }
-            /* STAT CARDS (Offline, Disk, Memory) & GRAPH BOXES (CPU Load, Memory, Network) */
             div[class*="stat_block"],
-            div[class*="style-module_V4CSEpa4"],
-            div[class*="StatBlock"],
-            div[class*="StatBox"],
-            div.bg-gray-600,
-            div[class*="bg-gray-600"],
-            div.bg-gray-700,
-            div.bg-gray-800,
-            div[class*="bg-gray-700"],
-            div[class*="bg-gray-800"] {
-                background-color: #120e24 !important;
-                background: #120e24 !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.28) !important;
-                border-radius: 12px !important;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55) !important;
-                transition: all 0.2s ease !important;
-            }
-            div[class*="stat_block"]:hover,
-            div[class*="style-module_V4CSEpa4"]:hover,
-            div[class*="StatBlock"]:hover,
-            div[class*="StatBox"]:hover {
-                border-color: rgba(194, 104, 242, 0.55) !important;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), 0 0 16px rgba(194, 104, 242, 0.22) !important;
+            div[class*="style-module_V4CSEpa4"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
+                overflow: hidden !important;
             }
             div[class*="status_bar"],
-            div[class*="style-module_M2eytJMi"],
+            div[class*="style-module_M2eytJMi"] {
+                background: #C268F2 !important;
+                border: none !important;
+            }
             div[class*="icon"][class*="style-module"] {
-                background-color: #1a1333 !important;
-                background: #1a1333 !important;
-                border-color: rgba(194, 104, 242, 0.35) !important;
+                background: transparent !important;
+                border: none !important;
             }
             div[class*="chart_container"],
-            div[class*="style-module_j35sQtg2"],
-            div[class*="ChartBlock"] {
-                background-color: #120e24 !important;
-                background: #120e24 !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.3) !important;
-                border-bottom: 4px solid #C268F2 !important;
-                border-radius: 12px !important;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
-                transition: all 0.2s ease !important;
+            div[class*="style-module_j35sQtg2"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-bottom: 3px solid #C268F2 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
             }
             div[class*="chart_container"]:hover,
-            div[class*="style-module_j35sQtg2"]:hover,
-            div[class*="ChartBlock"]:hover {
+            div[class*="style-module_j35sQtg2"]:hover {
                 border-color: #C268F2 !important;
                 box-shadow: 0 10px 32px rgba(194, 104, 242, 0.35) !important;
             }
             div[class*="chart_container"] h3,
-            div[class*="style-module_j35sQtg2"] h3,
-            div[class*="ChartBlock"] h3,
-            div[class*="StatBlock"] h3 {
+            div[class*="style-module_j35sQtg2"] h3 {
                 color: #ffffff !important;
                 font-weight: 700 !important;
             }
             div[class*="chart_container"] p,
             div[class*="style-module_j35sQtg2"] p,
             div[class*="stat_block"] p,
-            div[class*="stat_block"] span,
-            div[class*="StatBlock"] p,
-            div[class*="StatBox"] p {
+            div[class*="stat_block"] span {
                 color: #e2d2f7 !important;
             }
             /* CARD HEADINGS */
@@ -500,14 +688,25 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 6px 28px rgba(194, 104, 242, 0.75) !important;
                 filter: brightness(1.1) !important;
             }
-            /* HIDE PTERODACTYL FOOTER ON SERVER PAGES */
+            /* ELIMINATE ALL FOOTER, COPYRIGHT & PTERODACTYL MARKS */
+            p:has(> a[href*="pterodactyl"]),
+            div:has(> a[href*="pterodactyl"]),
+            div[class*="PageContentBlock"] > div:last-child,
+            div[class*="PageContentBlock"] p:has(a),
             div[class*="PageContentBlock"] > div > p,
-            div[class*="PageContentBlock"] p,
-            a[href*="pterodactyl.io"] {
+            a[href*="pterodactyl.io"],
+            a[href*="pterodactyl"],
+            p[class*="LoginFormContainer___StyledP"],
+            footer,
+            .main-footer {
                 display: none !important;
                 visibility: hidden !important;
                 opacity: 0 !important;
                 height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                pointer-events: none !important;
             }
         </style>
         <!-- Custom Domains & Port Router Script -->
@@ -523,32 +722,32 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
-                card.style.cssText = 'width: 100% !important; margin-top: 2rem !important; background: #120e24 !important; border: 1.5px solid rgba(194, 104, 242, 0.4) !important; border-radius: 14px !important; padding: 1.5rem 1.75rem !important; box-shadow: 0 10px 35px rgba(0,0,0,0.7), 0 0 20px rgba(194,104,242,0.15) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
+                card.style.cssText = 'width: 100% !important; margin-top: 2rem !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
                 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.2); padding-bottom:1rem; margin-bottom:1.25rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.15); padding-bottom:0.85rem; margin-bottom:1.25rem;">
                         <div>
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                                 <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; letter-spacing:0.5px;">CUSTOM DOMAINS &amp; PORT ROUTING</h3>
-                                <span style="background:rgba(194,104,242,0.22); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.4); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
+                                <span style="background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.35); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
                             </div>
                             <p style="margin:6px 0 0 0; font-size:0.85rem; color:#b7a4d6;">Connect your custom domain directly to this game server without any terminal commands.</p>
                         </div>
                     </div>
                     
-                    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:1.25rem; background:#0b0818; padding:1.25rem; border-radius:10px; border:1px solid rgba(194,104,242,0.25);">
+                    <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;">
                         <div style="flex:2; min-width:220px;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Custom Domain</label>
-                            <input type="text" id="np-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; box-sizing:border-box; background:#120e24; border:1.5px solid #322254; color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;" />
+                            <input type="text" id="np-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;" />
                         </div>
                         <div style="flex:1; min-width:140px;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
-                            <select id="np-port-select" style="width:100%; box-sizing:border-box; background:#120e24; border:1.5px solid #322254; color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                            <select id="np-port-select" style="width:100%; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none; cursor:pointer;">
                                 <option value="">Loading ports...</option>
                             </select>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px; padding:10px 6px;">
+                        <div style="display:flex; align-items:center; gap:8px; padding:10px 4px;">
                             <input type="checkbox" id="np-ssl-toggle" checked style="cursor:pointer; accent-color:#C268F2; width:16px; height:16px;" />
                             <label for="np-ssl-toggle" style="font-size:0.82rem; color:#d1b8eb; cursor:pointer; font-weight:600;">Auto-SSL</label>
                         </div>
@@ -562,7 +761,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     <div>
                         <h4 style="margin:0 0 10px 0; font-size:0.8rem; font-weight:700; color:#8e79b0; text-transform:uppercase; letter-spacing:0.8px;">Active Domains</h4>
                         <div id="np-domains-list">
-                            <div style="color:#7c6999; font-size:0.85rem; font-style:italic; padding:12px 0;">Loading domains...</div>
+                            <div style="color:#7c6999; font-size:0.85rem; font-style:italic; padding:8px 0;">Loading domains...</div>
                         </div>
                     </div>
                 `;
@@ -621,14 +820,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     }
                     
                     list.innerHTML = data.domains.map(d => `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#0b0818; border:1px solid rgba(194,104,242,0.2); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.12); padding:10px 0;">
                             <div style="display:flex; align-items:center; gap:12px;">
                                 <a href="${d.ssl ? 'https://' : 'http://'}${d.domain}" target="_blank" style="font-weight:700; color:#fff; text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:4px;">${d.domain} <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>
                                 <span style="color:#a895c2; font-size:0.82rem;">Port ${d.port}</span>
-                                <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(16,185,129,0.2); color:#10b981; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(16,185,129,0.4);"><span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>CONNECTED</span>
-                                ${d.ssl ? `<span style="display:inline-flex; align-items:center; gap:5px; background:rgba(194,104,242,0.2); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; border:1px solid rgba(194,104,242,0.4);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>SSL SECURED</span>` : ''}
+                                <span style="display:inline-flex; align-items:center; gap:5px; background:rgba(16,185,129,0.18); color:#10b981; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>CONNECTED</span>
+                                ${d.ssl ? `<span style="display:inline-flex; align-items:center; gap:5px; background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>SSL SECURED</span>` : ''}
                             </div>
-                            <button onclick="window.npRemoveDomain('${serverId}', ${d.port})" style="background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:0.75rem; font-weight:700; padding:5px 12px; border-radius:6px; cursor:pointer; text-transform:uppercase;">Remove</button>
+                            <button onclick="window.npRemoveDomain('${serverId}', ${d.port})" style="background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:6px; cursor:pointer; text-transform:uppercase;">Remove</button>
                         </div>
                     `).join('');
                 })
