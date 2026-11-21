@@ -163,6 +163,12 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         content = content.replace(target_footer, 'null && o.createElement(x,{$_css7:{textAlign:"center"')
         changed = True
 
+    # Restore text-gray-400 to bright white
+    if '.text-gray-400' in content:
+        content = content.replace('color: rgba(11, 7, 23, 1)', 'color: rgba(255, 255, 255, 1)')
+        content = content.replace('color: rgba(11, 7, 23, var(--tw-text-opacity', 'color: rgba(255, 255, 255, var(--tw-text-opacity')
+        changed = True
+
     # Force dark card background in auth bundle inline style
     if 'backgroundColor:"rgba(255, 255, 255, var(--tw-bg-opacity))"' in content:
         content = content.replace('backgroundColor:"rgba(255, 255, 255, var(--tw-bg-opacity))"', 'backgroundColor:"rgba(18, 14, 34, 1)"')
@@ -178,12 +184,10 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         ('>Pterodactyl<', '>Nothing Panel<'),
         ('© 2015 - ', '© '),
         ('"© 2015 - "', '""'),
-        ('hsla(209, 14%, 37%, 1)', 'rgba(11, 7, 23, 1)'),
         ('hsla(209, 18%, 30%, 1)', 'rgba(18, 14, 36, 1)'),
         ('hsla(209, 18%, 30%', 'rgba(18, 14, 36'),
         ('hsla(211, 12%, 43%', 'rgba(18, 14, 36'),
         ('hsla(211, 10%, 53%', 'rgba(18, 14, 36'),
-        ('hsla(209, 14%, 37%', 'rgba(11, 7, 23'),
         ('backgroundColor:"rgba(209, 184, 235', 'backgroundColor:"rgba(11, 7, 23'),
         ('rgba(209, 184, 235, var(--tw-bg-opacity))', 'rgba(11, 7, 23, var(--tw-bg-opacity))'),
         ('rgba(209, 184, 235', 'rgba(11, 7, 23'),
@@ -1177,9 +1181,29 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
             div[class*="chart_container"] p,
             div[class*="style-module_j35sQtg2"] p,
+            /* CONSOLE STAT CARDS: ALL VALUES, TEXT & OFFLINE LABELS BRIGHT WHITE */
+            div[class*="stat_block"],
+            div[class*="style-module_V4CSEpa4"] {
+                color: #ffffff !important;
+            }
+            div[class*="stat_block"] *,
+            div[class*="style-module_V4CSEpa4"] * {
+                color: #ffffff !important;
+            }
             div[class*="stat_block"] p,
-            div[class*="stat_block"] span {
-                color: #e2d2f7 !important;
+            div[class*="style-module_V4CSEpa4"] p {
+                color: #c9b6e3 !important;
+                font-weight: 600 !important;
+            }
+            div[class*="stat_block"] span,
+            div[class*="stat_block"] div,
+            div[class*="style-module_V4CSEpa4"] span,
+            div[class*="style-module_V4CSEpa4"] div,
+            div[class*="stat_block"] .text-gray-400,
+            div[class*="style-module_V4CSEpa4"] .text-gray-400,
+            .text-gray-400 {
+                color: #ffffff !important;
+                font-weight: 700 !important;
             }
             /* CARD HEADINGS */
             p[class*="TitledGreyBox___StyledP"],
