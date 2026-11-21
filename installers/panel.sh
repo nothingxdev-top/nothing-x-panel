@@ -41,6 +41,11 @@ telemetry="${telemetry:-true}"
 ASSUME_SSL="${ASSUME_SSL:-false}"
 CONFIGURE_LETSENCRYPT="${CONFIGURE_LETSENCRYPT:-false}"
 
+# Cloudflare Tunnel for NAT VPS / IPv6 / Non-Dedicated
+USE_CLOUDFLARE_TUNNEL="${USE_CLOUDFLARE_TUNNEL:-false}"
+CF_TUNNEL_MODE="${CF_TUNNEL_MODE:-token}"
+CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}"
+
 # Firewall
 CONFIGURE_FIREWALL="${CONFIGURE_FIREWALL:-false}"
 
@@ -481,6 +486,33 @@ configure_nginx() {
   success "Nginx configured!"
 }
 
+# --------------- Cloudflare Tunnel ------------ #
+
+install_cloudflared() {
+  if command -v cloudflared >/dev/null 2>&1; then
+    success "cloudflared is already installed!"
+    return 0
+  fi
+  output "Installing Cloudflare Tunnel (cloudflared)..."
+  local arch="amd64"
+  [ "$(uname -m)" == "aarch64" ] && arch="arm64"
+  curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${arch}" -o /usr/local/bin/cloudflared
+  chmod +x /usr/local/bin/cloudflared
+  if command -v cloudflared >/dev/null 2>&1; then
+    success "cloudflared installed successfully!"
+  else
+    warning "Binary install failed, falling back to package manager..."
+    case "$OS" in
+      ubuntu|debian)
+        mkdir -p --mode=0755 /etc/apt/keyrings
+        curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | tee /etc/apt/keyrings/cloudflare-main.gpg >/dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/cloudflared.list
+        apt-get update -y && apt-get install -y cloudflared || true
+        ;;
+    esac
+  fi
+}
+
 # --------------- Main functions --------------- #
 
 perform_install() {
@@ -499,6 +531,52 @@ perform_install() {
   configure_nginx
   [ "$CONFIGURE_LETSENCRYPT" == true ] && letsencrypt
 
+  # Setup Cloudflare Tunnel for NAT VPS / Non-Dedicated
+  if [ "$USE_CLOUDFLARE_TUNNEL" == true ]; then
+    install_cloudflared
+
+    if [ "$CF_TUNNEL_MODE" == "token" ] && [ -n "$CF_TUNNEL_TOKEN" ]; then
+      output "Installing Cloudflare Tunnel service with Token..."
+      cloudflared service install "$CF_TUNNEL_TOKEN" || true
+      systemctl enable --now cloudflared || true
+      success "Cloudflare Tunnel active for https://$FQDN!"
+    else
+      output "Starting Cloudflare Quick Tunnel (*.trycloudflare.com)..."
+      cat << 'EOF_CF' > /etc/systemd/system/cloudflared-panel.service
+[Unit]
+Description=Cloudflare Quick Tunnel for Nothing Panel
+After=network.target nginx.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cloudflared tunnel --url http://127.0.0.1:80 --logfile /var/log/cloudflared-panel.log
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF_CF
+      systemctl daemon-reload
+      systemctl enable --now cloudflared-panel
+      sleep 5
+      local assigned_url
+      assigned_url=$(grep -o 'https://[a-zA-Z0-9-]*\.trycloudflare\.com' /var/log/cloudflared-panel.log 2>/dev/null | tail -n 1 || true)
+      if [ -n "$assigned_url" ]; then
+        local assigned_domain="${assigned_url#https://}"
+        output "Assigned Cloudflare URL: $assigned_url"
+        sed -i "s@^APP_URL=.*@APP_URL=${assigned_url}@" /var/www/nothing/.env
+        sed -i -e "s@server_name [^;]*;@server_name ${assigned_domain} localhost;@g" /etc/nginx/sites-available/pterodactyl.conf 2>/dev/null || true
+        "$PHP_BIN" artisan config:clear
+        "$PHP_BIN" artisan queue:restart
+        systemctl reload nginx || true
+        export FQDN="$assigned_domain"
+        success "Cloudflare Quick Tunnel is LIVE at: $assigned_url"
+      else
+        warning "Could not parse trycloudflare URL immediately. Check status: journalctl -u cloudflared-panel"
+      fi
+    fi
+  fi
+
   # Install Nothing Panel Domain Manager (np-domain)
   output "Installing Nothing Panel Domain Manager (np-domain)..."
   curl -fsSL "$GITHUB_URL/scripts/np-domain.sh" -o /usr/local/bin/np-domain 2>/dev/null || true
@@ -514,8 +592,8 @@ perform_install() {
 
   if [ -n "${INSTALL_SETTINGS:-}" ]; then
     check_install_settings
-    printf 'CONFIGURE_FIREWALL=%s\nCONFIGURE_LETSENCRYPT=%s\nASSUME_SSL=%s\nFQDN=%s\nEMAIL=%s\nPANEL_MAJOR_VERSION=%s\n' \
-      "$CONFIGURE_FIREWALL" "$CONFIGURE_LETSENCRYPT" "$ASSUME_SSL" "$FQDN" "$email" "$PANEL_MAJOR_VERSION" >"$INSTALL_SETTINGS"
+    printf 'CONFIGURE_FIREWALL=%s\nCONFIGURE_LETSENCRYPT=%s\nASSUME_SSL=%s\nFQDN=%s\nEMAIL=%s\nPANEL_MAJOR_VERSION=%s\nUSE_CLOUDFLARE_TUNNEL=%s\nCF_TUNNEL_MODE=%s\n' \
+      "$CONFIGURE_FIREWALL" "$CONFIGURE_LETSENCRYPT" "$ASSUME_SSL" "$FQDN" "$email" "$PANEL_MAJOR_VERSION" "$USE_CLOUDFLARE_TUNNEL" "$CF_TUNNEL_MODE" >"$INSTALL_SETTINGS"
   fi
 
   return 0

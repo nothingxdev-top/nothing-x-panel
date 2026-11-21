@@ -81,6 +81,7 @@ while [ "$done" == false ]; do
 
   select_menu "Nothing Panel Installer — What would you like to do?" \
     "Install Panel + Wings (Automatic 1-Click Setup - Recommended)" \
+    "Install Panel on NAT VPS / IPv6 (via Cloudflare Tunnel - No Open Ports)" \
     "Install the Panel only" \
     "Install Wings (Game Server Node) only" \
     "Update Panel (Preserve Data & Database)" \
@@ -95,6 +96,7 @@ while [ "$done" == false ]; do
 
   actions=(
     "panel"
+    "panel_nat"
     "panel"
     "wings"
     "update"
@@ -109,13 +111,19 @@ while [ "$done" == false ]; do
   )
 
   # Skip the separator option
-  if [ "$MENU_RESULT" == "7" ]; then
+  if [ "$MENU_RESULT" == "8" ]; then
     continue
   fi
 
   action="${actions[$MENU_RESULT]}"
 
   if [ -z "$action" ]; then
+    continue
+  fi
+
+  if [ "$action" == "panel_nat" ]; then
+    export USE_CLOUDFLARE_TUNNEL=true
+    execute "panel"
     continue
   fi
 

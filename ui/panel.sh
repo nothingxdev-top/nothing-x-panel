@@ -44,6 +44,11 @@ export user_password=""
 export ASSUME_SSL=false
 export CONFIGURE_LETSENCRYPT=false
 
+# Cloudflare Tunnel for NAT VPS / IPv6 / Non-Dedicated
+export USE_CLOUDFLARE_TUNNEL="${USE_CLOUDFLARE_TUNNEL:-false}"
+export CF_TUNNEL_MODE="${CF_TUNNEL_MODE:-token}"
+export CF_TUNNEL_TOKEN="${CF_TUNNEL_TOKEN:-}"
+
 # Firewall
 export CONFIGURE_FIREWALL=false
 
@@ -171,31 +176,73 @@ main() {
   done
 
   # ─────────────────────────────────────────────
-  draw_box "Panel Domain / FQDN"
+  draw_box "Network & Domain Exposure Method"
 
-  while true; do
-    printf "  ${COLOR_BOLD}→ ${COLOR_NC}Set the FQDN of this panel (e.g. panel.yourdomain.com): "
-    read -r FQDN
-    valid_hostname "$FQDN" && break
-  done
-  FQDN="${FQDN%.}"
-  [[ "$FQDN" != *:* || "$FQDN" == '['*']' ]] || FQDN="[$FQDN]"
+  if [ "$USE_CLOUDFLARE_TUNNEL" != true ]; then
+    output "How would you like to expose this panel to the internet?"
+    output "• Dedicated VPS: Standard public IP, open ports 80/443 with Let's Encrypt SSL."
+    output "• NAT VPS / Non-Dedicated / IPv6: Expose via Cloudflare Tunnel (NO open ports required!)."
+    echo ""
 
-  # Check if SSL is available
-  check_FQDN_SSL
+    select_menu "Select VPS Network Setup:" \
+      "Dedicated VPS (Standard Domain + Let's Encrypt SSL on Ports 80 & 443)" \
+      "NAT VPS / Non-Dedicated / IPv6 (Cloudflare Tunnel - 100% Free SSL & No Open Ports)"
 
-  # Ask if firewall is needed
-  ask_firewall CONFIGURE_FIREWALL
-
-  # Only ask about SSL if it is available
-  if [ "$SSL_AVAILABLE" == true ]; then
-    ask_letsencrypt
-    [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
+    [ "$MENU_RESULT" == "1" ] && USE_CLOUDFLARE_TUNNEL=true
   fi
 
-  # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
-  if [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ]; then
-    verify_fqdn "$FQDN"
+  if [ "$USE_CLOUDFLARE_TUNNEL" == true ]; then
+    export CONFIGURE_LETSENCRYPT=false
+    export ASSUME_SSL=true
+    export CONFIGURE_FIREWALL=false
+
+    output "Configuring Cloudflare Tunnel for NAT VPS / Non-Dedicated environment..."
+    select_menu "Cloudflare Tunnel Setup Mode:" \
+      "Custom Domain with Tunnel Token (Recommended - Enter your Cloudflare Token)" \
+      "Free Quick Tunnel (*.trycloudflare.com - Zero setup, instant live URL)"
+
+    if [ "$MENU_RESULT" == "0" ]; then
+      export CF_TUNNEL_MODE="token"
+      while true; do
+        printf "  ${COLOR_BOLD}→ ${COLOR_NC}Enter your Domain configured in Cloudflare (e.g. panel.yourdomain.com): "
+        read -r FQDN
+        valid_hostname "$FQDN" && break
+      done
+      while true; do
+        printf "  ${COLOR_BOLD}→ ${COLOR_NC}Enter your Cloudflare Tunnel Token (from Zero Trust dashboard): "
+        read -r CF_TUNNEL_TOKEN
+        [ -n "$CF_TUNNEL_TOKEN" ] && break
+        error "Tunnel token cannot be empty."
+      done
+    else
+      export CF_TUNNEL_MODE="quick"
+      export FQDN="panel.trycloudflare.com"
+    fi
+  else
+    while true; do
+      printf "  ${COLOR_BOLD}→ ${COLOR_NC}Set the FQDN of this panel (e.g. panel.yourdomain.com): "
+      read -r FQDN
+      valid_hostname "$FQDN" && break
+    done
+    FQDN="${FQDN%.}"
+    [[ "$FQDN" != *:* || "$FQDN" == '['*']' ]] || FQDN="[$FQDN]"
+
+    # Check if SSL is available
+    check_FQDN_SSL
+
+    # Ask if firewall is needed
+    ask_firewall CONFIGURE_FIREWALL
+
+    # Only ask about SSL if it is available
+    if [ "$SSL_AVAILABLE" == true ]; then
+      ask_letsencrypt
+      [ "$CONFIGURE_LETSENCRYPT" == false ] && ask_assume_ssl
+    fi
+
+    # verify FQDN if user has selected to assume SSL or configure Let's Encrypt
+    if [ "$CONFIGURE_LETSENCRYPT" == true ] || [ "$ASSUME_SSL" == true ]; then
+      verify_fqdn "$FQDN"
+    fi
   fi
 
   # ask telemetry preference
@@ -231,10 +278,16 @@ summary() {
   printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Email"            "$email"
   printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Admin User"       "$user_username"
   printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Admin Password"   "(hidden)"
-  printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Panel FQDN"       "$FQDN"
-  printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Firewall"         "$CONFIGURE_FIREWALL"
-  printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Let's Encrypt"    "$CONFIGURE_LETSENCRYPT"
-  printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Assume SSL"       "$ASSUME_SSL"
+  if [ "$USE_CLOUDFLARE_TUNNEL" == true ]; then
+    printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Network Mode"     "Cloudflare Tunnel (NAT VPS)"
+    printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Tunnel Mode"      "$CF_TUNNEL_MODE"
+    printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Panel Domain"     "$FQDN"
+  else
+    printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Panel FQDN"       "$FQDN"
+    printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Firewall"         "$CONFIGURE_FIREWALL"
+    printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Let's Encrypt"    "$CONFIGURE_LETSENCRYPT"
+    printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Assume SSL"       "$ASSUME_SSL"
+  fi
   printf "  ${COLOR_CYAN}║${COLOR_NC}  %-20s : %-36s${COLOR_CYAN}║${COLOR_NC}\n" "Telemetry"        "$telemetry"
   echo -e "  ${COLOR_CYAN}╚══════════════════════════════════════════════════════════════╝${COLOR_NC}"
   echo ""
@@ -247,13 +300,18 @@ goodbye() {
   echo -e "  ${COLOR_CYAN}╚══════════════════════════════════════════════════════════════╝${COLOR_NC}"
   echo ""
 
-  [ "$CONFIGURE_LETSENCRYPT" == true ] && output "  🌐 Your panel is accessible at: $(hyperlink "https://$FQDN")"
-  if [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
-    output "  ⚠  SSL assumed but not auto-configured. Place certificates at:"
-    output "     /etc/ssl/$FQDN.pem  and  /etc/ssl/$FQDN.key"
-    output "     Then run: nginx -t && systemctl restart nginx"
+  if [ "$USE_CLOUDFLARE_TUNNEL" == true ]; then
+    output "  ☁ Your panel is exposed via Cloudflare Tunnel at: $(hyperlink "https://$FQDN")"
+    output "     No open ports or public IPv4 required!"
+  else
+    [ "$CONFIGURE_LETSENCRYPT" == true ] && output "  🌐 Your panel is accessible at: $(hyperlink "https://$FQDN")"
+    if [ "$ASSUME_SSL" == true ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
+      output "  ⚠  SSL assumed but not auto-configured. Place certificates at:"
+      output "     /etc/ssl/$FQDN.pem  and  /etc/ssl/$FQDN.key"
+      output "     Then run: nginx -t && systemctl restart nginx"
+    fi
+    [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "  🌐 Your panel is accessible at: $(hyperlink "http://$FQDN")"
   fi
-  [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ] && output "  🌐 Your panel is accessible at: $(hyperlink "http://$FQDN")"
 
   echo ""
   output "  Web server: nginx on $OS"
