@@ -161,13 +161,14 @@ echo "✔ Generated /etc/pterodactyl/config.yml\n";
 
 // 5. Create Default Allocations (Ports 25565 - 25575)
 $createdAllocations = 0;
+$alloc_ip = !empty($ip) ? $ip : (!empty($fqdn) ? $fqdn : '0.0.0.0');
 for ($port = 25565; $port <= 25575; $port++) {
     $alloc = Allocation::firstOrCreate([
         'node_id' => $node->id,
         'ip' => '0.0.0.0',
         'port' => $port,
     ], [
-        'ip_alias' => $fqdn,
+        'ip_alias' => $alloc_ip,
     ]);
     if ($alloc->wasRecentlyCreated) {
         $createdAllocations++;
