@@ -207,6 +207,13 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="LoginFormContainer___StyledDiv2"],
             img[src*="pterodactyl"],
             img[alt*="pterodactyl"],
+            img[src*="svgs/"],
+            img[src*="/assets/svgs"],
+            div[class*="LoginFormContainer"] img,
+            div[class*="sc-cyh04c"] img,
+            div.sc-cyh04c-0 img,
+            div.sc-cyh04c-3 img,
+            div.sc-cyh04c-6 img,
             p[class*="LoginFormContainer___StyledP"],
             a[href*="pterodactyl"] {
                 display: none !important;
@@ -214,6 +221,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 height: 0 !important;
                 width: 0 !important;
                 opacity: 0 !important;
+                pointer-events: none !important;
             }
             /* ========================================================= */
             /* LOGIN CARD: CLEAN SINGLE OBSIDIAN CARD (NO NESTED BOXES)  */
@@ -293,21 +301,36 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 display: block !important;
             }
             /* Inputs & Textareas — Sleek Obsidian Dark Background (Excluding Checkboxes & Radios) */
-            input:not([type="checkbox"]):not([type="radio"]),
+            input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
             input[type="text"],
             input[type="password"],
             input[type="email"],
             input[type="number"],
             input[type="search"],
-            textarea,
-            input[class*="sc-19rce1w"]:not([type="checkbox"]):not([type="radio"]),
-            textarea[class*="sc-19rce1w"],
-            div[class*="VariableBox"] input:not([type="checkbox"]),
+            textarea {
+                background-color: #0b0717 !important;
+                background: #0b0717 !important;
+                border: 1.5px solid #281f3d !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+                padding: 0.75rem 1rem !important;
+                transition: all 0.2s ease !important;
+                font-size: 0.95rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            /* Startup VariableBox inputs — force dark bg to override styled-components */
+            div[class*="VariableBox"] input[type="text"],
+            div[class*="VariableBox"] input:not([type="checkbox"]):not([type="radio"]),
             div[class*="VariableBox"] textarea,
-            div[class*="StartupContainer"] input:not([type="checkbox"]),
+            div[class*="StartupContainer"] input[type="text"],
+            div[class*="StartupContainer"] input:not([type="checkbox"]):not([type="radio"]),
             div[class*="StartupContainer"] textarea,
-            div[class*="SettingsContainer"] input:not([type="checkbox"]),
-            div[class*="TitledGreyBox"] input:not([type="checkbox"]) {
+            div[class*="SettingsContainer"] input[type="text"],
+            div[class*="SettingsContainer"] input:not([type="checkbox"]):not([type="radio"]),
+            div[class*="TitledGreyBox"] input[type="text"],
+            div[class*="TitledGreyBox"] input:not([type="checkbox"]):not([type="radio"]),
+            div[class*="TitledGreyBox"] textarea {
                 background-color: #0b0717 !important;
                 background: #0b0717 !important;
                 border: 1.5px solid #281f3d !important;
@@ -696,6 +719,22 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border: none !important;
                 padding: 0 !important;
                 box-shadow: none !important;
+            }
+
+            /* SETTINGS PAGE: Full-width grid layout (2 cards side by side, no half-width) */
+            div[class*="SettingsContainer"] > div[class*="grid"],
+            div[class*="SettingsContainer___StyledDiv"]:has(div[class*="TitledGreyBox"]) {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1.5rem !important;
+                width: 100% !important;
+            }
+            /* Single-column sections (no sibling) go full width */
+            div[class*="ReinstallServerBox"],
+            div[class*="sc-1prmksw-1"]:only-child {
+                grid-column: 1 / -1 !important;
+                max-width: 100% !important;
+                width: 100% !important;
             }
 
             /* REMOVE ALL decorative rectangular outlines & nested borders inside settings & forms */
@@ -1119,7 +1158,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 // Mount target from React component in server bundle
                 const mount = document.getElementById('np-domains-view-mount');
                 if (!mount) {
-                    // React component is still mounting, retry on next tick
+                    // React component is still mounting — retry with backoff
+                    setTimeout(injectDomainManager, 150);
                     return;
                 }
 
@@ -1140,6 +1180,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                             <span style="background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.35); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
                         </div>
                     </div>
+                    
 
                     <!-- MODE SELECTOR TABS -->
                     <div style="display:flex; gap:10px; margin-bottom:1.25rem;">
@@ -1728,32 +1769,109 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 return res;
             };
 
-            // CHECKBOX STATE SYNCHRONIZATION
+            // ============================================================
+            // CHECKBOX VISUAL STATE — JS inline-style (bypasses styled-components)
+            // ============================================================
+            const TICK_SVG = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjQgMTEgOCAxNSAxNiA2Ii8+PC9zdmc+")';
+            const DASH_SVG = 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjgiIHdpZHRoPSIxNCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=")';
+
+            function applyCheckboxStyle(cb) {
+                // Skip switch/toggle inputs
+                if (cb.getAttribute('role') === 'switch' || cb.closest('[class*="Switch"]') || cb.closest('[class*="Toggle"]') || cb.closest('[class*="sc-1nxt82m"]')) return;
+                if (cb.indeterminate) {
+                    cb.style.setProperty('appearance', 'none', 'important');
+                    cb.style.setProperty('-webkit-appearance', 'none', 'important');
+                    cb.style.setProperty('background-color', '#C268F2', 'important');
+                    cb.style.setProperty('background-image', DASH_SVG, 'important');
+                    cb.style.setProperty('background-size', '14px 14px', 'important');
+                    cb.style.setProperty('background-position', 'center', 'important');
+                    cb.style.setProperty('background-repeat', 'no-repeat', 'important');
+                    cb.style.setProperty('border', '1.5px solid #ffffff', 'important');
+                    cb.style.setProperty('box-shadow', '0 0 12px rgba(194, 104, 242, 0.75)', 'important');
+                    cb.style.setProperty('width', '20px', 'important');
+                    cb.style.setProperty('height', '20px', 'important');
+                    cb.style.setProperty('min-width', '20px', 'important');
+                    cb.style.setProperty('min-height', '20px', 'important');
+                    cb.style.setProperty('border-radius', '5px', 'important');
+                    cb.style.setProperty('cursor', 'pointer', 'important');
+                } else if (cb.checked) {
+                    cb.style.setProperty('appearance', 'none', 'important');
+                    cb.style.setProperty('-webkit-appearance', 'none', 'important');
+                    cb.style.setProperty('background-color', '#C268F2', 'important');
+                    cb.style.setProperty('background-image', TICK_SVG, 'important');
+                    cb.style.setProperty('background-size', '14px 14px', 'important');
+                    cb.style.setProperty('background-position', 'center', 'important');
+                    cb.style.setProperty('background-repeat', 'no-repeat', 'important');
+                    cb.style.setProperty('border', '1.5px solid #ffffff', 'important');
+                    cb.style.setProperty('box-shadow', '0 0 12px rgba(194, 104, 242, 0.75)', 'important');
+                    cb.style.setProperty('width', '20px', 'important');
+                    cb.style.setProperty('height', '20px', 'important');
+                    cb.style.setProperty('min-width', '20px', 'important');
+                    cb.style.setProperty('min-height', '20px', 'important');
+                    cb.style.setProperty('border-radius', '5px', 'important');
+                    cb.style.setProperty('cursor', 'pointer', 'important');
+                } else {
+                    cb.style.setProperty('appearance', 'none', 'important');
+                    cb.style.setProperty('-webkit-appearance', 'none', 'important');
+                    cb.style.setProperty('background-color', '#0b0717', 'important');
+                    cb.style.setProperty('background-image', 'none', 'important');
+                    cb.style.setProperty('border', '1.5px solid #5d447a', 'important');
+                    cb.style.setProperty('box-shadow', 'none', 'important');
+                    cb.style.setProperty('width', '20px', 'important');
+                    cb.style.setProperty('height', '20px', 'important');
+                    cb.style.setProperty('min-width', '20px', 'important');
+                    cb.style.setProperty('min-height', '20px', 'important');
+                    cb.style.setProperty('border-radius', '5px', 'important');
+                    cb.style.setProperty('cursor', 'pointer', 'important');
+                }
+            }
+
+            // Listen for change events on all checkboxes
             document.addEventListener('change', function(e) {
                 if (e.target && e.target.type === 'checkbox') {
-                    if (e.target.checked) {
-                        e.target.classList.add('np-is-checked');
-                    } else {
-                        e.target.classList.remove('np-is-checked');
-                    }
+                    applyCheckboxStyle(e.target);
                 }
             }, true);
 
             function syncCheckboxes() {
-                document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                    if (cb.checked) {
-                        if (!cb.classList.contains('np-is-checked')) cb.classList.add('np-is-checked');
+                document.querySelectorAll('input[type="checkbox"]').forEach(applyCheckboxStyle);
+            }
+
+            // JS-driven toggle/switch state sync (bypasses styled-components)
+            function syncToggles() {
+                document.querySelectorAll('div[class*="sc-1nxt82m-0"] > input[type="checkbox"], div[class*="sc-1nxt82m-1"] > input[type="checkbox"], div[class*="Switch"] > input[type="checkbox"], div[class*="Toggle"] > input[type="checkbox"]').forEach(inp => {
+                    const label = inp.nextElementSibling;
+                    if (!label || label.tagName !== 'LABEL') return;
+                    if (inp.checked) {
+                        label.style.setProperty('background', 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)', 'important');
+                        label.style.setProperty('border-color', '#C268F2', 'important');
+                        label.style.setProperty('box-shadow', '0 0 14px rgba(194, 104, 242, 0.6)', 'important');
+                        const knob = label.querySelector('::before') || label;
+                        try { label.style.setProperty('--knob-x', '1.5rem'); } catch(e) {}
                     } else {
-                        if (cb.classList.contains('np-is-checked')) cb.classList.remove('np-is-checked');
+                        label.style.setProperty('background', '#1a1330', 'important');
+                        label.style.setProperty('border-color', 'rgba(194, 104, 242, 0.4)', 'important');
+                        label.style.setProperty('box-shadow', 'none', 'important');
+                        try { label.style.setProperty('--knob-x', '0'); } catch(e) {}
                     }
                 });
             }
+
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.type === 'checkbox') {
+                    const parent = e.target.parentElement;
+                    if (parent && (parent.className.includes('sc-1nxt82m') || parent.className.includes('Switch') || parent.className.includes('Toggle'))) {
+                        setTimeout(syncToggles, 10);
+                    }
+                }
+            }, true);
 
             function onNavigate() {
                 injectDomainManager();
                 initCustomSelects();
                 initFileManagerImagePreview();
                 syncCheckboxes();
+                syncToggles();
             }
 
             window.addEventListener('popstate', onNavigate);
@@ -2081,7 +2199,7 @@ if [ -f "$ADMIN_INDEX" ]; then
   sed -i 's@https://github\.com/sponsors/pterodactyl@https://github.com/nothingxdev-top@g' "$ADMIN_INDEX"
 fi
 
-# 6. Configure Nginx Cache-Control (Force Fresh Bundles)
+# 6. Configure Nginx Cache-Control (Force Fresh Bundles) & SVG MIME type
 python3 - << 'PYEOF'
 import os
 nginx_file = "/etc/nginx/sites-available/pterodactyl.conf"
@@ -2090,7 +2208,14 @@ if os.path.exists(nginx_file):
         conf = f.read()
 
     cache_block = """
-    location ~* \.(css|js|svg|png|jpg|jpeg|gif|ico|woff|woff2|ttf)$ {
+    # SVG with correct MIME type
+    location ~* \\.svg$ {
+        expires -1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
+        add_header Content-Type "image/svg+xml";
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+    location ~* \\.(css|js|png|jpg|jpeg|gif|ico|woff|woff2|ttf)$ {
         expires -1;
         add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0";
         try_files $uri $uri/ /index.php?$query_string;
