@@ -804,8 +804,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             let activeMode = 'nginx'; // 'nginx' or 'cloudflared'
 
             function findSettingsFlexRow() {
+                // Exact styled-component class for 2-column flex row in SettingsContainer
+                const styledFlex = document.querySelector('div[class*="sc-1e5ycmz-1"]') ||
+                                   document.querySelector('div[class*="SettingsContainer___StyledDiv"]');
+                if (styledFlex) return styledFlex;
+
                 const all = Array.from(document.querySelectorAll('div, p, h3, h2, h4'));
-                const sftp = all.find(el => el.textContent.trim() === 'SFTP Details' || el.textContent.trim() === 'Server Address' || el.textContent.trim() === 'Change Server Details');
+                const sftp = all.find(el => {
+                    const t = el.textContent.trim();
+                    return t === 'SFTP Details' || t === 'Server Address' || t === 'Change Server Details';
+                });
                 if (sftp) {
                     const cardBox = sftp.closest('div[class*="TitledGreyBox"]') || sftp.closest('div[class*="sc-gvsoy"]');
                     if (cardBox) {
@@ -826,14 +834,32 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             function injectDomainManager() {
                 const path = window.location.pathname;
                 const match = path.match(/^\/server\/([a-zA-Z0-9]+)\/settings/);
-                if (!match) return;
+                const existing = document.getElementById('np-domain-manager-card');
+
+                // STRICT: Only show on /server/[id]/settings. Remove on ANY other route (Dashboard, Console, etc.)
+                if (!match) {
+                    if (existing) existing.remove();
+                    return;
+                }
                 
                 const serverId = match[1];
-                if (document.getElementById('np-domain-manager-card')) return;
-
                 const flexRow = findSettingsFlexRow();
+                if (!flexRow) {
+                    // Settings page is still loading in React, retry on next tick
+                    return;
+                }
+
+                // If card already exists and is placed correctly, keep it
+                if (existing) {
+                    if (existing.getAttribute('data-server-id') === serverId && flexRow.nextElementSibling === existing) {
+                        return;
+                    }
+                    existing.remove();
+                }
+
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
+                card.setAttribute('data-server-id', serverId);
                 card.style.cssText = 'width: 100% !important; margin-top: 2rem !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
                 
                 card.innerHTML = `
@@ -848,30 +874,36 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                         </div>
                     </div>
 
-                    <!-- MODE SELECTOR TABS -->
+                    <!-- MODE SELECTOR TABS (NO UNICODE EMOJIS) -->
                     <div style="display:flex; gap:10px; margin-bottom:1.25rem;">
-                        <button id="np-tab-nginx" type="button" style="padding:7px 16px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; border:none; box-shadow:0 2px 10px rgba(194,104,242,0.4);">🌐 Custom Domain (Nginx &amp; SSL)</button>
-                        <button id="np-tab-cf" type="button" style="padding:7px 16px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:#1b1531; color:#c7b4e2; border:1px solid rgba(194,104,242,0.25);">☁️ Cloudflare Tunnel (NAT VPS / IPv6 / No Open Ports)</button>
+                        <button id="np-tab-nginx" type="button" style="padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; border:none; box-shadow:0 2px 10px rgba(194,104,242,0.4); display:inline-flex; align-items:center;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            CUSTOM DOMAIN (NGINX &amp; SSL)
+                        </button>
+                        <button id="np-tab-cf" type="button" style="padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:#1b1531; color:#c7b4e2; border:1px solid rgba(194,104,242,0.25); display:inline-flex; align-items:center;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                            CLOUDFLARE TUNNEL (NAT VPS / IPV6)
+                        </button>
                     </div>
                     
                     <!-- NGINX REVERSE PROXY FORM -->
                     <div id="np-form-nginx" style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;">
                         <div style="flex:2; min-width:220px;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Custom Domain</label>
-                            <input type="text" id="np-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;" />
+                            <input type="text" id="np-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
                         </div>
                         <div style="flex:1; min-width:140px;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
-                            <select id="np-port-select" style="width:100%; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                            <select id="np-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
                                 <option value="">Loading ports...</option>
                             </select>
                         </div>
-                        <div style="display:flex; align-items:center; gap:8px; padding:10px 4px;">
-                            <input type="checkbox" id="np-ssl-toggle" checked style="cursor:pointer; accent-color:#C268F2; width:16px; height:16px;" />
-                            <label for="np-ssl-toggle" style="font-size:0.82rem; color:#d1b8eb; cursor:pointer; font-weight:600;">Auto-SSL</label>
+                        <div style="display:flex; align-items:center; gap:8px; height:42px; padding:0 4px;">
+                            <input type="checkbox" id="np-ssl-toggle" checked style="cursor:pointer; accent-color:#C268F2; width:16px; height:16px; margin:0;" />
+                            <label for="np-ssl-toggle" style="font-size:0.82rem; color:#d1b8eb; cursor:pointer; font-weight:600; margin:0; text-transform:none;">Auto-SSL</label>
                         </div>
                         <div>
-                            <button id="np-btn-add-domain" type="button" style="background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:11px 22px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(194,104,242,0.4); text-transform:uppercase; letter-spacing:0.5px;">+ Connect Domain</button>
+                            <button id="np-btn-add-domain" type="button" style="height:42px; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(194,104,242,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">+ Connect Domain</button>
                         </div>
                     </div>
 
@@ -879,16 +911,19 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     <div id="np-form-cf" style="display:none; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;">
                         <div style="flex:1; min-width:140px;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
-                            <select id="np-cf-port-select" style="width:100%; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                            <select id="np-cf-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
                                 <option value="">Loading ports...</option>
                             </select>
                         </div>
                         <div style="flex:2; min-width:220px;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Cloudflare Tunnel Token (Optional)</label>
-                            <input type="text" id="np-cf-token-input" placeholder="Leave empty for instant Quick Tunnel (*.trycloudflare.com)" style="width:100%; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:10px 14px; font-size:0.9rem; outline:none;" />
+                            <input type="text" id="np-cf-token-input" placeholder="Leave empty for instant Quick Tunnel (*.trycloudflare.com)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
                         </div>
                         <div>
-                            <button id="np-btn-launch-cf" type="button" style="background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:11px 22px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(6,182,212,0.4); text-transform:uppercase; letter-spacing:0.5px;">⚡ Launch Cloudflare Tunnel</button>
+                            <button id="np-btn-launch-cf" type="button" style="height:42px; background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(6,182,212,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                Launch Cloudflare Tunnel
+                            </button>
                         </div>
                     </div>
 
@@ -902,17 +937,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     </div>
                 `;
                 
-                if (flexRow) {
-                    flexRow.insertAdjacentElement('afterend', card);
-                } else {
-                    const fallback = document.querySelector('div[class*="ContentContainer"]') ||
-                                     document.querySelector('div.my-4') ||
-                                     document.querySelector('main') ||
-                                     document.querySelector('#app section') ||
-                                     document.querySelector('#app');
-                    if (fallback) fallback.appendChild(card);
-                    else return;
-                }
+                flexRow.insertAdjacentElement('afterend', card);
                 loadServerDomains(serverId);
                 
                 // Tab switcher logic
@@ -1069,7 +1094,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     const btn1 = document.getElementById('np-btn-add-domain');
                     const btn2 = document.getElementById('np-btn-launch-cf');
                     if (btn1) { btn1.disabled = false; btn1.textContent = '+ Connect Domain'; }
-                    if (btn2) { btn2.disabled = false; btn2.textContent = '⚡ Launch Cloudflare Tunnel'; }
+                    if (btn2) { btn2.disabled = false; btn2.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Launch Cloudflare Tunnel'; }
 
                     if (res.success) {
                         showMsg(res.message, false);
@@ -1084,7 +1109,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     const btn1 = document.getElementById('np-btn-add-domain');
                     const btn2 = document.getElementById('np-btn-launch-cf');
                     if (btn1) { btn1.disabled = false; btn1.textContent = '+ Connect Domain'; }
-                    if (btn2) { btn2.disabled = false; btn2.textContent = '⚡ Launch Cloudflare Tunnel'; }
+                    if (btn2) { btn2.disabled = false; btn2.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Launch Cloudflare Tunnel'; }
                     showMsg('Error: ' + err.message, true);
                 });
             }
@@ -1113,8 +1138,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 .catch(err => showMsg('Error: ' + err.message, true));
             };
 
-            // Run check on navigation and interval
-            setInterval(injectDomainManager, 800);
+            // Run check frequently (300ms) and on popstate for instant SPA responsiveness
+            setInterval(injectDomainManager, 300);
             window.addEventListener('popstate', injectDomainManager);
         })();
         </script>
