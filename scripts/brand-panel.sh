@@ -59,13 +59,18 @@ fi
 
 # 2. Deploy Brand Logo, Favicons & Neutralize dinosaur SVG
 mkdir -p "$PANEL_DIR/public/assets" "$PANEL_DIR/public/favicons" "$PANEL_DIR/public/assets/svgs"
-curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/logo.png" -o "$PANEL_DIR/public/assets/logo.png" 2>/dev/null || true
-curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/logo.png" -o "$PANEL_DIR/public/favicons/apple-touch-icon.png" 2>/dev/null || true
-curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/logo.png" -o "$PANEL_DIR/public/favicons/favicon-32x32.png" 2>/dev/null || true
-curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/configs/favicon.ico" -o "$PANEL_DIR/public/favicons/favicon.ico" 2>/dev/null || true
-chmod 644 "$PANEL_DIR/public/assets/logo.png" 2>/dev/null || true
+cat << 'SVGEOF' > "$PANEL_DIR/public/assets/logo.svg"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="10" y="10" width="80" height="80" rx="22" fill="#1a1330" stroke="#C268F2" stroke-width="3"/>
+  <path d="M34 66 V34 L66 66 V34" fill="none" stroke="#C268F2" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+SVGEOF
+chmod 644 "$PANEL_DIR/public/assets/logo.svg" 2>/dev/null || true
+cp -f "$PANEL_DIR/public/assets/logo.svg" "$PANEL_DIR/public/favicons/favicon.ico" 2>/dev/null || true
+cp -f "$PANEL_DIR/public/assets/logo.svg" "$PANEL_DIR/public/favicons/apple-touch-icon.png" 2>/dev/null || true
+cp -f "$PANEL_DIR/public/assets/logo.svg" "$PANEL_DIR/public/favicons/favicon-32x32.png" 2>/dev/null || true
 
-# Render Vynoxis logo inside pterodactyl.svg and dinosaur SVGs so no mascot ever displays
+# Render Nothing brand logo inside pterodactyl.svg and dinosaur SVGs so no mascot ever displays
 for svg_file in \
   "$PANEL_DIR/public/assets/svgs/pterodactyl.svg" \
   "$PANEL_DIR/public/assets/svgs/not_found.svg" \
@@ -76,11 +81,12 @@ for svg_file in \
   "$PANEL_DIR/resources/scripts/assets/images/server_error.svg" \
   "$PANEL_DIR/resources/scripts/assets/images/server_installing.svg"; do
   if [ -f "$svg_file" ] || [ -d "$(dirname "$svg_file")" ]; then
-    cat << 'EOF' > "$svg_file"
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
-  <image href="/assets/logo.png" width="512" height="512" />
+    cat << 'SVGEOF' > "$svg_file"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="10" y="10" width="80" height="80" rx="22" fill="#1a1330" stroke="#C268F2" stroke-width="3"/>
+  <path d="M34 66 V34 L66 66 V34" fill="none" stroke="#C268F2" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
-EOF
+SVGEOF
     chmod 644 "$svg_file" 2>/dev/null || true
     chown www-data:www-data "$svg_file" 2>/dev/null || true
   fi
@@ -145,6 +151,13 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         content = content.replace('Nothing PanelUser', 'PterodactylUser')
         changed = True
 
+    # Register dedicated /domains tab in server navigation and router
+    target_route = 'r.createElement(o.A,{action:"settings.reinstall"},r.createElement(Ii,null)))))}},{path:"/activity"'
+    domains_route = 'r.createElement(o.A,{action:"settings.reinstall"},r.createElement(Ii,null)))))}},{path:"/domains",permission:null,name:"Domains",component:()=>{return r.createElement(c,{title:"Domains"},r.createElement("div",{id:"np-domains-view-mount"}))}},{path:"/activity"'
+    if target_route in content:
+        content = content.replace(target_route, domains_route)
+        changed = True
+
     if changed:
         with open(path, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -202,11 +215,36 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 width: 0 !important;
                 opacity: 0 !important;
             }
-            /* CENTER AND STYLE THE LOGIN CARD ONLY ON AUTH / LOGIN CONTAINER */
-            div[class*="LoginFormContainer___StyledDiv"],
-            div[class*="LoginFormContainer"] form {
+            /* ========================================================= */
+            /* LOGIN CARD: CLEAN SINGLE OBSIDIAN CARD (NO NESTED BOXES)  */
+            /* ========================================================= */
+            div.sc-cyh04c-0,
+            div[class*="LoginFormContainer__Container"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+            }
+            div[class*="LoginFormContainer"] form,
+            div.sc-cyh04c-6,
+            div[class*="LoginFormContainer___StyledDiv3"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            div[class*="LoginFormContainer"] form::before,
+            div.sc-cyh04c-0::before,
+            div.sc-cyh04c-6::before {
+                content: none !important;
+                display: none !important;
+            }
+            div.sc-cyh04c-3,
+            div[class*="LoginFormContainer___StyledDiv"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"]) {
                 max-width: 440px !important;
-                margin: 3.5rem auto 2rem auto !important;
+                margin: 4rem auto 2rem auto !important;
                 background-color: #120e22 !important;
                 background: #120e22 !important;
                 border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
@@ -214,20 +252,19 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-radius: 16px !important;
                 padding: 2.5rem 2rem !important;
                 display: block !important;
+                box-sizing: border-box !important;
             }
-            /* BRAND LOGO ON LOGIN CARD */
-            .sc-cyh04c-3::before,
-            [class*="sc-cyh04c-3"]::before,
-            div[class*="LoginFormContainer___StyledDiv"]::before {
-                content: "";
-                display: block;
-                width: 100px;
-                height: 100px;
-                margin: 0 auto 1.5rem auto;
-                background: url("/assets/logo.png") no-repeat center center;
-                background-size: contain;
-                border-radius: 20px;
-                filter: drop-shadow(0 0 16px rgba(194, 104, 242, 0.65));
+            /* BRAND LOGO ONLY ONCE ON LOGIN CARD */
+            div.sc-cyh04c-3::before,
+            div[class*="LoginFormContainer___StyledDiv"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"])::before {
+                content: "" !important;
+                display: block !important;
+                width: 72px !important;
+                height: 72px !important;
+                margin: 0 auto 1.5rem auto !important;
+                background: url("/assets/logo.svg") no-repeat center center !important;
+                background-size: contain !important;
+                filter: drop-shadow(0 0 16px rgba(194, 104, 242, 0.65)) !important;
             }
             div[class*="LoginFormContainer___StyledDiv3"],
             .sc-cyh04c-6,
@@ -263,14 +300,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             input[type="number"],
             input[type="search"],
             textarea,
-            input[class*="sc-19rce1w"],
+            input[class*="sc-19rce1w"]:not([type="checkbox"]):not([type="radio"]),
             textarea[class*="sc-19rce1w"],
-            div[class*="VariableBox"] input,
+            div[class*="VariableBox"] input:not([type="checkbox"]),
             div[class*="VariableBox"] textarea,
-            div[class*="StartupContainer"] input,
+            div[class*="StartupContainer"] input:not([type="checkbox"]),
             div[class*="StartupContainer"] textarea,
-            div[class*="SettingsContainer"] input,
-            div[class*="TitledGreyBox"] input {
+            div[class*="SettingsContainer"] input:not([type="checkbox"]),
+            div[class*="TitledGreyBox"] input:not([type="checkbox"]) {
                 background-color: #0b0717 !important;
                 background: #0b0717 !important;
                 border: 1.5px solid #281f3d !important;
@@ -287,10 +324,10 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             input[type="password"]:focus,
             input[type="email"]:focus,
             textarea:focus,
-            input[class*="sc-19rce1w"]:focus,
-            div[class*="VariableBox"] input:focus,
-            div[class*="StartupContainer"] input:focus,
-            div[class*="SettingsContainer"] input:focus {
+            input[class*="sc-19rce1w"]:not([type="checkbox"]):not([type="radio"]):focus,
+            div[class*="VariableBox"] input:not([type="checkbox"]):focus,
+            div[class*="StartupContainer"] input:not([type="checkbox"]):focus,
+            div[class*="SettingsContainer"] input:not([type="checkbox"]):focus {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
                 background-color: #0e0920 !important;
@@ -301,13 +338,15 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* ========================================================= */
             /* SWITCH / TOGGLE COMPONENT RESET (REMOVES FLOATING CIRCLE) */
             /* ========================================================= */
-            div[class*="Switch"] input,
-            label[class*="Switch"] input,
-            div[class*="sc-1nxt82m"] input,
-            div[class*="Toggle"] input,
-            div[class*="ToggleContainer"] input,
+            div[class*="Switch"] > input,
+            div[class*="sc-1nxt82m"] > input,
+            div.sc-1nxt82m-0 > input,
+            div.sc-1nxt82m-1 > input,
+            div[class*="Toggle"] > input,
+            div[class*="ToggleContainer"] > input,
             [role="switch"] input {
                 display: none !important;
+                position: absolute !important;
                 opacity: 0 !important;
                 width: 0 !important;
                 height: 0 !important;
@@ -315,13 +354,13 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 max-width: 0 !important;
                 min-height: 0 !important;
                 max-height: 0 !important;
-                position: absolute !important;
                 pointer-events: none !important;
                 border: none !important;
                 background: transparent !important;
                 box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                visibility: hidden !important;
             }
             /* Switch Track */
             div[class*="Switch__ToggleContainer"],
@@ -383,65 +422,72 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 right: auto !important;
                 background: #ffffff !important;
             }
-            /* Standard Checkboxes & Radios (Excluding Switches & Toggles) */
+            /* ========================================================= */
+            /* ALL CHECKBOXES: SOLID VISIBLE UNCHECKED & PURPLE CHECKED  */
+            /* ========================================================= */
             input[type="checkbox"]:not([role="switch"]):not([class*="Switch"]):not([class*="Toggle"]),
-            input[type="radio"],
-            input[class*="FileActionCheckbox"],
-            label[class*="SelectFileCheckbox"] input,
-            label[class*="sc-1cv6gsl-1"] input,
+            input[type="checkbox"][class*="sc-1cv6gsl-0"],
+            input[type="checkbox"][class*="FileActionCheckbox"],
+            input[type="checkbox"].np-checkbox,
             div[class*="file_row"] input[type="checkbox"],
             div[class*="FileManagerContainer"] input[type="checkbox"] {
                 appearance: none !important;
                 -webkit-appearance: none !important;
-                width: 18px !important;
-                height: 18px !important;
-                min-width: 18px !important;
-                max-width: 18px !important;
-                min-height: 18px !important;
-                max-height: 18px !important;
+                -moz-appearance: none !important;
+                width: 20px !important;
+                height: 20px !important;
+                min-width: 20px !important;
+                max-width: 20px !important;
+                min-height: 20px !important;
+                max-height: 20px !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                border-radius: 4px !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
+                border-radius: 5px !important;
+                border: 1.5px solid #5d447a !important;
+                background: #0b0717 !important;
                 background-color: #0b0717 !important;
                 background-image: none !important;
                 cursor: pointer !important;
-                display: inline-block !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
                 vertical-align: middle !important;
                 box-sizing: border-box !important;
-                transition: all 0.15s ease !important;
+                outline: none !important;
+                transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
             }
-            input[type="checkbox"]:not([role="switch"]):hover,
-            input[class*="FileActionCheckbox"]:hover,
-            label[class*="SelectFileCheckbox"] input:hover,
-            div[class*="file_row"] input[type="checkbox"]:hover {
+            input[type="checkbox"]:not([role="switch"]):not([class*="Switch"]):not([class*="Toggle"]):hover,
+            input[type="checkbox"][class*="sc-1cv6gsl-0"]:hover {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 8px rgba(194, 104, 242, 0.4) !important;
             }
             input[type="checkbox"]:not([role="switch"]):checked,
-            input[class*="FileActionCheckbox"]:checked,
-            label[class*="SelectFileCheckbox"] input:checked,
-            label[class*="sc-1cv6gsl-1"] input:checked,
+            input[type="checkbox"][class*="sc-1cv6gsl-0"]:checked,
+            input[type="checkbox"][class*="FileActionCheckbox"]:checked,
+            input[type="checkbox"].np-is-checked,
             div[class*="file_row"] input[type="checkbox"]:checked,
             div[class*="FileManagerContainer"] input[type="checkbox"]:checked {
+                background: #C268F2 !important;
                 background-color: #C268F2 !important;
-                border-color: #C268F2 !important;
-                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3E%3C/svg%3E") !important;
-                background-size: 13px 13px !important;
-                background-position: center !important;
+                border: 1.5px solid #ffffff !important;
+                border-color: #ffffff !important;
+                background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjQgMTAgOCA4IDE2IDYiLz48L3N2Zz4=") !important;
+                background-size: 14px 14px !important;
+                background-position: center center !important;
                 background-repeat: no-repeat !important;
-                box-shadow: 0 0 12px rgba(194, 104, 242, 0.6) !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.75) !important;
             }
             input[type="checkbox"]:not([role="switch"]):indeterminate,
             input[class*="FileActionCheckbox"]:indeterminate,
             div[class*="FileManagerContainer"] input[type="checkbox"]:indeterminate {
                 background-color: #C268F2 !important;
-                border-color: #C268F2 !important;
-                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='7' width='10' height='2' rx='1' fill='white'/%3E%3C/svg%3E") !important;
-                background-size: 11px 11px !important;
-                background-position: center !important;
+                border: 1.5px solid #ffffff !important;
+                border-color: #ffffff !important;
+                background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiPjxyZWN0IHg9IjMiIHk9IjgiIHdpZHRoPSIxNCIgaGVpZ2h0PSI0IiByeD0iMiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=") !important;
+                background-size: 14px 14px !important;
+                background-position: center center !important;
                 background-repeat: no-repeat !important;
-                box-shadow: 0 0 12px rgba(194, 104, 242, 0.6) !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.75) !important;
             }
             label[class*="SelectFileCheckbox___StyledLabel"],
             label[class*="sc-1cv6gsl-1"],
@@ -1052,43 +1098,12 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
         (function() {
             let activeMode = 'nginx'; // 'nginx' or 'cloudflared'
 
-            function findSettingsFlexRow() {
-                // Exact styled-component class for 2-column flex row in SettingsContainer
-                const styledFlex = document.querySelector('div[class*="SettingsContainer___StyledDiv-sc-1e5ycmz-1"]') ||
-                                   document.querySelector('div[class*="sc-1e5ycmz-1"]') ||
-                                   document.querySelector('div[class*="SettingsContainer___StyledDiv"]');
-                if (styledFlex && styledFlex.children.length >= 2) return styledFlex;
-
-                const all = Array.from(document.querySelectorAll('div, p, h3, h2, h4, span'));
-                const sftp = all.find(el => {
-                    const t = (el.textContent || '').trim().toLowerCase();
-                    return t === 'sftp details' || t === 'server address' || t === 'change server details' || t === 'reinstall server';
-                });
-                if (sftp) {
-                    let el = sftp;
-                    while (el && el !== document.body && !el.classList.contains('ContentContainer')) {
-                        const style = window.getComputedStyle(el);
-                        if (el.classList.contains('md:flex') || style.display === 'flex' || style.display === 'grid') {
-                            if (el.children.length >= 2) return el;
-                        }
-                        el = el.parentElement;
-                    }
-                }
-
-                // Fallback to ContentContainer
-                const content = document.querySelector('div[class*="ContentContainer"]');
-                if (content && content.children.length > 0) {
-                    return content.lastElementChild;
-                }
-                return null;
-            }
-
             function injectDomainManager() {
                 const path = window.location.pathname;
-                const match = path.match(/^\/server\/([a-zA-Z0-9]+)\/settings/);
+                const match = path.match(/^\/server\/([a-zA-Z0-9]+)\/domains/);
                 const existing = document.getElementById('np-domain-manager-card');
 
-                // STRICT: Only show on /server/[id]/settings. Remove on ANY other route (Dashboard, Console, etc.)
+                // STRICT: Only show on /server/[id]/domains. Remove on ANY other route
                 if (!match) {
                     if (existing) existing.remove();
                     return;
@@ -1096,14 +1111,15 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 
                 const serverId = match[1];
 
-                // If card already exists on this server's settings and is connected to DOM, keep it
+                // If card already exists on this server's domains and is connected to DOM, keep it
                 if (existing && existing.getAttribute('data-server-id') === serverId && document.body.contains(existing)) {
                     return;
                 }
 
-                const flexRow = findSettingsFlexRow();
-                if (!flexRow) {
-                    // Settings page is still loading in React, retry on next tick
+                // Mount target from React component in server bundle
+                const mount = document.getElementById('np-domains-view-mount');
+                if (!mount) {
+                    // React component is still mounting, retry on next tick
                     return;
                 }
 
@@ -1114,21 +1130,18 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
                 card.setAttribute('data-server-id', serverId);
-                card.style.cssText = 'width: 100% !important; margin-top: 2rem !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; clear: both !important; display: block !important;';
+                card.style.cssText = 'width: 100% !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; display: block !important;';
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.15); padding-bottom:0.85rem; margin-bottom:1.25rem;">
-                        <div>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                                <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; letter-spacing:0.5px;">CUSTOM DOMAINS &amp; PORT ROUTING</h3>
-                                <span style="background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.35); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
-                            </div>
-                            <p style="margin:6px 0 0 0; font-size:0.85rem; color:#b7a4d6;">Connect your custom domain or route ports via Cloudflare Tunnel without terminal commands.</p>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; letter-spacing:0.5px;">CUSTOM DOMAINS &amp; PORT ROUTING</h3>
+                            <span style="background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.35); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
                         </div>
                     </div>
 
-                    <!-- MODE SELECTOR TABS (NO UNICODE EMOJIS) -->
+                    <!-- MODE SELECTOR TABS -->
                     <div style="display:flex; gap:10px; margin-bottom:1.25rem;">
                         <button id="np-tab-nginx" type="button" style="padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; border:none; box-shadow:0 2px 10px rgba(194,104,242,0.4); display:inline-flex; align-items:center;">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
@@ -1163,15 +1176,19 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
                     <!-- CLOUDFLARE TUNNEL FORM -->
                     <div id="np-form-cf" style="display:none; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;">
+                        <div style="flex:2; min-width:200px;">
+                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Domain Name</label>
+                            <input type="text" id="np-cf-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
+                        </div>
+                        <div style="flex:2; min-width:200px;">
+                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Cloudflare Tunnel Token</label>
+                            <input type="text" id="np-cf-token-input" placeholder="Tunnel token (leave empty for Quick Tunnel)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
+                        </div>
                         <div style="flex:1; min-width:140px;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
                             <select id="np-cf-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
                                 <option value="">Loading ports...</option>
                             </select>
-                        </div>
-                        <div style="flex:2; min-width:220px;">
-                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Cloudflare Tunnel Token (Optional)</label>
-                            <input type="text" id="np-cf-token-input" placeholder="Leave empty for instant Quick Tunnel (*.trycloudflare.com)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
                         </div>
                         <div>
                             <button id="np-btn-launch-cf" type="button" style="height:42px; background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(6,182,212,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">
@@ -1191,7 +1208,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     </div>
                 `;
                 
-                flexRow.insertAdjacentElement('afterend', card);
+                mount.appendChild(card);
                 loadServerDomains(serverId);
                 
                 // Tab switcher logic
@@ -1336,7 +1353,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                         btn.textContent = 'Configuring Nginx...';
                     }
                 } else {
+                    const cfDomainInput = document.getElementById('np-cf-domain-input');
                     const tokenInput = document.getElementById('np-cf-token-input');
+                    payload.domain = cfDomainInput ? cfDomainInput.value.trim() : '';
                     payload.cf_token = tokenInput ? tokenInput.value.trim() : '';
 
                     const btn = document.getElementById('np-btn-launch-cf');
@@ -1709,10 +1728,32 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 return res;
             };
 
+            // CHECKBOX STATE SYNCHRONIZATION
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.type === 'checkbox') {
+                    if (e.target.checked) {
+                        e.target.classList.add('np-is-checked');
+                    } else {
+                        e.target.classList.remove('np-is-checked');
+                    }
+                }
+            }, true);
+
+            function syncCheckboxes() {
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    if (cb.checked) {
+                        if (!cb.classList.contains('np-is-checked')) cb.classList.add('np-is-checked');
+                    } else {
+                        if (cb.classList.contains('np-is-checked')) cb.classList.remove('np-is-checked');
+                    }
+                });
+            }
+
             function onNavigate() {
                 injectDomainManager();
                 initCustomSelects();
                 initFileManagerImagePreview();
+                syncCheckboxes();
             }
 
             window.addEventListener('popstate', onNavigate);
@@ -1814,7 +1855,7 @@ admin_css = """<!-- Nothing Admin Theme -->
                 height: 30px;
                 margin-right: 10px;
                 vertical-align: middle;
-                background: url("/assets/logo.png") no-repeat center center;
+                background: url("/assets/logo.svg") no-repeat center center;
                 background-size: contain;
                 border-radius: 8px;
                 filter: drop-shadow(0 0 8px rgba(194, 104, 242, 0.6));
