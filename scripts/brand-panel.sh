@@ -332,16 +332,22 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-sizing: border-box !important;
             }
             /* BRAND LOGO ONLY ONCE ON LOGIN CARD */
+            /* Circular Glowing Logo on /auth/login */
             div.sc-cyh04c-3::before,
             div[class*="LoginFormContainer___StyledDiv"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"])::before {
                 content: "" !important;
                 display: block !important;
-                width: 72px !important;
-                height: 72px !important;
-                margin: 0 auto 1.5rem auto !important;
-                background: url("/assets/logo.png") no-repeat center center !important; background-size: contain !important;
-                background-size: contain !important;
-                filter: drop-shadow(0 0 16px rgba(194, 104, 242, 0.65)) !important;
+                width: 88px !important;
+                height: 88px !important;
+                margin: 0 auto 1.75rem auto !important;
+                background-image: url("/assets/logo.png") !important;
+                background-size: cover !important;
+                background-repeat: no-repeat !important;
+                background-position: center center !important;
+                border-radius: 50% !important;
+                border: 2.5px solid #C268F2 !important;
+                box-shadow: 0 0 25px rgba(194, 104, 242, 0.75), inset 0 0 12px rgba(194, 104, 242, 0.35) !important;
+                overflow: hidden !important;
             }
             div[class*="LoginFormContainer___StyledDiv3"],
             .sc-cyh04c-6,
@@ -1336,6 +1342,80 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 overflow: hidden !important;
                 pointer-events: none !important;
             }
+
+            /* ========================================================= */
+            /* ALL MODALS & DIALOGS: OBSIDIAN PURPLE GLASS THEME         */
+            /* ========================================================= */
+            div[role="dialog"],
+            div[class*="Modal"] > div,
+            div[class*="Dialog"] > div,
+            div[class*="Modal__Container"],
+            div[class*="Dialog___StyledDiv"],
+            div[class*="ModalMask"] > div,
+            div[class*="ConfirmationModal"] {
+                background: #110d22 !important;
+                background-color: #110d22 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
+                border-radius: 14px !important;
+                box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(194, 104, 242, 0.25) !important;
+                color: #ffffff !important;
+            }
+            div[role="dialog"] h2,
+            div[role="dialog"] p[class*="font-header"],
+            div[class*="Modal"] h2,
+            div[class*="Modal"] p[class*="title"],
+            div[role="dialog"] label,
+            div[role="dialog"] span {
+                color: #ffffff !important;
+            }
+            div[role="dialog"] input,
+            div[role="dialog"] textarea,
+            div[class*="Modal"] input {
+                background: #0b0717 !important;
+                background-color: #0b0717 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.3) !important;
+                border-radius: 8px !important;
+                color: #ffffff !important;
+                padding: 10px 14px !important;
+            }
+            div[role="dialog"] input:focus,
+            div[role="dialog"] textarea:focus,
+            div[class*="Modal"] input:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.5) !important;
+            }
+
+            /* ========================================================= */
+            /* ALL SELECT DROPDOWNS: OBSIDIAN PURPLE THEME               */
+            /* ========================================================= */
+            select,
+            select[class*="Select"],
+            div[class*="Select"] select {
+                background-color: #0b0717 !important;
+                background: #0b0717 !important;
+                color: #ffffff !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                border-radius: 8px !important;
+                padding: 8px 32px 8px 12px !important;
+                outline: none !important;
+                box-shadow: none !important;
+            }
+            select:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.5) !important;
+            }
+            select option {
+                background-color: #110d22 !important;
+                color: #ffffff !important;
+                padding: 10px 14px !important;
+            }
+            select option:hover,
+            select option:focus,
+            select option:checked {
+                background-color: #C268F2 !important;
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                color: #ffffff !important;
+            }
         </style>
         <!-- Custom Domains & Cloudflare Tunnel Router Script -->
         <script>
@@ -2082,11 +2162,216 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 }
             }, true);
 
+
+            // ============================================================
+            // CONSOLE ADDRESS STAT CARD: Real IP:Port or Custom Domain
+            // ============================================================
+            function updateAddressStatCard() {
+                const path = window.location.pathname;
+                const match = path.match(/^\/server\/([a-zA-Z0-9]+)(\/|$)/);
+                if (!match) return;
+                const serverId = match[1];
+
+                const allDivs = Array.from(document.querySelectorAll('div, p, span'));
+                const addrLabel = allDivs.find(el => el.children.length === 0 && el.innerText.trim() === 'Address');
+                if (!addrLabel) return;
+                const card = addrLabel.closest('div[class*="style-module_V4CSEpa4"]') || addrLabel.closest('div[class*="StatBlock"]') || addrLabel.parentElement.parentElement;
+                if (!card) return;
+                const valEl = card.querySelector('.truncate, div[class*="text-gray-50"]');
+                if (!valEl) return;
+
+                if (!card.hasAttribute('data-np-addr-init') || card.getAttribute('data-np-server') !== serverId) {
+                    card.setAttribute('data-np-addr-init', '1');
+                    card.setAttribute('data-np-server', serverId);
+
+                    fetch('/api/server/' + serverId + '/domains', { headers: { 'Accept': 'application/json' } })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.domains && data.domains.length > 0) {
+                                const primary = data.domains[0];
+                                card.setAttribute('data-np-domain', primary.domain);
+                                valEl.textContent = primary.domain;
+                            } else {
+                                card.removeAttribute('data-np-domain');
+                                const cur = valEl.textContent;
+                                const portM = cur.match(/:(\d+)$/);
+                                const port = portM ? portM[1] : (data.allocations && data.allocations[0] ? data.allocations[0].port : '25565');
+                                valEl.textContent = '213.136.89.90:' + port;
+                            }
+                        })
+                        .catch(() => {});
+                } else {
+                    const customDomain = card.getAttribute('data-np-domain');
+                    if (customDomain) {
+                        if (valEl.textContent !== customDomain) valEl.textContent = customDomain;
+                    } else {
+                        const cur = valEl.textContent;
+                        if (cur.includes('panel.fayas.nx.kg') || !cur.startsWith('213.')) {
+                            const portM = cur.match(/:(\d+)$/);
+                            const port = portM ? portM[1] : '25565';
+                            valEl.textContent = '213.136.89.90:' + port;
+                        }
+                    }
+                }
+            }
+
+            // ============================================================
+            // MARKDOWN (.md) EDITOR & GITHUB-STYLE PREVIEW CONTROLLER
+            // ============================================================
+            function simpleMarkdownToHtml(md) {
+                if (!md) return '<p style="color:#7c6999;font-style:italic;">Nothing to preview</p>';
+                let html = md;
+                html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                
+                // Code blocks
+                html = html.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, function(match, lang, code) {
+                    return '<pre style="background:#0d1117;border:1px solid rgba(194,104,242,0.25);border-radius:8px;padding:14px;overflow-x:auto;margin:12px 0;"><code style="color:#e2d4f8;font-family:monospace;font-size:0.88rem;">' + code.trim() + '</code></pre>';
+                });
+
+                // Inline code
+                html = html.replace(/`([^`]+)`/g, '<code style="background:#1a1330;border:1px solid rgba(194,104,242,0.25);border-radius:4px;padding:2px 6px;color:#C268F2;font-family:monospace;font-size:0.88rem;">$1</code>');
+
+                // Headers
+                html = html.replace(/^###### (.*$)/gim, '<h6 style="color:#d8b4fe;font-size:0.95rem;font-weight:700;margin:14px 0 6px 0;">$1</h6>');
+                html = html.replace(/^##### (.*$)/gim, '<h5 style="color:#d8b4fe;font-size:1.05rem;font-weight:700;margin:16px 0 8px 0;">$1</h5>');
+                html = html.replace(/^#### (.*$)/gim, '<h4 style="color:#d8b4fe;font-size:1.15rem;font-weight:700;margin:18px 0 8px 0;">$1</h4>');
+                html = html.replace(/^### (.*$)/gim, '<h3 style="color:#e9d5ff;font-size:1.3rem;font-weight:700;margin:20px 0 10px 0;border-bottom:1px solid rgba(194,104,242,0.15);padding-bottom:6px;">$1</h3>');
+                html = html.replace(/^## (.*$)/gim, '<h2 style="color:#f3e8ff;font-size:1.55rem;font-weight:700;margin:24px 0 12px 0;border-bottom:1px solid rgba(194,104,242,0.2);padding-bottom:8px;">$1</h2>');
+                html = html.replace(/^# (.*$)/gim, '<h1 style="color:#ffffff;font-size:1.85rem;font-weight:800;margin:28px 0 14px 0;border-bottom:2px solid #C268F2;padding-bottom:10px;">$1</h1>');
+
+                // Blockquotes
+                html = html.replace(/^\> (.*$)/gim, '<blockquote style="border-left:3.5px solid #C268F2;background:rgba(194,104,242,0.08);margin:12px 0;padding:8px 16px;color:#c4b5fd;border-radius:0 8px 8px 0;">$1</blockquote>');
+
+                // Bold & Italic
+                html = html.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:#ffffff;font-weight:700;">$1</strong>');
+                html = html.replace(/\*([^*]+)\*/g, '<em style="color:#e9d5ff;">$1</em>');
+                html = html.replace(/__([^_]+)__/g, '<strong style="color:#ffffff;font-weight:700;">$1</strong>');
+                html = html.replace(/_([^_]+)_/g, '<em style="color:#e9d5ff;">$1</em>');
+
+                // Horizontal Rule
+                html = html.replace(/^---$/gim, '<hr style="border:none;border-top:1px solid rgba(194,104,242,0.25);margin:20px 0;" />');
+
+                // Task lists & Lists
+                html = html.replace(/^- \[x\] (.*$)/gim, '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;"><span style="color:#10b981;font-weight:bold;">☑</span> <span style="color:#94a3b8;text-decoration:line-through;">$1</span></div>');
+                html = html.replace(/^- \[ \] (.*$)/gim, '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;"><span style="color:#C268F2;">☐</span> <span style="color:#ffffff;">$1</span></div>');
+                html = html.replace(/^\- (.*$)/gim, '<li style="color:#e2d4f8;margin:4px 0 4px 20px;">$1</li>');
+                html = html.replace(/^\* (.*$)/gim, '<li style="color:#e2d4f8;margin:4px 0 4px 20px;">$1</li>');
+
+                // Links
+                html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color:#C268F2;text-decoration:underline;font-weight:600;">$1</a>');
+
+                // Paragraphs
+                html = html.split('\n\n').map(p => {
+                    p = p.trim();
+                    if (!p) return '';
+                    if (p.startsWith('<h') || p.startsWith('<pre') || p.startsWith('<blockquote') || p.startsWith('<div') || p.startsWith('<li') || p.startsWith('<hr')) {
+                        return p;
+                    }
+                    return '<p style="margin:8px 0;line-height:1.6;color:#e2d4f8;">' + p.replace(/\n/g, '<br/>') + '</p>';
+                }).join('');
+
+                return html;
+            }
+
+            function initMarkdownPreview() {
+                const path = window.location.pathname;
+                const isEditPage = path.includes('/files/edit');
+                if (!isEditPage) {
+                    const existingBar = document.getElementById('np-md-toolbar');
+                    if (existingBar) existingBar.remove();
+                    const existingPrev = document.getElementById('np-md-preview-container');
+                    if (existingPrev) existingPrev.remove();
+                    return;
+                }
+
+                const editorContainer = document.querySelector('.ace_editor') || document.querySelector('div[class*="FileEditContainer"]') || document.querySelector('div[class*="EditorContainer"]');
+                if (!editorContainer) return;
+                const parent = editorContainer.parentElement;
+                if (!parent) return;
+
+                let toolbar = document.getElementById('np-md-toolbar');
+                if (!toolbar) {
+                    toolbar = document.createElement('div');
+                    toolbar.id = 'np-md-toolbar';
+                    toolbar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#110d22;border:1px solid rgba(194,104,242,0.25);border-bottom:none;border-radius:10px 10px 0 0;padding:8px 14px;margin-bottom:0;width:100%;box-sizing:border-box;';
+
+                    toolbar.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-weight:700;font-size:0.85rem;color:#C268F2;display:inline-flex;align-items:center;gap:6px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                MARKDOWN
+                            </span>
+                        </div>
+                        <div style="display:flex;align-items:center;background:#0b0717;border:1px solid rgba(194,104,242,0.3);border-radius:8px;padding:3px;gap:4px;">
+                            <button id="np-md-btn-edit" type="button" style="background:#C268F2;color:#ffffff;border:none;border-radius:6px;padding:5px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s ease;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                Edit
+                            </button>
+                            <button id="np-md-btn-preview" type="button" style="background:transparent;color:#c4b5fd;border:none;border-radius:6px;padding:5px 12px;font-size:0.82rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s ease;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                Preview
+                            </button>
+                        </div>
+                    `;
+
+                    parent.insertBefore(toolbar, editorContainer);
+
+                    let previewCont = document.getElementById('np-md-preview-container');
+                    if (!previewCont) {
+                        previewCont = document.createElement('div');
+                        previewCont.id = 'np-md-preview-container';
+                        previewCont.style.cssText = 'display:none;width:100%;min-height:500px;max-height:75vh;overflow-y:auto;background:#0d1117;border:1px solid rgba(194,104,242,0.25);border-radius:0 0 10px 10px;padding:2rem;box-sizing:border-box;color:#e2d4f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;';
+                        parent.insertBefore(previewCont, editorContainer.nextSibling);
+                    }
+
+                    const btnEdit = document.getElementById('np-md-btn-edit');
+                    const btnPreview = document.getElementById('np-md-btn-preview');
+
+                    btnEdit.onclick = function() {
+                        btnEdit.style.background = '#C268F2';
+                        btnEdit.style.color = '#ffffff';
+                        btnPreview.style.background = 'transparent';
+                        btnPreview.style.color = '#c4b5fd';
+                        editorContainer.style.display = 'block';
+                        previewCont.style.display = 'none';
+                    };
+
+                    btnPreview.onclick = function() {
+                        btnPreview.style.background = '#C268F2';
+                        btnPreview.style.color = '#ffffff';
+                        btnEdit.style.background = 'transparent';
+                        btnEdit.style.color = '#c4b5fd';
+
+                        let text = '';
+                        if (window.ace && window.ace.edit) {
+                            try {
+                                const ed = window.ace.edit(editorContainer);
+                                if (ed) text = ed.getValue();
+                            } catch(e) {}
+                        }
+                        if (!text) {
+                            const ta = editorContainer.querySelector('textarea');
+                            if (ta) text = ta.value;
+                        }
+                        if (!text) {
+                            const lines = Array.from(editorContainer.querySelectorAll('.ace_line'));
+                            if (lines.length > 0) text = lines.map(l => l.innerText).join('\n');
+                        }
+
+                        previewCont.innerHTML = simpleMarkdownToHtml(text);
+                        editorContainer.style.display = 'none';
+                        previewCont.style.display = 'block';
+                    };
+                }
+            }
+
             function onNavigate() {
                 injectDomainManager();
                 initCustomSelects();
                 initFileManagerImagePreview();
                 syncToggles();
+                updateAddressStatCard();
+                initMarkdownPreview();
             }
 
             window.addEventListener('popstate', onNavigate);
