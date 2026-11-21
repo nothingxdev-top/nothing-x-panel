@@ -80,11 +80,33 @@ for p in [f'{panel_dir}/public/favicons/favicon.ico', f'{panel_dir}/public/favic
     with open(p, 'wb') as f:
         f.write(ico_data)
 
-# Write logo.png and png favicons
-for p in [f'{panel_dir}/public/assets/logo.png', f'{panel_dir}/public/favicons/apple-touch-icon.png', f'{panel_dir}/public/favicons/favicon-32x32.png']:
+# Write logo.png and ALL png favicons (wipe every old Pterodactyl icon completely)
+fav_icons = [
+    'android-chrome-192x192.png', 'android-chrome-512x512.png',
+    'android-icon-144x144.png', 'android-icon-192x192.png', 'android-icon-36x36.png',
+    'android-icon-48x48.png', 'android-icon-72x72.png', 'android-icon-96x96.png',
+    'apple-icon-114x114.png', 'apple-icon-120x120.png', 'apple-icon-144x144.png',
+    'apple-icon-152x152.png', 'apple-icon-180x180.png', 'apple-icon-57x57.png',
+    'apple-icon-60x60.png', 'apple-icon-72x72.png', 'apple-icon-76x76.png',
+    'apple-icon.png', 'apple-icon-precomposed.png', 'apple-touch-icon.png',
+    'favicon-16x16.png', 'favicon-32x32.png', 'favicon-96x96.png',
+    'ms-icon-144x144.png', 'ms-icon-150x150.png', 'ms-icon-310x310.png',
+    'ms-icon-70x70.png', 'mstile-150x150.png'
+]
+for f_name in fav_icons:
+    p = f'{panel_dir}/public/favicons/{f_name}'
     os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'wb') as f:
         f.write(png_data)
+
+with open(f'{panel_dir}/public/assets/logo.png', 'wb') as f:
+    f.write(png_data)
+
+# Remove legacy zip archive if present
+try:
+    os.remove(f'{panel_dir}/public/favicons/df4b367461890fa5fd0d9339d3c3f9c6.ico.zip')
+except OSError:
+    pass
 
 # Generate logo.svg embedding the exact logo image
 svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 64 64" width="64" height="64">
@@ -92,6 +114,8 @@ svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://ww
 </svg>"""
 
 with open(f'{panel_dir}/public/assets/logo.svg', 'w', encoding='utf-8') as f:
+    f.write(svg_content)
+with open(f'{panel_dir}/public/favicons/safari-pinned-tab.svg', 'w', encoding='utf-8') as f:
     f.write(svg_content)
 
 # Neutralize mascot svgs with user logo
@@ -190,6 +214,7 @@ PYEOF
 WRAPPER="$PANEL_DIR/resources/views/templates/wrapper.blade.php"
 if [ -f "$WRAPPER" ]; then
   sed -i "s@config('app.name', 'Pterodactyl')@config('app.name', 'Nothing Panel')@g" "$WRAPPER"
+  sed -i "s@color=\"#bc6e3c\"@color=\"#C268F2\"@g" "$WRAPPER" 2>/dev/null || true
 
   python3 - << 'PYEOF'
 import os, re
@@ -1954,6 +1979,7 @@ PYEOF
 ADMIN_BLADE="$PANEL_DIR/resources/views/layouts/admin.blade.php"
 if [ -f "$ADMIN_BLADE" ]; then
   sed -i "s@config('app.name', 'Pterodactyl')@config('app.name', 'Nothing Panel')@g" "$ADMIN_BLADE"
+  sed -i "s@color=\"#bc6e3c\"@color=\"#C268F2\"@g" "$ADMIN_BLADE" 2>/dev/null || true
   sed -i 's@https://pterodactyl\.io/@#@g' "$ADMIN_BLADE"
   sed -i 's@https://pterodactyl\.io@#@g' "$ADMIN_BLADE"
   sed -i 's@Pterodactyl Software@Nothing Panel@g' "$ADMIN_BLADE"
