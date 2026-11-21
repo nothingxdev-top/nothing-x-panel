@@ -126,12 +126,15 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         ('>Pterodactyl<', '>Nothing Panel<'),
         ('© 2015 - ', '© '),
         ('"© 2015 - "', '""'),
-        ('hsla(209, 14%, 37%, 1)', 'rgba(18, 14, 36, 1)'),
+        ('hsla(209, 14%, 37%, 1)', 'rgba(11, 7, 23, 1)'),
         ('hsla(209, 18%, 30%, 1)', 'rgba(18, 14, 36, 1)'),
         ('hsla(209, 18%, 30%', 'rgba(18, 14, 36'),
         ('hsla(211, 12%, 43%', 'rgba(194, 104, 242'),
-        ('hsla(211, 10%, 53%', 'rgba(209, 184, 235'),
-        ('hsla(209, 14%, 37%', 'rgba(209, 184, 235'),
+        ('hsla(211, 10%, 53%', 'rgba(18, 14, 36'),
+        ('hsla(209, 14%, 37%', 'rgba(11, 7, 23'),
+        ('backgroundColor:"rgba(209, 184, 235', 'backgroundColor:"rgba(11, 7, 23'),
+        ('rgba(209, 184, 235, var(--tw-bg-opacity))', 'rgba(11, 7, 23, var(--tw-bg-opacity))'),
+        ('rgba(209, 184, 235', 'rgba(11, 7, 23'),
     ]:
         if old in content:
             content = content.replace(old, new)
@@ -252,22 +255,43 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 margin-bottom: 0.4rem !important;
                 display: block !important;
             }
-            /* Inputs */
-            input[type="text"], input[type="password"], input[type="email"] {
-                background-color: #0b0817 !important;
+            /* Inputs & Textareas — Sleek Obsidian Dark Background (NO Pastel Purple) */
+            input,
+            input[type="text"],
+            input[type="password"],
+            input[type="email"],
+            input[type="number"],
+            input[type="search"],
+            textarea,
+            div[class*="VariableBox"] input,
+            div[class*="VariableBox"] textarea,
+            div[class*="StartupContainer"] input,
+            div[class*="SettingsContainer"] input,
+            div[class*="TitledGreyBox"] input {
+                background-color: #0b0717 !important;
+                background: #0b0717 !important;
                 border: 1.5px solid #281f3d !important;
                 color: #ffffff !important;
-                border-radius: 10px !important;
-                padding: 0.85rem 1rem !important;
+                border-radius: 8px !important;
+                padding: 0.75rem 1rem !important;
                 transition: all 0.2s ease !important;
                 font-size: 0.95rem !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
             }
-            input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
+            input:focus,
+            input[type="text"]:focus,
+            input[type="password"]:focus,
+            input[type="email"]:focus,
+            textarea:focus,
+            div[class*="VariableBox"] input:focus,
+            div[class*="StartupContainer"] input:focus,
+            div[class*="SettingsContainer"] input:focus {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
-                background-color: #0f0b20 !important;
+                background-color: #0e0920 !important;
+                background: #0e0920 !important;
+                color: #ffffff !important;
                 outline: none !important;
             }
             /* Buttons */
@@ -1138,9 +1162,141 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 .catch(err => showMsg('Error: ' + err.message, true));
             };
 
+            // ULTRA-SLEEK CUSTOM SELECT CONTROLLER
+            function initCustomSelects() {
+                const selects = Array.from(document.querySelectorAll('select:not([data-np-select="true"])'));
+                selects.forEach(select => {
+                    if (select.offsetParent === null && select.style.display === 'none') return;
+
+                    select.setAttribute('data-np-select', 'true');
+
+                    // Visually hide native select but keep it accessible for form submissions & state
+                    select.style.cssText = 'position: absolute !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important; margin: 0 !important; padding: 0 !important; border: none !important; z-index: -1 !important;';
+
+                    // Wrapper container
+                    const container = document.createElement('div');
+                    container.className = 'np-custom-select-wrap';
+                    container.style.cssText = 'position: relative !important; width: 100% !important; min-width: 140px !important; box-sizing: border-box !important; font-family: inherit !important; user-select: none !important;';
+
+                    // Trigger button
+                    const trigger = document.createElement('div');
+                    trigger.className = 'np-custom-select-trigger';
+                    trigger.style.cssText = 'width: 100% !important; height: 42px !important; background: #0b0717 !important; border: 1.5px solid rgba(194, 104, 242, 0.4) !important; border-radius: 8px !important; color: #ffffff !important; padding: 0 38px 0 14px !important; font-size: 0.92rem !important; font-weight: 500 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; cursor: pointer !important; box-sizing: border-box !important; transition: all 0.2s ease !important;';
+
+                    const labelSpan = document.createElement('span');
+                    labelSpan.className = 'np-custom-select-label';
+                    labelSpan.style.cssText = 'overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; flex: 1 !important; color: #ffffff !important;';
+
+                    const arrowSpan = document.createElement('span');
+                    arrowSpan.className = 'np-custom-select-arrow';
+                    arrowSpan.style.cssText = 'position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; transition: transform 0.2s ease !important; pointer-events: none !important;';
+                    arrowSpan.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+                    trigger.appendChild(labelSpan);
+                    trigger.appendChild(arrowSpan);
+                    container.appendChild(trigger);
+
+                    // Dropdown menu
+                    const menu = document.createElement('div');
+                    menu.className = 'np-custom-select-menu';
+                    menu.style.cssText = 'display: none !important; position: absolute !important; top: calc(100% + 4px) !important; left: 0 !important; width: 100% !important; max-height: 240px !important; overflow-y: auto !important; background: #120e24 !important; border: 1.5px solid #C268F2 !important; border-radius: 10px !important; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(194, 104, 242, 0.3) !important; z-index: 999999 !important; padding: 4px 0 !important; box-sizing: border-box !important;';
+
+                    function syncOptions() {
+                        menu.innerHTML = '';
+                        const opts = Array.from(select.options);
+                        const selOpt = select.options[select.selectedIndex];
+                        labelSpan.textContent = selOpt ? selOpt.text : (opts[0] ? opts[0].text : 'Select...');
+
+                        opts.forEach((opt, idx) => {
+                            const item = document.createElement('div');
+                            const isSelected = idx === select.selectedIndex;
+                            item.className = 'np-custom-select-item';
+                            item.style.cssText = `padding: 10px 14px !important; font-size: 0.9rem !important; cursor: pointer !important; color: ${isSelected ? '#ffffff' : '#dcc7f5'} !important; background: ${isSelected ? 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)' : 'transparent'} !important; font-weight: ${isSelected ? '700' : '500'} !important; display: flex !important; align-items: center !important; justify-content: space-between !important; transition: all 0.15s ease !important;`;
+
+                            item.innerHTML = `<span>${opt.text}</span>` + (isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : '');
+
+                            item.onmouseenter = function() {
+                                if (idx !== select.selectedIndex) {
+                                    item.style.background = 'rgba(194, 104, 242, 0.22)';
+                                    item.style.color = '#ffffff';
+                                }
+                            };
+                            item.onmouseleave = function() {
+                                if (idx !== select.selectedIndex) {
+                                    item.style.background = 'transparent';
+                                    item.style.color = '#dcc7f5';
+                                }
+                            };
+
+                            item.onclick = function(e) {
+                                e.stopPropagation();
+                                select.selectedIndex = idx;
+                                select.value = opt.value;
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                                select.dispatchEvent(new Event('input', { bubbles: true }));
+                                closeSelect();
+                                syncOptions();
+                            };
+
+                            menu.appendChild(item);
+                        });
+                    }
+
+                    function openSelect() {
+                        document.querySelectorAll('.np-custom-select-menu').forEach(m => m.style.display = 'none');
+                        document.querySelectorAll('.np-custom-select-arrow').forEach(a => a.style.transform = 'translateY(-50%) rotate(0deg)');
+                        document.querySelectorAll('.np-custom-select-trigger').forEach(t => {
+                            t.style.borderColor = 'rgba(194, 104, 242, 0.4)';
+                            t.style.boxShadow = 'none';
+                        });
+
+                        syncOptions();
+                        menu.style.display = 'block';
+                        trigger.style.borderColor = '#C268F2';
+                        trigger.style.boxShadow = '0 0 16px rgba(194, 104, 242, 0.45)';
+                        arrowSpan.style.transform = 'translateY(-50%) rotate(180deg)';
+                    }
+
+                    function closeSelect() {
+                        menu.style.display = 'none';
+                        trigger.style.borderColor = 'rgba(194, 104, 242, 0.4)';
+                        trigger.style.boxShadow = 'none';
+                        arrowSpan.style.transform = 'translateY(-50%) rotate(0deg)';
+                    }
+
+                    trigger.onclick = function(e) {
+                        e.stopPropagation();
+                        if (menu.style.display === 'block') {
+                            closeSelect();
+                        } else {
+                            openSelect();
+                        }
+                    };
+
+                    container.appendChild(menu);
+                    select.parentNode.insertBefore(container, select.nextSibling);
+                    syncOptions();
+
+                    select.addEventListener('change', syncOptions);
+                });
+            }
+
+            document.addEventListener('click', function() {
+                document.querySelectorAll('.np-custom-select-menu').forEach(m => m.style.display = 'none');
+                document.querySelectorAll('.np-custom-select-arrow').forEach(a => a.style.transform = 'translateY(-50%) rotate(0deg)');
+                document.querySelectorAll('.np-custom-select-trigger').forEach(t => {
+                    t.style.borderColor = 'rgba(194, 104, 242, 0.4)';
+                    t.style.boxShadow = 'none';
+                });
+            });
+
             // Run check frequently (300ms) and on popstate for instant SPA responsiveness
             setInterval(injectDomainManager, 300);
-            window.addEventListener('popstate', injectDomainManager);
+            setInterval(initCustomSelects, 300);
+            window.addEventListener('popstate', function() {
+                injectDomainManager();
+                initCustomSelects();
+            });
         })();
         </script>
     </head>"""
