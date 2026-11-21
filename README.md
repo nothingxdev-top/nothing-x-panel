@@ -52,8 +52,6 @@ wget -qO- https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/mast
 
 | Feature | Description |
 |---|---|
-| 🎨 **Custom Branding** | Fully rebranded — no "Pterodactyl" visible anywhere |
-| 📋 **Custom Select Menus** | Beautiful boxed, numbered menus — not plain text |
 | 🌐 **Domain Management** | Assign domains to game server ports |
 | 🔒 **Auto SSL** | Automatic Let's Encrypt SSL for panel + port domains |
 | 🔥 **Firewall Auto-Config** | UFW / firewall-cmd auto setup |
