@@ -227,9 +227,10 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         changed = True
 
     # Fix StartupContainer layout in JS bundles: make Startup Command & Docker Image flex column
-    if 'grid-cols-1 md:grid-cols-4 gap-4' in content:
-        content = content.replace('grid-cols-1 md:grid-cols-4 gap-4', 'flex flex-col gap-6')
-        changed = True
+    for old_grid in ['grid-cols-1 md:grid-cols-4 gap-4', 'grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-4', 'grid-cols-1 md:grid-cols-4']:
+        if old_grid in content:
+            content = content.replace(old_grid, 'flex flex-col gap-6')
+            changed = True
 
     if changed:
         with open(path, 'w', encoding='utf-8') as f:
@@ -1112,10 +1113,12 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             /* FORCE STARTUP COMMAND & DOCKER IMAGE TO STACK VERTICALLY FULL WIDTH (100%) AT ALL SCREEN SIZES */
-            div[class*="StartupContainer"] > div > div:first-child,
-            div[class*="StartupContainer"] div[class*="grid"]:first-of-type,
+            div.grid.grid-cols-1.md\:grid-cols-4,
+            div[class*="grid-cols-4"],
             div[class*="StartupContainer"] div[class*="grid-cols-4"],
-            div.grid.grid-cols-1.md\:grid-cols-4 {
+            div:has(> div p.font-mono),
+            div:has(> div > div p.font-mono),
+            div:has(> div > div > div p.font-mono) {
                 display: flex !important;
                 flex-direction: column !important;
                 grid-template-columns: 1fr !important;
@@ -1123,14 +1126,21 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 gap: 1.5rem !important;
             }
 
+            div.grid.grid-cols-1.md\:grid-cols-4 > div,
+            div[class*="grid-cols-4"] > div,
+            div.col-span-3,
+            div.col-span-1,
+            div.md\:col-span-3,
+            div.md\:col-span-1,
+            div[class*="col-span-3"],
+            div[class*="col-span-1"],
             div[class*="StartupContainer"] div[class*="md:col-span-1"],
             div[class*="StartupContainer"] div[class*="md:col-span-3"],
             div[class*="StartupContainer"] div[class*="col-span-1"],
             div[class*="StartupContainer"] div[class*="col-span-3"],
-            .md\:col-span-1,
-            .md\:col-span-3,
-            div[class*="StartupContainer"] div:has(> p[class*="font-mono"]),
-            div[class*="StartupContainer"] div:has(> div > p[class*="font-mono"]) {
+            div:has(> div p.font-mono) > div,
+            div:has(> div > div p.font-mono) > div,
+            div:has(> div > div > div p.font-mono) > div {
                 grid-column: 1 / -1 !important;
                 width: 100% !important;
                 min-width: 100% !important;
@@ -2817,44 +2827,52 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             function fixStartupLayout() {
                 if (!window.location.pathname.includes('/startup')) return;
 
-                document.querySelectorAll('div, h2, h3, p, span').forEach(el => {
-                    const txt = (el.textContent || '').trim();
-                    if (txt === 'STARTUP COMMAND' || txt === 'Startup Command') {
-                        const card = el.closest('div[class*="TitledGreyBox"]') || el.closest('.rounded-lg') || el.parentElement;
-                        if (card) {
-                            card.style.setProperty('width', '100%', 'important');
-                            card.style.setProperty('max-width', '100%', 'important');
-                            card.style.setProperty('min-width', '100%', 'important');
-                            card.style.setProperty('flex', '1 1 100%', 'important');
-                            card.style.setProperty('grid-column', '1 / -1', 'important');
-
-                            const parent = card.parentElement;
-                            if (parent) {
-                                parent.style.setProperty('display', 'flex', 'important');
-                                parent.style.setProperty('flex-direction', 'column', 'important');
-                                parent.style.setProperty('width', '100%', 'important');
-                                parent.style.setProperty('gap', '1.5rem', 'important');
-                                Array.from(parent.children).forEach(child => {
-                                    child.style.setProperty('width', '100%', 'important');
-                                    child.style.setProperty('max-width', '100%', 'important');
-                                    child.style.setProperty('min-width', '100%', 'important');
-                                    child.style.setProperty('flex', '1 1 100%', 'important');
-                                    child.style.setProperty('grid-column', '1 / -1', 'important');
-                                });
-                            }
-
-                            const codeBox = card.querySelector('p.font-mono, p[class*="font-mono"], code') || card.querySelectorAll('p')[1] || card.querySelector('p');
-                            if (codeBox) {
-                                codeBox.style.setProperty('width', '100%', 'important');
-                                codeBox.style.setProperty('min-width', '100%', 'important');
-                                codeBox.style.setProperty('box-sizing', 'border-box', 'important');
-                                codeBox.style.setProperty('display', 'block', 'important');
-                                codeBox.style.setProperty('white-space', 'pre-wrap', 'important');
-                                codeBox.style.setProperty('word-break', 'break-all', 'important');
-                                codeBox.style.setProperty('overflow-wrap', 'anywhere', 'important');
-                            }
-                        }
+                // 1. Locate the Startup Command card title
+                let cmdTitle = null;
+                document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div').forEach(el => {
+                    if (el.children.length === 0 && (el.textContent || '').trim().toUpperCase() === 'STARTUP COMMAND') {
+                        cmdTitle = el;
                     }
+                });
+
+                if (cmdTitle) {
+                    // Walk up to find the container holding both Startup Command and Docker Image
+                    let gridContainer = cmdTitle.parentElement;
+                    while (gridContainer && gridContainer !== document.body && gridContainer.id !== 'app') {
+                        const text = (gridContainer.textContent || '').toUpperCase();
+                        if (text.includes('STARTUP COMMAND') && text.includes('DOCKER IMAGE') && !text.includes('VARIABLES')) {
+                            break;
+                        }
+                        gridContainer = gridContainer.parentElement;
+                    }
+
+                    if (gridContainer && gridContainer !== document.body) {
+                        gridContainer.style.setProperty('display', 'flex', 'important');
+                        gridContainer.style.setProperty('flex-direction', 'column', 'important');
+                        gridContainer.style.setProperty('width', '100%', 'important');
+                        gridContainer.style.setProperty('gap', '1.5rem', 'important');
+
+                        Array.from(gridContainer.children).forEach(child => {
+                            child.style.setProperty('width', '100%', 'important');
+                            child.style.setProperty('max-width', '100%', 'important');
+                            child.style.setProperty('min-width', '100%', 'important');
+                            child.style.setProperty('flex', '1 1 100%', 'important');
+                            child.style.setProperty('grid-column', '1 / -1', 'important');
+                            child.style.setProperty('display', 'block', 'important');
+                        });
+                    }
+                }
+
+                // 2. Ensure terminal code box is full-width, clean pre-wrap
+                document.querySelectorAll('p.font-mono, p[class*="font-mono"], code').forEach(box => {
+                    box.style.setProperty('width', '100%', 'important');
+                    box.style.setProperty('min-width', '100%', 'important');
+                    box.style.setProperty('max-width', '100%', 'important');
+                    box.style.setProperty('box-sizing', 'border-box', 'important');
+                    box.style.setProperty('display', 'block', 'important');
+                    box.style.setProperty('white-space', 'pre-wrap', 'important');
+                    box.style.setProperty('word-break', 'break-all', 'important');
+                    box.style.setProperty('overflow-wrap', 'anywhere', 'important');
                 });
             }
 
