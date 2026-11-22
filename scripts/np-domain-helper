@@ -1,0 +1,329 @@
+#!/usr/bin/env bash
+# /usr/local/sbin/np-domain-helper
+# Secure root-owned helper for Nothing Panel domain and tunnel management
+set -euo pipefail
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Input sanitization regexes
+UUID_REGEX='^[a-zA-Z0-9_-]{1,64}$'
+DOMAIN_REGEX='^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$'
+TOKEN_REGEX='^[A-Za-z0-9=_-]{20,2048}$'
+
+ACTION="${1:-}"
+SERVER_UUID="${2:-}"
+
+log_msg() {
+    echo "$*"
+}
+
+error_exit() {
+    echo "ERROR: $*" >&2
+    exit 1
+}
+
+# Require action and server UUID
+[ -n "$ACTION" ] || error_exit "Action required (add-nginx, delete-nginx, add-cf, delete-cf, status-cf)"
+[ -n "$SERVER_UUID" ] || error_exit "Server UUID required"
+[[ "$SERVER_UUID" =~ $UUID_REGEX ]] || error_exit "Invalid Server UUID format"
+
+mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /var/log/nginx /var/log/nothing /etc/nothing/tunnels
+chmod 700 /etc/nothing /etc/nothing/tunnels /var/log/nothing 2>/dev/null || true
+
+# Helper to find panel's own domain to prevent collision/hijack
+get_panel_domains() {
+    local panel_domains=""
+    for cfg in /etc/nginx/sites-available/*.conf /etc/nginx/sites-enabled/*.conf; do
+        if [ -f "$cfg" ] && [[ "$cfg" != *"np-srv-"* ]] && [[ "$cfg" != *"np-port-"* ]]; then
+            local doms
+            doms=$(grep -E '^\s*server_name\s+' "$cfg" 2>/dev/null | sed -E 's/^\s*server_name\s+//; s/;//g' | tr ' ' '\n' | grep -v -E '^(localhost|_|\$host)' || true)
+            panel_domains="${panel_domains} ${doms}"
+        fi
+    done
+    echo "$panel_domains"
+}
+
+case "$ACTION" in
+    add-nginx)
+        DOMAIN="${3:-}"
+        PORT="${4:-}"
+        ENABLE_SSL="${5:-0}"
+
+        [ -n "$DOMAIN" ] || error_exit "Domain required"
+        [ -n "$PORT" ] || error_exit "Port required"
+        [[ "$DOMAIN" =~ $DOMAIN_REGEX ]] || error_exit "Invalid domain name format"
+        [[ "$PORT" =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || error_exit "Port must be an integer between 1024 and 65535"
+
+        # Check against panel's own domain
+        PANEL_DOMAINS=$(get_panel_domains)
+        for pd in $PANEL_DOMAINS; do
+            if [ "$DOMAIN" = "$pd" ]; then
+                error_exit "Cannot map domain: '$DOMAIN' is reserved for Nothing Panel itself"
+            fi
+        done
+
+        # Check for duplicate mapping across other servers
+        for existing in /etc/nginx/sites-available/np-srv-*.conf /etc/nginx/sites-available/np-port-*.conf; do
+            if [ -f "$existing" ]; then
+                if grep -qw "$DOMAIN" "$existing" 2>/dev/null; then
+                    if [[ "$existing" != *"/np-srv-${SERVER_UUID}-port-${PORT}.conf" ]] && [[ "$existing" != *"/np-port-${PORT}.conf" ]]; then
+                        error_exit "Domain '$DOMAIN' is already mapped to another server or port"
+                    fi
+                fi
+            fi
+        done
+
+        CONF_FILE="/etc/nginx/sites-available/np-srv-${SERVER_UUID}-port-${PORT}.conf"
+        LINK_FILE="/etc/nginx/sites-enabled/np-srv-${SERVER_UUID}-port-${PORT}.conf"
+        BAK_FILE="/tmp/np-backup-${SERVER_UUID}-${PORT}.conf"
+
+        [ -f "$CONF_FILE" ] && cp "$CONF_FILE" "$BAK_FILE"
+
+        cat << NGINX_CONF > "$CONF_FILE"
+# Nothing Panel - Server ${SERVER_UUID} Port ${PORT}
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+
+    location / {
+        proxy_pass http://127.0.0.1:${PORT};
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 86400;
+    }
+
+    access_log /var/log/nginx/np-srv-${SERVER_UUID}-port-${PORT}.access.log;
+    error_log  /var/log/nginx/np-srv-${SERVER_UUID}-port-${PORT}.error.log error;
+}
+NGINX_CONF
+        chmod 644 "$CONF_FILE"
+        ln -sf "$CONF_FILE" "$LINK_FILE"
+
+        # Test Nginx with automatic rollback
+        if ! nginx -t 2>/dev/null; then
+            rm -f "$LINK_FILE" "$CONF_FILE"
+            if [ -f "$BAK_FILE" ]; then
+                mv "$BAK_FILE" "$CONF_FILE"
+                ln -sf "$CONF_FILE" "$LINK_FILE"
+                nginx -t 2>/dev/null || rm -f "$LINK_FILE" "$CONF_FILE"
+            fi
+            error_exit "Nginx syntax test failed after adding domain. Configuration rolled back."
+        fi
+        rm -f "$BAK_FILE"
+
+        # Reload Nginx
+        systemctl reload nginx 2>/dev/null || nginx -s reload 2>/dev/null || true
+
+        # Optional SSL Setup with DNS Pre-check
+        SSL_MSG=""
+        if [ "$ENABLE_SSL" = "1" ] || [ "$ENABLE_SSL" = "true" ]; then
+            # DNS Pre-check: Verify domain points to this server
+            SERVER_IP=$(curl -4 -fsSL https://api.ipify.org 2>/dev/null || curl -4 -fsSL https://icanhazip.com 2>/dev/null || echo "")
+            RESOLVED_IP=$(getent ahostsv4 "$DOMAIN" 2>/dev/null | awk '{print $1; exit}' || echo "")
+
+            if [ -n "$SERVER_IP" ] && [ -n "$RESOLVED_IP" ] && [ "$SERVER_IP" != "$RESOLVED_IP" ]; then
+                SSL_MSG=" (HTTP active. DNS pre-check notice: '$DOMAIN' points to $RESOLVED_IP, server IP is $SERVER_IP. Update DNS A record before SSL can be issued.)"
+            elif command -v certbot >/dev/null 2>&1; then
+                if certbot --nginx --redirect --non-interactive --agree-tos --register-unsafely-without-email -d "$DOMAIN" >/dev/null 2>&1; then
+                    SSL_MSG=" with SSL (HTTPS) enabled"
+                else
+                    SSL_MSG=" (HTTP active. SSL pending DNS propagation or certbot challenge.)"
+                fi
+            fi
+        fi
+
+        log_msg "SUCCESS: Domain '$DOMAIN' successfully mapped to Port $PORT${SSL_MSG}"
+        ;;
+
+    delete-nginx)
+        PORT="${3:-}"
+        [ -n "$PORT" ] || error_exit "Port required"
+        [[ "$PORT" =~ ^[0-9]+$ ]] || error_exit "Invalid port format"
+
+        CONF_FILE="/etc/nginx/sites-available/np-srv-${SERVER_UUID}-port-${PORT}.conf"
+        LINK_FILE="/etc/nginx/sites-enabled/np-srv-${SERVER_UUID}-port-${PORT}.conf"
+        LEGACY_CONF="/etc/nginx/sites-available/np-port-${PORT}.conf"
+        LEGACY_LINK="/etc/nginx/sites-enabled/np-port-${PORT}.conf"
+
+        for cf in "$CONF_FILE" "$LEGACY_CONF"; do
+            if [ -f "$cf" ]; then
+                DOM=$(grep -E '^\s*server_name\s+' "$cf" 2>/dev/null | sed -E 's/^\s*server_name\s+//; s/;//g' | awk '{print $1}' || true)
+                if [ -n "$DOM" ] && command -v certbot >/dev/null 2>&1; then
+                    certbot delete --cert-name "$DOM" --non-interactive >/dev/null 2>&1 || true
+                fi
+            fi
+        done
+
+        rm -f "$LINK_FILE" "$CONF_FILE" "$LEGACY_LINK" "$LEGACY_CONF"
+        nginx -t 2>/dev/null && (systemctl reload nginx 2>/dev/null || nginx -s reload 2>/dev/null || true)
+        log_msg "SUCCESS: Nginx port mapping for Port $PORT deleted"
+        ;;
+
+    add-cf)
+        PORT="${3:-}"
+        TOKEN="${4:-}"
+        CUSTOM_DOMAIN="${5:-}"
+
+        [ -n "$PORT" ] || error_exit "Port required"
+        [[ "$PORT" =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || error_exit "Port must be an integer between 1024 and 65535"
+
+        # Determine architecture and ensure cloudflared binary
+        CF_BIN="/usr/local/bin/cloudflared"
+        if [ ! -x "$CF_BIN" ]; then
+            ARCH=$(uname -m)
+            case "$ARCH" in
+                x86_64|amd64) CF_ARCH="amd64" ;;
+                aarch64|arm64) CF_ARCH="arm64" ;;
+                *) error_exit "Unsupported CPU architecture for cloudflared: $ARCH" ;;
+            esac
+            TMP_CF=$(mktemp)
+            curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${CF_ARCH}" -o "$TMP_CF"
+            chmod +x "$TMP_CF"
+            mv -f "$TMP_CF" "$CF_BIN"
+        fi
+
+        SVC_NAME="np-cf-srv-${SERVER_UUID}-port-${PORT}"
+        SVC_FILE="/etc/systemd/system/${SVC_NAME}.service"
+        ENV_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.env"
+        LOG_FILE="/var/log/nothing/cf-srv-${SERVER_UUID}-port-${PORT}.log"
+        META_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.meta"
+
+        # Stop existing service if running
+        systemctl stop "$SVC_NAME" 2>/dev/null || true
+        rm -f "$LOG_FILE" "$META_FILE" "$ENV_FILE"
+
+        if [ -n "$TOKEN" ]; then
+            # Token mode
+            [[ "$TOKEN" =~ $TOKEN_REGEX ]] || error_exit "Invalid Cloudflare tunnel token format"
+            if [ -n "$CUSTOM_DOMAIN" ]; then
+                [[ "$CUSTOM_DOMAIN" =~ $DOMAIN_REGEX ]] || error_exit "Invalid custom domain name format"
+            fi
+
+            # Store in root-only 0600 EnvironmentFile (no command execution possible)
+            cat << EOF > "$ENV_FILE"
+TUNNEL_TOKEN=${TOKEN}
+EOF
+            chmod 600 "$ENV_FILE"
+            chown root:root "$ENV_FILE"
+
+            cat << UNIT > "$SVC_FILE"
+[Unit]
+Description=Nothing Panel Cloudflare Tunnel (${SERVER_UUID} Port ${PORT})
+After=network.target
+
+[Service]
+Type=simple
+User=root
+EnvironmentFile=${ENV_FILE}
+ExecStart=${CF_BIN} tunnel --no-autoupdate run --token \${TUNNEL_TOKEN}
+Restart=always
+RestartSec=5
+StandardOutput=append:${LOG_FILE}
+StandardError=append:${LOG_FILE}
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+            chmod 644 "$SVC_FILE"
+            systemctl daemon-reload
+            systemctl enable --now "$SVC_NAME" 2>&1
+
+            DISPLAY_DOMAIN="${CUSTOM_DOMAIN:-Cloudflare Tunnel (Token Active)}"
+            cat << META > "$META_FILE"
+{"domain": "${DISPLAY_DOMAIN}", "port": ${PORT}, "custom_domain": true, "token_mode": true}
+META
+            chmod 644 "$META_FILE"
+            log_msg "SUCCESS: Cloudflare Tunnel successfully launched with token for Port $PORT"
+        else
+            # Quick Tunnel mode (trycloudflare.com)
+            cat << UNIT > "$SVC_FILE"
+[Unit]
+Description=Nothing Panel Quick Tunnel (${SERVER_UUID} Port ${PORT})
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=${CF_BIN} tunnel --no-autoupdate --url http://127.0.0.1:${PORT}
+Restart=always
+RestartSec=5
+StandardOutput=append:${LOG_FILE}
+StandardError=append:${LOG_FILE}
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+            chmod 644 "$SVC_FILE"
+            systemctl daemon-reload
+            systemctl enable --now "$SVC_NAME" 2>&1
+
+            # Poll log file up to 6 seconds to capture actual URL
+            ASSIGNED_DOMAIN=""
+            for _ in {1..12}; do
+                sleep 0.5
+                if [ -f "$LOG_FILE" ]; then
+                    MATCH=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' "$LOG_FILE" | head -n 1 || true)
+                    if [ -n "$MATCH" ]; then
+                        ASSIGNED_DOMAIN="${MATCH#https://}"
+                        break
+                    fi
+                fi
+            done
+
+            if [ -z "$ASSIGNED_DOMAIN" ]; then
+                systemctl stop "$SVC_NAME" 2>/dev/null || true
+                systemctl disable "$SVC_NAME" 2>/dev/null || true
+                rm -f "$SVC_FILE"
+                systemctl daemon-reload
+                error_exit "Could not capture Quick Tunnel URL from Cloudflare. Check /var/log/nothing/ for details."
+            fi
+
+            cat << META > "$META_FILE"
+{"domain": "${ASSIGNED_DOMAIN}", "port": ${PORT}, "custom_domain": false, "token_mode": false}
+META
+            chmod 644 "$META_FILE"
+            log_msg "SUCCESS: Instant Quick Tunnel active at https://${ASSIGNED_DOMAIN} (routing to Port $PORT)"
+        fi
+        ;;
+
+    delete-cf)
+        PORT="${3:-}"
+        [ -n "$PORT" ] || error_exit "Port required"
+        SVC_NAME="np-cf-srv-${SERVER_UUID}-port-${PORT}"
+        SVC_FILE="/etc/systemd/system/${SVC_NAME}.service"
+        ENV_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.env"
+        META_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.meta"
+
+        LEGACY_SVC="np-cf-tunnel-${PORT}"
+        LEGACY_FILE="/etc/systemd/system/${LEGACY_SVC}.service"
+
+        systemctl stop "$SVC_NAME" "$LEGACY_SVC" 2>/dev/null || true
+        systemctl disable "$SVC_NAME" "$LEGACY_SVC" 2>/dev/null || true
+        rm -f "$SVC_FILE" "$ENV_FILE" "$META_FILE" "$LEGACY_FILE" "/var/log/cf-tunnel-${PORT}.meta" "/var/log/cf-tunnel-${PORT}.log"
+        systemctl daemon-reload 2>/dev/null || true
+        pkill -f "cloudflared.*127.0.0.1:${PORT}" 2>/dev/null || true
+        log_msg "SUCCESS: Cloudflare Tunnel for Port $PORT stopped and removed"
+        ;;
+
+    status-cf)
+        PORT="${3:-}"
+        SVC_NAME="np-cf-srv-${SERVER_UUID}-port-${PORT}"
+        LEGACY_SVC="np-cf-tunnel-${PORT}"
+        if systemctl is-active --quiet "$SVC_NAME" 2>/dev/null || systemctl is-active --quiet "$LEGACY_SVC" 2>/dev/null; then
+            echo "active"
+        else
+            echo "inactive"
+        fi
+        ;;
+
+    *)
+        error_exit "Unknown action '$ACTION'"
+        ;;
+esac
+
+exit 0

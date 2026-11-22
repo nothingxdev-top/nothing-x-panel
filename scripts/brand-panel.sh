@@ -361,11 +361,34 @@ chmod 644 "$DM_TARGET"
 chown www-data:www-data "$DM_TARGET"
 echo "  ✔ DomainManagerController.php deployed successfully" 
 
-# Add Sudoers rule for www-data to control Nginx & Certbot without password
+# Add Sudoers rule: ONLY np-domain-helper is permitted for www-data
+HELPER_TARGET="/usr/local/sbin/np-domain-helper"
+if [ -f "$SCRIPT_DIR/np-domain-helper" ]; then
+    cp "$SCRIPT_DIR/np-domain-helper" "$HELPER_TARGET"
+elif [ -f "/usr/local/share/nothing-panel/np-domain-helper" ]; then
+    cp "/usr/local/share/nothing-panel/np-domain-helper" "$HELPER_TARGET"
+else
+    curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/np-domain-helper" -o "$HELPER_TARGET"
+fi
+
+if [ -f "$HELPER_TARGET" ]; then
+    chmod 750 "$HELPER_TARGET"
+    chown root:www-data "$HELPER_TARGET" 2>/dev/null || chown root:root "$HELPER_TARGET" 2>/dev/null || true
+    echo "  ✔ np-domain-helper deployed to /usr/local/sbin"
+fi
+
 cat << 'SUDOEOF' > /etc/sudoers.d/nothing-panel
-www-data ALL=(ALL) NOPASSWD: /bin/mv, /bin/ln, /bin/rm, /usr/sbin/nginx, /bin/systemctl reload nginx, /usr/bin/certbot, /usr/local/bin/np-domain
+www-data ALL=(ALL) NOPASSWD: /usr/local/sbin/np-domain-helper
 SUDOEOF
 chmod 440 /etc/sudoers.d/nothing-panel
+if command -v visudo >/dev/null 2>&1; then
+    if ! visudo -cf /etc/sudoers.d/nothing-panel >/dev/null 2>&1; then
+        echo "❌ Error: Invalid sudoers syntax in /etc/sudoers.d/nothing-panel! Removing invalid file." >&2
+        rm -f /etc/sudoers.d/nothing-panel
+        exit 1
+    fi
+fi
+echo "  ✔ Secure sudoers rule installed and verified with visudo"
 
 # Ensure routes are registered in routes/base.php
 python3 - << 'PYEOF'
