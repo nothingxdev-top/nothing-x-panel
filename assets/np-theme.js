@@ -536,9 +536,15 @@ window.NP_VPS_IP = '" + server_ip + "';
                         const typeBadge = document.createElement('span');
                         typeBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
                         if (d.type === 'cloudflared') {
-                            typeBadge.style.background = 'rgba(6,182,212,0.18)';
-                            typeBadge.style.color = '#06b6d4';
-                            typeBadge.textContent = 'CLOUDFLARE TUNNEL';
+                            if (d.active !== false) {
+                                typeBadge.style.background = 'rgba(16,185,129,0.18)';
+                                typeBadge.style.color = '#10b981';
+                                typeBadge.textContent = 'TUNNEL ACTIVE';
+                            } else {
+                                typeBadge.style.background = 'rgba(239,68,68,0.18)';
+                                typeBadge.style.color = '#ef4444';
+                                typeBadge.textContent = 'TUNNEL DOWN';
+                            }
                         } else {
                             typeBadge.style.background = 'rgba(16,185,129,0.18)';
                             typeBadge.style.color = '#10b981';

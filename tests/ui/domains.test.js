@@ -56,6 +56,7 @@ async function runTest() {
           ],
           domains: [
             { type: 'nginx', domain: 'sub.example.com', port: 25565, ssl: true },
+            { type: 'cloudflared', domain: 'tunnel-demo.trycloudflare.com', port: 25566, ssl: true, active: true },
           ],
           cloudflared_installed: true,
         }),
@@ -82,10 +83,12 @@ async function runTest() {
   assert.ok(portSelect.options.length >= 2, 'portSelect should have options');
   assert.strictEqual(portSelect.options[0].value, '25565');
 
-  // 3. Assert the list shows mapped domains
+  // 3. Assert the list shows mapped domains and tunnels
   const domainList = window.document.getElementById('np-domains-list');
   assert.ok(domainList, '#np-domains-list should exist');
   assert.ok(domainList.textContent.includes('sub.example.com'), 'Mapped domain sub.example.com must be in list');
+  assert.ok(domainList.textContent.includes('tunnel-demo.trycloudflare.com'), 'Cloudflare tunnel must be in list');
+  assert.ok(domainList.textContent.includes('TUNNEL ACTIVE'), 'Active badge must be rendered for tunnel');
 
   // 4. Assert zero console errors
   assert.strictEqual(consoleErrors.length, 0, `Expected 0 console errors, got: ${JSON.stringify(consoleErrors)}`);

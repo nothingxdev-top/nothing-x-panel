@@ -137,19 +137,38 @@ class DomainManagerController extends Controller
                 return response()->json(['error' => 'Invalid custom domain name format.'], 422);
             }
 
+            // Execute helper passing token securely via stdin to prevent exposing it in ps aux
             $cmd = "sudo /usr/local/sbin/np-domain-helper add-cf " .
                 escapeshellarg($server->uuidShort) . " " .
                 escapeshellarg((string) $port) . " " .
-                escapeshellarg($token) . " " .
                 escapeshellarg($customDomain) . " 2>&1";
 
-            $output = [];
-            $exitCode = 0;
-            exec($cmd, $output, $exitCode);
+            $descriptors = [
+                0 => ["pipe", "r"], // stdin
+                1 => ["pipe", "w"], // stdout
+                2 => ["pipe", "w"]  // stderr
+            ];
+
+            $process = proc_open($cmd, $descriptors, $pipes);
+            $outputStr = '';
+            $exitCode = -1;
+
+            if (is_resource($process)) {
+                if (!empty($token)) {
+                    fwrite($pipes[0], $token . "\n");
+                }
+                fclose($pipes[0]);
+
+                $outputStr = stream_get_contents($pipes[1]);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+
+                $exitCode = proc_close($process);
+            }
 
             if ($exitCode !== 0) {
                 return response()->json([
-                    'error' => 'Cloudflare tunnel creation failed: ' . implode(' ', $output)
+                    'error' => 'Cloudflare tunnel creation failed: ' . trim($outputStr)
                 ], 500);
             }
 
@@ -165,7 +184,7 @@ class DomainManagerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => implode(' ', $output),
+                'message' => trim($outputStr),
                 'domain' => $assignedDomain,
                 'port' => $port,
                 'type' => 'cloudflared',

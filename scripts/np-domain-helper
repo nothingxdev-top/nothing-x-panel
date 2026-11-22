@@ -166,8 +166,13 @@ NGINX_CONF
 
     add-cf)
         PORT="${3:-}"
-        TOKEN="${4:-}"
-        CUSTOM_DOMAIN="${5:-}"
+        CUSTOM_DOMAIN="${4:-}"
+        # Token is passed securely via stdin (or arg 5 for CLI testing) to prevent ps aux token leakage
+        TOKEN="${5:-}"
+        if [ -z "$TOKEN" ] && [ ! -t 0 ]; then
+            IFS= read -r TOKEN || TOKEN=""
+        fi
+        TOKEN=$(echo "$TOKEN" | tr -d '\r\n')
 
         [ -n "$PORT" ] || error_exit "Port required"
         [[ "$PORT" =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || error_exit "Port must be an integer between 1024 and 65535"
