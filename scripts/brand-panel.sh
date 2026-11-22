@@ -175,13 +175,22 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         changed = True
 
     for old, new in [
+        ('Configure Pterodactyl to your liking.', 'Configure Nothing Panel to your liking.'),
+        ('Configure Pterodactyl to your liking', 'Configure Nothing Panel to your liking'),
+        ('Configure Pterodactyl', 'Configure Nothing Panel'),
         ('Pterodactyl Software', 'Nothing Panel'),
+        ('Pterodactyl Panel', 'Nothing Panel'),
+        ('Pterodactyl Wings', 'Nothing Wings'),
         ('https://pterodactyl.io', panel_url),
+        ('http://pterodactyl.io', panel_url),
+        ('pterodactyl.io', 'nothingx.top'),
         ('"Pterodactyl®"', '""'),
         ('Pterodactyl®', 'Nothing Panel'),
         ('Pterodactyl&reg;', 'Nothing Panel'),
         ('"Pterodactyl"', '"Nothing Panel"'),
         ('>Pterodactyl<', '>Nothing Panel<'),
+        ('>Pterodactyl ', '>Nothing Panel '),
+        (' Pterodactyl<', ' Nothing Panel<'),
         ('© 2015 - ', '© '),
         ('"© 2015 - "', '""'),
         ('hsla(209, 18%, 30%, 1)', 'rgba(18, 14, 36, 1)'),
@@ -194,6 +203,7 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         ('container@pterodactyl~', 'container@nothing~'),
         ('[Pterodactyl Daemon]:', '[Nothing Daemon]:'),
         ('Pterodactyl Daemon', 'Nothing Daemon'),
+        ('Pterodactyl', 'Nothing Panel'),
     ]:
         if old in content:
             content = content.replace(old, new)
@@ -1938,6 +1948,50 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 .catch(err => showMsg('Error: ' + err.message, true));
             };
 
+            // Real-time DOM text sanitizer (Guarantees zero Pterodactyl visibility anywhere)
+            function sanitizePterodactylText(node) {
+                if (!node) return;
+                if (node.nodeType === 3) { // TEXT_NODE
+                    var val = node.nodeValue;
+                    if (val && (val.indexOf('pterodactyl') !== -1 || val.indexOf('Pterodactyl') !== -1)) {
+                        node.nodeValue = val
+                            .replace(/Configure Pterodactyl to your liking\.?/gi, 'Configure Nothing Panel to your liking.')
+                            .replace(/Configure advanced settings for Pterodactyl\.?/gi, 'Configure advanced settings for Nothing Panel.')
+                            .replace(/Configure how Pterodactyl should handle sending emails\.?/gi, 'Configure how Nothing Panel should handle sending emails.')
+                            .replace(/All nodes currently configured on the Pterodactyl Panel\.?/gi, 'All nodes currently configured on Nothing Panel.')
+                            .replace(/All servers currently configured on the Pterodactyl Panel\.?/gi, 'All servers currently configured on Nothing Panel.')
+                            .replace(/Pterodactyl Software/gi, 'Nothing Panel')
+                            .replace(/Pterodactyl Panel/gi, 'Nothing Panel')
+                            .replace(/Pterodactyl Wings/gi, 'Nothing Wings')
+                            .replace(/container@pterodactyl~/g, 'container@nothing~')
+                            .replace(/container@pterodactyl/g, 'container@nothing')
+                            .replace(/\[Pterodactyl Daemon\]:/g, '[Nothing Daemon]:')
+                            .replace(/Pterodactyl Daemon/g, 'Nothing Daemon')
+                            .replace(/https?:\/\/pterodactyl\.io[^\s"']*/gi, '#')
+                            .replace(/pterodactyl\.io/gi, 'nothingx.top')
+                            .replace(/Pterodactyl/g, 'Nothing Panel')
+                            .replace(/pterodactyl/g, 'nothing');
+                    }
+                } else if (node.nodeType === 1) { // ELEMENT_NODE
+                    ['title', 'placeholder', 'alt', 'aria-label'].forEach(function(attr) {
+                        var aVal = node.getAttribute && node.getAttribute(attr);
+                        if (aVal && (aVal.indexOf('pterodactyl') !== -1 || aVal.indexOf('Pterodactyl') !== -1)) {
+                            node.setAttribute(attr, aVal
+                                .replace(/Configure Pterodactyl to your liking\.?/gi, 'Configure Nothing Panel to your liking.')
+                                .replace(/Pterodactyl Software/gi, 'Nothing Panel')
+                                .replace(/Pterodactyl Panel/gi, 'Nothing Panel')
+                                .replace(/Pterodactyl/g, 'Nothing Panel')
+                                .replace(/pterodactyl/g, 'nothing')
+                            );
+                        }
+                    });
+                    var children = node.childNodes;
+                    for (var k = 0; k < children.length; k++) {
+                        sanitizePterodactylText(children[k]);
+                    }
+                }
+            }
+
             // ULTRA-SLEEK CUSTOM SELECT CONTROLLER
             function initCustomSelects() {
                 // Cleanup orphaned custom select wraps
@@ -1950,7 +2004,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
                 const selects = Array.from(document.querySelectorAll('select:not([data-np-select="true"])'));
                 selects.forEach(select => {
-                    if (select.offsetParent === null && select.style.display === 'none') return;
+                    if (select.classList.contains('select2-hidden-accessible')) return;
 
                     select.setAttribute('data-np-select', 'true');
 
@@ -1965,7 +2019,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     // Trigger button
                     const trigger = document.createElement('div');
                     trigger.className = 'np-custom-select-trigger';
-                    trigger.style.cssText = 'width: 100% !important; height: 42px !important; background: #0b0717 !important; border: 1.5px solid rgba(194, 104, 242, 0.4) !important; border-radius: 8px !important; color: #ffffff !important; padding: 0 38px 0 14px !important; font-size: 0.92rem !important; font-weight: 500 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; cursor: pointer !important; box-sizing: border-box !important; transition: all 0.2s ease !important;';
+                    trigger.style.cssText = 'width: 100% !important; min-height: 40px !important; background: #0b0717 !important; border: 1.5px solid rgba(194, 104, 242, 0.45) !important; border-radius: 8px !important; color: #ffffff !important; padding: 8px 38px 8px 14px !important; font-size: 0.92rem !important; font-weight: 500 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; cursor: pointer !important; box-sizing: border-box !important; transition: all 0.2s ease !important;';
 
                     const labelSpan = document.createElement('span');
                     labelSpan.className = 'np-custom-select-label';
@@ -1983,7 +2037,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     // Dropdown menu
                     const menu = document.createElement('div');
                     menu.className = 'np-custom-select-menu';
-                    menu.style.cssText = 'display: none !important; position: absolute !important; top: calc(100% + 4px) !important; left: 0 !important; width: 100% !important; max-height: 240px !important; overflow-y: auto !important; background: #120e24 !important; border: 1.5px solid #C268F2 !important; border-radius: 10px !important; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(194, 104, 242, 0.3) !important; z-index: 999999 !important; padding: 4px 0 !important; box-sizing: border-box !important;';
+                    menu.style.cssText = 'display: none !important; position: absolute !important; top: calc(100% + 4px) !important; left: 0 !important; width: 100% !important; max-height: 250px !important; overflow-y: auto !important; background: #120e24 !important; border: 1.5px solid #C268F2 !important; border-radius: 10px !important; box-shadow: 0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35) !important; z-index: 9999999 !important; padding: 4px !important; box-sizing: border-box !important; backdrop-filter: blur(12px) !important;';
 
                     function syncOptions() {
                         menu.innerHTML = '';
@@ -1998,7 +2052,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                             const item = document.createElement('div');
                             const isSelected = idx === select.selectedIndex;
                             item.className = 'np-custom-select-item';
-                            item.style.cssText = `padding: 10px 14px !important; font-size: 0.9rem !important; cursor: pointer !important; color: ${isSelected ? '#ffffff' : '#dcc7f5'} !important; background: ${isSelected ? 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)' : 'transparent'} !important; font-weight: ${isSelected ? '700' : '500'} !important; display: flex !important; align-items: center !important; justify-content: space-between !important; transition: all 0.15s ease !important;`;
+                            item.style.cssText = `padding: 10px 14px !important; margin: 2px 0 !important; border-radius: 6px !important; font-size: 0.9rem !important; cursor: pointer !important; color: ${isSelected ? '#ffffff' : '#dcc7f5'} !important; background: ${isSelected ? 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)' : 'transparent'} !important; font-weight: ${isSelected ? '700' : '500'} !important; display: flex !important; align-items: center !important; justify-content: space-between !important; transition: all 0.15s ease !important;`;
 
                             item.innerHTML = `<span>${opt.text}</span>` + (isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : '');
 
@@ -2019,6 +2073,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                                 e.stopPropagation();
                                 select.selectedIndex = idx;
                                 select.value = opt.value;
+                                if (window.jQuery) {
+                                    window.jQuery(select).val(opt.value).trigger('change');
+                                }
                                 select.dispatchEvent(new Event('change', { bubbles: true }));
                                 select.dispatchEvent(new Event('input', { bubbles: true }));
                                 closeSelect();
@@ -2037,7 +2094,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                         document.querySelectorAll('.np-custom-select-menu').forEach(m => m.style.display = 'none');
                         document.querySelectorAll('.np-custom-select-arrow').forEach(a => a.style.transform = 'translateY(-50%) rotate(0deg)');
                         document.querySelectorAll('.np-custom-select-trigger').forEach(t => {
-                            t.style.borderColor = 'rgba(194, 104, 242, 0.4)';
+                            t.style.borderColor = 'rgba(194, 104, 242, 0.45)';
                             t.style.boxShadow = 'none';
                         });
 
@@ -2050,7 +2107,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
                     function closeSelect() {
                         menu.style.display = 'none';
-                        trigger.style.borderColor = 'rgba(194, 104, 242, 0.4)';
+                        trigger.style.borderColor = 'rgba(194, 104, 242, 0.45)';
                         trigger.style.boxShadow = 'none';
                         arrowSpan.style.transform = 'translateY(-50%) rotate(0deg)';
                     }
@@ -2471,6 +2528,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             function onNavigate() {
+                sanitizePterodactylText(document.body);
                 injectDomainManager();
                 initCustomSelects();
                 initFileManagerImagePreview();
@@ -2533,35 +2591,128 @@ Route::prefix('/api/server/{server}/domains')->group(function () {
             f.write(routes_content)
 PYEOF
 
-# 5. Rebrand Admin Views & Inject Admin UI Theme
+# 5. Universal Rebranding across all Views, Lang, and Configs & Inject Admin Theme
+python3 - << 'PYEOF'
+import os, re
+
+panel_dir = os.environ.get('PANEL_DIR', '/var/www/nothing')
+
+search_targets = [
+    os.path.join(panel_dir, 'resources/views'),
+    os.path.join(panel_dir, 'resources/lang'),
+    os.path.join(panel_dir, 'config'),
+]
+
+exact_replacements = [
+    ('Configure Pterodactyl to your liking.', 'Configure Nothing Panel to your liking.'),
+    ('Configure Pterodactyl to your liking', 'Configure Nothing Panel to your liking'),
+    ('Configure advanced settings for Pterodactyl.', 'Configure advanced settings for Nothing Panel.'),
+    ('Configure advanced settings for Pterodactyl', 'Configure advanced settings for Nothing Panel'),
+    ('Configure how Pterodactyl should handle sending emails.', 'Configure how Nothing Panel should handle sending emails.'),
+    ('Configure how Pterodactyl should handle sending emails', 'Configure how Nothing Panel should handle sending emails'),
+    ('All nodes currently configured on the Pterodactyl Panel.', 'All nodes currently configured on Nothing Panel.'),
+    ('All servers currently configured on the Pterodactyl Panel.', 'All servers currently configured on Nothing Panel.'),
+    ('All registered users on the Pterodactyl Panel.', 'All registered users on Nothing Panel.'),
+    ('Pterodactyl Software', 'Nothing Panel'),
+    ('Pterodactyl Panel', 'Nothing Panel'),
+    ('Pterodactyl Wings', 'Nothing Wings'),
+    ('https://pterodactyl.io/', '#'),
+    ('https://pterodactyl.io', '#'),
+    ('http://pterodactyl.io', '#'),
+    ('pterodactyl.io', 'nothingx.top'),
+    ('https://github.com/pterodactyl/panel', 'https://github.com/nothingxdev-top/nothing-x-panel'),
+    ('https://github.com/pterodactyl', 'https://github.com/nothingxdev-top'),
+    ('https://discord.gg/pterodactyl', '#'),
+    ('https://github.com/sponsors/pterodactyl', 'https://github.com/nothingxdev-top'),
+    ('<b>Pterodactyl</b>', '<b>Nothing</b> Panel'),
+    ('Pterodactyl&reg;', 'Nothing Panel'),
+    ('Pterodactyl®', 'Nothing Panel'),
+    ("config('app.name', 'Pterodactyl')", "config('app.name', 'Nothing Panel')"),
+    ('color="#bc6e3c"', 'color="#C268F2"'),
+]
+
+for starget in search_targets:
+    if not os.path.exists(starget):
+        continue
+    for root, dirs, files in os.walk(starget):
+        for file in files:
+            if file.endswith(('.blade.php', '.php', '.json')):
+                filepath = os.path.join(root, file)
+                try:
+                    with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+
+                    orig = content
+                    for old, new in exact_replacements:
+                        if old in content:
+                            content = content.replace(old, new)
+
+                    if 'copyright' in content.lower() or 'main-footer' in content.lower() or 'copy;' in content.lower():
+                        content = re.sub(r'<footer\b[^>]*>.*?</footer>', '', content, flags=re.DOTALL | re.IGNORECASE)
+                        lines = []
+                        for line in content.splitlines(True):
+                            l = line.lower()
+                            if 'copyright' in l or 'copy;' in l or 'laravel_start' in l or '$appversion' in l or 'main-footer' in l or 'pterodactyl software' in l:
+                                continue
+                            lines.append(line)
+                        content = ''.join(lines)
+
+                    if file.endswith('.blade.php'):
+                        content = re.sub(r'(?<![\\a-zA-Z0-9_])Pterodactyl(?![\\a-zA-Z0-9_])', 'Nothing Panel', content)
+                        content = re.sub(r'Nothing Panel Panel', 'Nothing Panel', content)
+                    elif 'lang' in root:
+                        content = re.sub(r'(?<![\\a-zA-Z0-9_])Pterodactyl(?![\\a-zA-Z0-9_])', 'Nothing Panel', content)
+                        content = re.sub(r'Nothing Panel Panel', 'Nothing Panel', content)
+                    elif file == 'app.php' and 'config' in root:
+                        content = re.sub(r"'name'\s*=>\s*env\('APP_NAME',\s*'Pterodactyl'\)", "'name' => env('APP_NAME', 'Nothing Panel')", content)
+
+                    if content != orig:
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            f.write(content)
+                except Exception:
+                    pass
+
+env_path = os.path.join(panel_dir, '.env')
+if os.path.exists(env_path):
+    try:
+        with open(env_path, 'r', encoding='utf-8') as f:
+            env_content = f.read()
+        if 'APP_NAME=' in env_content:
+            env_content = re.sub(r'APP_NAME=.*', 'APP_NAME="Nothing Panel"', env_content)
+        else:
+            env_content += '\nAPP_NAME="Nothing Panel"\n'
+        with open(env_path, 'w', encoding='utf-8') as f:
+            f.write(env_content)
+    except Exception:
+        pass
+
+lang_strings = os.path.join(panel_dir, 'resources/lang/en/strings.php')
+if os.path.exists(lang_strings):
+    try:
+        with open(lang_strings, 'r', encoding='utf-8') as f:
+            lcontent = f.read()
+        lcontent = re.sub(r"'copyright'\s*=>\s*.*", "'copyright' => '',", lcontent)
+        with open(lang_strings, 'w', encoding='utf-8') as f:
+            f.write(lcontent)
+    except Exception:
+        pass
+PYEOF
+
 ADMIN_BLADE="$PANEL_DIR/resources/views/layouts/admin.blade.php"
 if [ -f "$ADMIN_BLADE" ]; then
-  sed -i "s@config('app.name', 'Pterodactyl')@config('app.name', 'Nothing Panel')@g" "$ADMIN_BLADE"
-  sed -i "s@color=\"#bc6e3c\"@color=\"#C268F2\"@g" "$ADMIN_BLADE" 2>/dev/null || true
-  sed -i 's@https://pterodactyl\.io/@#@g' "$ADMIN_BLADE"
-  sed -i 's@https://pterodactyl\.io@#@g' "$ADMIN_BLADE"
-  sed -i 's@Pterodactyl Software@Nothing Panel@g' "$ADMIN_BLADE"
-  sed -i 's@<b>Pterodactyl</b>@<b>Nothing</b> Panel@g' "$ADMIN_BLADE"
-  sed -i "s@<span>{{ config('app.name', 'Pterodactyl') }}</span>@<span>Nothing Panel</span>@g" "$ADMIN_BLADE"
-
   python3 - << 'PYEOF'
 import os, re
 
 panel_dir = os.environ.get('PANEL_DIR', '/var/www/nothing')
-admin_blade = os.path.join(panel_dir, "resources/views/layouts/admin.blade.php")
-with open(admin_blade, "r", encoding="utf-8") as f:
+admin_blade = os.path.join(panel_dir, 'resources/views/layouts/admin.blade.php')
+with open(admin_blade, 'r', encoding='utf-8') as f:
     admin_content = f.read()
 
 admin_content = re.sub(r"<!-- Nothing Admin Theme.*?<\/style>", "", admin_content, flags=re.DOTALL)
-
-# Completely remove footer tags and eliminate any corrupted copyright text
+admin_content = re.sub(r"<!-- Nothing Admin Custom Select.*?<\/script>", "", admin_content, flags=re.DOTALL)
 admin_content = re.sub(r'<footer\b[^>]*>.*?</footer>', '', admin_content, flags=re.DOTALL | re.IGNORECASE)
 admin_content = re.sub(r'<div\b[^>]*class="[^"]*main-footer[^"]*"[^>]*>.*?</div>', '', admin_content, flags=re.DOTALL | re.IGNORECASE)
-admin_content = re.sub(r'Copyright\s+(?:Copyright\s+)+[^\n<]*', '', admin_content, flags=re.IGNORECASE)
-admin_content = re.sub(r'(?:&copy;|©)\s*2015\s*-\s*(?:202[0-9]copy;\s*)+[^\n<]*', '', admin_content, flags=re.IGNORECASE)
-admin_content = re.sub(r'2026\s+Nothing\s+Panel\.?', '', admin_content, flags=re.IGNORECASE)
 
-# Drop any line containing copyright, copy;, laravel_start, appversion, or main-footer
 admin_lines = []
 for line in admin_content.splitlines(True):
     l = line.lower()
@@ -2569,29 +2720,6 @@ for line in admin_content.splitlines(True):
         continue
     admin_lines.append(line)
 admin_content = "".join(admin_lines)
-
-# Scan all blade files in resources/views to eliminate any stray footer or copyright lines
-for root, dirs, files in os.walk(os.path.join(panel_dir, "resources/views")):
-    for file in files:
-        if file.endswith('.blade.php'):
-            filepath = os.path.join(root, file)
-            try:
-                with open(filepath, 'r', encoding='utf-8', errors='ignore') as vf:
-                    vcontent = vf.read()
-                vlower = vcontent.lower()
-                if 'copyright' in vlower or 'main-footer' in vlower or 'copy;' in vlower or 'laravel_start' in vlower:
-                    vcontent = re.sub(r'<footer\b[^>]*>.*?</footer>', '', vcontent, flags=re.DOTALL | re.IGNORECASE)
-                    vlines = []
-                    for line in vcontent.splitlines(True):
-                        vl = line.lower()
-                        if 'copyright' in vl or 'copy;' in vl or 'laravel_start' in vl or '$appversion' in vl or 'main-footer' in vl or 'pterodactyl software' in vl:
-                            continue
-                        vlines.append(line)
-                    vcontent = "".join(vlines)
-                    with open(filepath, 'w', encoding='utf-8') as vf:
-                        vf.write(vcontent)
-            except Exception:
-                pass
 
 admin_css = """<!-- Nothing Admin Theme -->
         <style>
@@ -2618,7 +2746,7 @@ admin_css = """<!-- Nothing Admin Theme -->
                 height: 30px;
                 margin-right: 10px;
                 vertical-align: middle;
-                background: url("/assets/logo.png") no-repeat center center; background-size: contain;
+                background: url("/assets/logo.png") no-repeat center center;
                 background-size: contain;
                 border-radius: 8px;
                 filter: drop-shadow(0 0 8px rgba(194, 104, 242, 0.6));
@@ -2796,6 +2924,72 @@ admin_css = """<!-- Nothing Admin Theme -->
                 color: #ffffff !important;
                 font-weight: 700 !important;
             }
+
+            /* OBSIDIAN ELECTRIC PURPLE CUSTOM SELECTS FOR ADMIN */
+            .np-custom-select-wrap {
+                position: relative !important;
+                display: inline-block !important;
+                width: 100% !important;
+                user-select: none !important;
+                font-family: inherit !important;
+            }
+            .np-custom-select-trigger {
+                width: 100% !important;
+                min-height: 38px !important;
+                background: #0b0717 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
+                border-radius: 8px !important;
+                color: #ffffff !important;
+                padding: 8px 38px 8px 14px !important;
+                font-size: 0.92rem !important;
+                font-weight: 500 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                cursor: pointer !important;
+                box-sizing: border-box !important;
+                transition: all 0.2s ease !important;
+            }
+            .np-custom-select-trigger:hover {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 14px rgba(194, 104, 242, 0.35) !important;
+            }
+            .np-custom-select-menu {
+                display: none !important;
+                position: absolute !important;
+                top: calc(100% + 4px) !important;
+                left: 0 !important;
+                width: 100% !important;
+                max-height: 250px !important;
+                overflow-y: auto !important;
+                background: #120e24 !important;
+                border: 1.5px solid #C268F2 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35) !important;
+                z-index: 9999999 !important;
+                padding: 4px !important;
+                box-sizing: border-box !important;
+                backdrop-filter: blur(12px) !important;
+            }
+            .np-custom-select-menu::-webkit-scrollbar {
+                width: 6px !important;
+            }
+            .np-custom-select-menu::-webkit-scrollbar-thumb {
+                background: #C268F2 !important;
+                border-radius: 3px !important;
+            }
+            .np-custom-select-item {
+                padding: 10px 14px !important;
+                margin: 2px 0 !important;
+                border-radius: 6px !important;
+                font-size: 0.9rem !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                transition: all 0.15s ease !important;
+            }
+
             /* Custom Scrollbars */
             ::-webkit-scrollbar {
                 width: 8px;
@@ -2831,36 +3025,225 @@ admin_css = """<!-- Nothing Admin Theme -->
         </style>
     </head>"""
 
+admin_js = """<!-- Nothing Admin Custom Select & Real-time Sanitizer -->
+        <script>
+        (function() {
+            function sanitizePterodactylText(node) {
+                if (!node) return;
+                if (node.nodeType === 3) {
+                    var val = node.nodeValue;
+                    if (val && (val.indexOf('pterodactyl') !== -1 || val.indexOf('Pterodactyl') !== -1 || val.indexOf('PTERODACTYL') !== -1)) {
+                        node.nodeValue = val
+                            .replace(/Configure Pterodactyl to your liking\.?/gi, 'Configure Nothing Panel to your liking.')
+                            .replace(/Configure advanced settings for Pterodactyl\.?/gi, 'Configure advanced settings for Nothing Panel.')
+                            .replace(/Configure how Pterodactyl should handle sending emails\.?/gi, 'Configure how Nothing Panel should handle sending emails.')
+                            .replace(/All nodes currently configured on the Pterodactyl Panel\.?/gi, 'All nodes currently configured on Nothing Panel.')
+                            .replace(/All servers currently configured on the Pterodactyl Panel\.?/gi, 'All servers currently configured on Nothing Panel.')
+                            .replace(/All registered users on the Pterodactyl Panel\.?/gi, 'All registered users on Nothing Panel.')
+                            .replace(/Pterodactyl Software/gi, 'Nothing Panel')
+                            .replace(/Pterodactyl Panel/gi, 'Nothing Panel')
+                            .replace(/Pterodactyl Wings/gi, 'Nothing Wings')
+                            .replace(/container@pterodactyl~/g, 'container@nothing~')
+                            .replace(/container@pterodactyl/g, 'container@nothing')
+                            .replace(/\[Pterodactyl Daemon\]:/g, '[Nothing Daemon]:')
+                            .replace(/Pterodactyl Daemon/g, 'Nothing Daemon')
+                            .replace(/https?:\/\/pterodactyl\.io[^\s"']*/gi, '#')
+                            .replace(/pterodactyl\.io/gi, 'nothingx.top')
+                            .replace(/Pterodactyl/gi, 'Nothing Panel')
+                            .replace(/pterodactyl/gi, 'nothing');
+                    }
+                } else if (node.nodeType === 1) {
+                    ['title', 'placeholder', 'alt', 'aria-label'].forEach(function(attr) {
+                        var aVal = node.getAttribute && node.getAttribute(attr);
+                        if (aVal && (aVal.indexOf('pterodactyl') !== -1 || aVal.indexOf('Pterodactyl') !== -1)) {
+                            node.setAttribute(attr, aVal
+                                .replace(/Configure Pterodactyl to your liking\.?/gi, 'Configure Nothing Panel to your liking.')
+                                .replace(/Pterodactyl Software/gi, 'Nothing Panel')
+                                .replace(/Pterodactyl Panel/gi, 'Nothing Panel')
+                                .replace(/Pterodactyl/gi, 'Nothing Panel')
+                                .replace(/pterodactyl/gi, 'nothing')
+                            );
+                        }
+                    });
+                    var children = node.childNodes;
+                    for (var k = 0; k < children.length; k++) {
+                        sanitizePterodactylText(children[k]);
+                    }
+                }
+            }
+
+            function initCustomSelects() {
+                document.querySelectorAll('.np-custom-select-wrap').forEach(function(wrap) {
+                    var prev = wrap.previousElementSibling;
+                    if (!prev || prev.tagName !== 'SELECT' || !document.body.contains(prev)) {
+                        wrap.remove();
+                    }
+                });
+
+                var selects = Array.from(document.querySelectorAll('select:not([data-np-select="true"])'));
+                selects.forEach(function(select) {
+                    if (select.classList.contains('select2-hidden-accessible')) return;
+
+                    select.setAttribute('data-np-select', 'true');
+                    select.style.cssText = 'position: absolute !important; opacity: 0 !important; pointer-events: none !important; width: 0 !important; height: 0 !important; margin: 0 !important; padding: 0 !important; border: none !important; z-index: -1 !important;';
+
+                    var container = document.createElement('div');
+                    container.className = 'np-custom-select-wrap';
+                    container.style.cssText = 'position: relative !important; width: 100% !important; min-width: 140px !important; box-sizing: border-box !important; font-family: inherit !important; user-select: none !important;';
+
+                    var trigger = document.createElement('div');
+                    trigger.className = 'np-custom-select-trigger';
+                    trigger.style.cssText = 'width: 100% !important; min-height: 38px !important; background: #0b0717 !important; border: 1.5px solid rgba(194, 104, 242, 0.45) !important; border-radius: 8px !important; color: #ffffff !important; padding: 8px 38px 8px 14px !important; font-size: 0.92rem !important; font-weight: 500 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; cursor: pointer !important; box-sizing: border-box !important; transition: all 0.2s ease !important;';
+
+                    var labelSpan = document.createElement('span');
+                    labelSpan.className = 'np-custom-select-label';
+                    labelSpan.style.cssText = 'overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; flex: 1 !important; color: #ffffff !important;';
+
+                    var arrowSpan = document.createElement('span');
+                    arrowSpan.className = 'np-custom-select-arrow';
+                    arrowSpan.style.cssText = 'position: absolute !important; right: 12px !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; transition: transform 0.2s ease !important; pointer-events: none !important;';
+                    arrowSpan.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+
+                    trigger.appendChild(labelSpan);
+                    trigger.appendChild(arrowSpan);
+                    container.appendChild(trigger);
+
+                    var menu = document.createElement('div');
+                    menu.className = 'np-custom-select-menu';
+                    menu.style.cssText = 'display: none !important; position: absolute !important; top: calc(100% + 4px) !important; left: 0 !important; width: 100% !important; max-height: 250px !important; overflow-y: auto !important; background: #120e24 !important; border: 1.5px solid #C268F2 !important; border-radius: 10px !important; box-shadow: 0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35) !important; z-index: 9999999 !important; padding: 4px !important; box-sizing: border-box !important; backdrop-filter: blur(12px) !important;';
+
+                    function syncOptions() {
+                        menu.innerHTML = '';
+                        var opts = Array.from(select.options);
+                        if (opts.length > 0 && select.selectedIndex < 0) {
+                            select.selectedIndex = 0;
+                        }
+                        var selOpt = select.options[select.selectedIndex];
+                        labelSpan.textContent = selOpt ? selOpt.text : (opts[0] ? opts[0].text : 'Select...');
+
+                        opts.forEach(function(opt, idx) {
+                            var item = document.createElement('div');
+                            var isSelected = idx === select.selectedIndex;
+                            item.className = 'np-custom-select-item';
+                            item.style.cssText = 'padding: 10px 14px !important; margin: 2px 0 !important; border-radius: 6px !important; font-size: 0.9rem !important; cursor: pointer !important; color: ' + (isSelected ? '#ffffff' : '#dcc7f5') + ' !important; background: ' + (isSelected ? 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)' : 'transparent') + ' !important; font-weight: ' + (isSelected ? '700' : '500') + ' !important; display: flex !important; align-items: center !important; justify-content: space-between !important; transition: all 0.15s ease !important;';
+
+                            item.innerHTML = '<span>' + opt.text + '</span>' + (isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : '');
+
+                            item.onmouseenter = function() {
+                                if (idx !== select.selectedIndex) {
+                                    item.style.background = 'rgba(194, 104, 242, 0.22)';
+                                    item.style.color = '#ffffff';
+                                }
+                            };
+                            item.onmouseleave = function() {
+                                if (idx !== select.selectedIndex) {
+                                    item.style.background = 'transparent';
+                                    item.style.color = '#dcc7f5';
+                                }
+                            };
+
+                            item.onclick = function(e) {
+                                e.stopPropagation();
+                                select.selectedIndex = idx;
+                                select.value = opt.value;
+                                if (window.jQuery) {
+                                    window.jQuery(select).val(opt.value).trigger('change');
+                                }
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                                select.dispatchEvent(new Event('input', { bubbles: true }));
+                                closeSelect();
+                                syncOptions();
+                            };
+
+                            menu.appendChild(item);
+                        });
+                    }
+
+                    var optObserver = new MutationObserver(function() { syncOptions(); });
+                    optObserver.observe(select, { childList: true, subtree: true, characterData: true });
+
+                    function openSelect() {
+                        document.querySelectorAll('.np-custom-select-menu').forEach(function(m) { m.style.display = 'none'; });
+                        document.querySelectorAll('.np-custom-select-arrow').forEach(function(a) { a.style.transform = 'translateY(-50%) rotate(0deg)'; });
+                        document.querySelectorAll('.np-custom-select-trigger').forEach(function(t) {
+                            t.style.borderColor = 'rgba(194, 104, 242, 0.45)';
+                            t.style.boxShadow = 'none';
+                        });
+
+                        syncOptions();
+                        menu.style.display = 'block';
+                        trigger.style.borderColor = '#C268F2';
+                        trigger.style.boxShadow = '0 0 16px rgba(194, 104, 242, 0.45)';
+                        arrowSpan.style.transform = 'translateY(-50%) rotate(180deg)';
+                    }
+
+                    function closeSelect() {
+                        menu.style.display = 'none';
+                        trigger.style.borderColor = 'rgba(194, 104, 242, 0.45)';
+                        trigger.style.boxShadow = 'none';
+                        arrowSpan.style.transform = 'translateY(-50%) rotate(0deg)';
+                    }
+
+                    trigger.onclick = function(e) {
+                        e.stopPropagation();
+                        if (menu.style.display === 'block') {
+                            closeSelect();
+                        } else {
+                            openSelect();
+                        }
+                    };
+
+                    container.appendChild(menu);
+                    select.parentNode.insertBefore(container, select.nextSibling);
+                    syncOptions();
+
+                    select.addEventListener('change', syncOptions);
+                });
+            }
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.np-custom-select-wrap')) {
+                    document.querySelectorAll('.np-custom-select-menu').forEach(function(m) { m.style.display = 'none'; });
+                    document.querySelectorAll('.np-custom-select-arrow').forEach(function(a) { a.style.transform = 'translateY(-50%) rotate(0deg)'; });
+                    document.querySelectorAll('.np-custom-select-trigger').forEach(function(t) {
+                        t.style.borderColor = 'rgba(194, 104, 242, 0.45)';
+                        t.style.boxShadow = 'none';
+                    });
+                }
+            });
+
+            function runInit() {
+                sanitizePterodactylText(document.body);
+                initCustomSelects();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', runInit);
+            } else {
+                runInit();
+            }
+
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        sanitizePterodactylText(node);
+                    });
+                });
+                initCustomSelects();
+            });
+            observer.observe(document.documentElement, { childList: true, subtree: true });
+        })();
+        </script>
+    </body>"""
+
 admin_content = admin_content.replace("</head>", admin_css, 1)
-with open(admin_blade, "w", encoding="utf-8") as f:
+admin_content = admin_content.replace("</body>", admin_js, 1)
+
+with open(admin_blade, 'w', encoding='utf-8') as f:
     f.write(admin_content)
 PYEOF
 fi
 
-# Update copyright string in lang file (Safely via Python, preventing sed & recursive expansion bug)
-LANG_STRINGS="$PANEL_DIR/resources/lang/en/strings.php"
-if [ -f "$LANG_STRINGS" ]; then
-  python3 - << 'PYEOF'
-import os, re
-path = os.environ.get('PANEL_DIR', '/var/www/nothing') + '/resources/lang/en/strings.php'
-if os.path.exists(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    content = re.sub(r"'copyright'\s*=>\s*.*", "'copyright' => '',", content)
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(content)
-PYEOF
-fi
-
-ADMIN_INDEX="$PANEL_DIR/resources/views/admin/index.blade.php"
-if [ -f "$ADMIN_INDEX" ]; then
-  sed -i 's@Pterodactyl Panel@Nothing Panel@g' "$ADMIN_INDEX"
-  sed -i 's@Pterodactyl@Nothing@g' "$ADMIN_INDEX"
-  sed -i 's@https://github\.com/pterodactyl/panel@https://github.com/nothingxdev-top/nothing-x-panel@g' "$ADMIN_INDEX"
-  sed -i 's@https://pterodactyl\.io@#@g' "$ADMIN_INDEX"
-  sed -i 's@https://discord\.gg/pterodactyl@#@g' "$ADMIN_INDEX"
-  sed -i 's@https://github\.com/sponsors/pterodactyl@https://github.com/nothingxdev-top@g' "$ADMIN_INDEX"
-fi
 
 # 6. Configure Nginx Cache-Control (Force Fresh Bundles) & SVG MIME type
 python3 - << 'PYEOF'
