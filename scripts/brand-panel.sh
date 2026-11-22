@@ -164,6 +164,17 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         changed = True
 
     # Restore text-gray-400 to bright white
+    if True:
+        # Restore any dark text on dark background in bundle to bright white
+        content = content.replace('color: rgba(11, 7, 23, 1)', 'color: rgba(255, 255, 255, 1)')
+        content = content.replace('color: rgba(11, 7, 23, var(--tw-text-opacity', 'color: rgba(255, 255, 255, var(--tw-text-opacity')
+        content = content.replace('color:rgba(11,7,23,1)', 'color:rgba(255,255,255,1)')
+        content = content.replace('color:rgba(11,7,23,var(--tw-text-opacity', 'color:rgba(255,255,255,var(--tw-text-opacity')
+        # Eliminate Pterodactyl blue buttons
+        content = content.replace('bg-primary-500', 'bg-primary-500 np-btn-purple')
+        content = content.replace('bg-blue-600', 'bg-blue-600 np-btn-purple')
+        changed = True
+
     if '.text-gray-400' in content:
         content = content.replace('color: rgba(11, 7, 23, 1)', 'color: rgba(255, 255, 255, 1)')
         content = content.replace('color: rgba(11, 7, 23, var(--tw-text-opacity', 'color: rgba(255, 255, 255, var(--tw-text-opacity')
@@ -199,7 +210,7 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         ('hsla(211, 10%, 53%', 'rgba(18, 14, 36'),
         ('backgroundColor:"rgba(209, 184, 235', 'backgroundColor:"rgba(11, 7, 23'),
         ('rgba(209, 184, 235, var(--tw-bg-opacity))', 'rgba(11, 7, 23, var(--tw-bg-opacity))'),
-        ('rgba(209, 184, 235', 'rgba(11, 7, 23'),
+        ('rgba(209, 184, 235', 'rgba(235, 218, 252'),
         ('container@pterodactyl~', 'container@nothing~'),
         ('[Pterodactyl Daemon]:', '[Nothing Daemon]:'),
         ('Pterodactyl Daemon', 'Nothing Daemon'),
@@ -644,13 +655,20 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 from { transform: rotate(0deg); }
                 to { transform: rotate(360deg); }
             }
-            /* PRIMARY CTA & SUBMIT BUTTONS ONLY (#C268F2 GRADIENT) */
+            /* PRIMARY CTA & ACTION BUTTONS (#C268F2 GRADIENT) */
             button[type="submit"],
             .btn-primary,
             button.primary,
-            button[class*="Button__Primary"],
+            button[class*="primary"],
+            button[class*="Primary"],
+            button[class*="bg-primary"],
+            button[class*="bg-blue"],
+            .np-btn-purple,
+            div[class*="FileManagerContainer"] button:not([class*="secondary"]):not([class*="p-"]):not([class*="danger"]),
+            div[class*="FileManagerContainer"] a > button,
+            div[class*="flex"] > a > button,
             div[class*="Modal"] button[type="submit"],
-            button[class*="Button___StyledButton"]:not([class*="secondary"]):not([class*="danger"]):not([class*="text"]):not([class*="p-"]):not([class*="p-1"]):not([class*="p-2"]) {
+            button[class*="Button"]:not([class*="secondary"]):not([class*="danger"]):not([class*="text"]):not([class*="p-"]):not([class*="p-1"]):not([class*="p-2"]):not([aria-haspopup="true"]) {
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 background-color: #C268F2 !important;
                 color: #ffffff !important;
@@ -667,7 +685,12 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             button[type="submit"]:hover,
             .btn-primary:hover,
             button.primary:hover,
-            button[class*="Button__Primary"]:hover {
+            button[class*="bg-primary"]:hover,
+            button[class*="bg-blue"]:hover,
+            .np-btn-purple:hover,
+            div[class*="FileManagerContainer"] button:not([class*="secondary"]):not([class*="p-"]):not([class*="danger"]):hover,
+            div[class*="FileManagerContainer"] a > button:hover,
+            button[class*="Button"]:not([class*="secondary"]):not([class*="danger"]):not([class*="text"]):not([class*="p-"]):not([class*="p-1"]):not([class*="p-2"]):hover {
                 transform: translateY(-1px) !important;
                 box-shadow: 0 6px 24px rgba(194, 104, 242, 0.6) !important;
                 filter: brightness(1.08) !important;
@@ -698,25 +721,28 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 transform: none !important;
             }
 
-            /* 3-DOTS ACTION BUTTON & ALL ICON BUTTONS: ZERO BOX, COMPLETELY BORDERLESS */
+            /* 3-DOTS ACTION BUTTON & ALL ICON-ONLY BUTTONS: STRICT ZERO OUTLINE & ZERO BORDER */
+            button:has(svg[data-icon="ellipsis-h"]),
+            button:has(svg.fa-ellipsis-h),
+            button:has(svg[class*="ellipsis"]),
             button[class*="p-2"],
             button[class*="p-1"],
-            button:has(svg:only-child),
-            button[aria-label],
-            button[title],
-            div[class*="file_row"] button,
-            div[class*="FileObjectRow"] button,
             button.p-2,
             button.p-1,
-            div[class*="flex"] > button[class*="p-2"],
-            div[class*="flex"] > button[class*="p-1"] {
+            div[class*="file_row"] button,
+            div[class*="FileObjectRow"] button,
+            div[class*="FileManager"] button:not([class*="bg-"]):not([type="submit"]):not([class*="btn"]):not([class*="primary"]):not([class*="Primary"]):not([class*="purple"]),
+            div[class*="flex items-center"] > button:has(svg:only-child),
+            button:has(svg:only-child):not([class*="bg-"]):not([type="submit"]):not([class*="primary"]) {
                 background: transparent !important;
                 background-color: transparent !important;
                 border: none !important;
+                border-width: 0 !important;
+                border-color: transparent !important;
                 outline: none !important;
                 box-shadow: none !important;
                 border-radius: 6px !important;
-                padding: 6px !important;
+                padding: 6px 8px !important;
                 color: #a394bf !important;
                 margin: 0 !important;
                 cursor: pointer !important;
@@ -789,6 +815,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 background-color: #120c24 !important;
             }
             /* Options list and dropdown menu styling (fixes gray unreadable items) */
+            html, body, select, option {
+                color-scheme: dark !important;
+            }
             select option,
             select optgroup,
             .form-control select option,
@@ -1160,8 +1189,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-sizing: border-box !important;
                 display: block !important;
                 white-space: pre-wrap !important;
-                word-break: break-all !important;
-                overflow-wrap: anywhere !important;
+                word-break: normal !important;
+                overflow-wrap: break-word !important;
                 word-wrap: break-word !important;
                 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
                 font-size: 0.95rem !important;
@@ -1172,6 +1201,18 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-radius: 10px !important;
                 padding: 1.25rem 1.5rem !important;
                 box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7) !important;
+            }
+
+            /* Completely hide native selects once enhanced by custom select */
+            select[data-np-select="true"],
+            .np-custom-select-wrap select {
+                display: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                position: absolute !important;
+                visibility: hidden !important;
             }
 
             /* Startup settings select input (Docker Image selector) */
@@ -1292,6 +1333,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 color: #ffffff !important;
             }
 
+            nav.react-contextmenu,
+            .react-contextmenu,
+            div.react-contextmenu,
             div[role="menu"],
             ul[role="menu"],
             div[class*="ContextMenu"],
@@ -1306,9 +1350,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-radius: 10px !important;
                 box-shadow: 0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35) !important;
                 padding: 6px !important;
+                min-width: 190px !important;
                 z-index: 999999 !important;
             }
 
+            .react-contextmenu-item,
+            nav.react-contextmenu .react-contextmenu-item,
+            div.react-contextmenu .react-contextmenu-item,
+            [role="menuitem"],
             div[role="menu"] button,
             div[role="menu"] a,
             div[role="menu"] div[role="menuitem"],
@@ -1324,8 +1373,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 color: #ffffff !important;
                 padding: 8px 14px !important;
                 margin: 2px 0 !important;
-                font-size: 0.9rem !important;
-                font-weight: 500 !important;
+                font-size: 0.88rem !important;
+                font-weight: 600 !important;
                 border-radius: 6px !important;
                 background: transparent !important;
                 border: none !important;
@@ -1333,8 +1382,19 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 transition: all 0.15s ease !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
+                white-space: nowrap !important;
             }
 
+            .react-contextmenu-item *,
+            nav.react-contextmenu *,
+            div.react-contextmenu * {
+                color: #ffffff !important;
+            }
+
+            .react-contextmenu-item:hover,
+            .react-contextmenu-item--active,
+            nav.react-contextmenu .react-contextmenu-item:hover,
+            [role="menuitem"]:hover,
             div[role="menu"] button:hover,
             div[role="menu"] a:hover,
             div[role="menu"] div[role="menuitem"]:hover,
@@ -1762,6 +1822,10 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                                 obj.ip_alias = vpsIp;
                                 modified = true;
                             }
+                            if (typeof obj.ip === 'string' && (obj.ip.includes('panel.') || obj.ip.includes('.nx.kg') || obj.ip.includes('.top') || obj.ip.includes('.com') || obj.ip.includes('.net') || obj.ip === '0.0.0.0' || obj.ip === 'localhost' || obj.ip === '127.0.0.1')) {
+                                obj.ip = vpsIp;
+                                modified = true;
+                            }
                             for (const k in obj) {
                                 if (obj[k] && typeof obj[k] === 'object') {
                                     fixAlloc(obj[k]);
@@ -1897,28 +1961,26 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     return;
                 }
 
+                // Clean up any stray hidden-by-domains tags
+                document.querySelectorAll('[data-np-hidden-by-domains="true"]').forEach(el => {
+                    el.style.display = '';
+                    el.removeAttribute('data-np-hidden-by-domains');
+                });
+
                 // 1. Primary mount target: React Router's mounted container
                 let mount = document.getElementById('np-domains-view-mount');
 
-                // 2. Fallback: Place directly below sub-nav inside ServerViewContainer
+                // 2. Fallback: Mount inside server view container or right below subnavigation
                 if (!mount) {
-                    const subNav = domainsLink.closest('div.flex.overflow-x-auto, div[class*="overflow-x-auto"], nav');
-                    if (subNav && subNav.parentElement) {
+                    let contentArea = document.querySelector('div[class*="ServerViewContainer"] > div, div.my-4, div.sm\\:my-10') || document.querySelector('main') || document.getElementById('app');
+                    if (contentArea) {
                         let fb = document.getElementById('np-domains-fallback-mount');
                         if (!fb) {
                             fb = document.createElement('div');
                             fb.id = 'np-domains-fallback-mount';
-                            fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; z-index: 5 !important; clear: both !important;';
+                            fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 10 !important;';
+                            contentArea.prepend(fb);
                         }
-                        if (fb.parentElement !== subNav.parentElement) {
-                            subNav.insertAdjacentElement('afterend', fb);
-                        }
-                        Array.from(subNav.parentElement.children).forEach(child => {
-                            if (child !== subNav && child !== fb && child.style.display !== 'none') {
-                                child.style.display = 'none';
-                                child.setAttribute('data-np-hidden-by-domains', 'true');
-                            }
-                        });
                         mount = fb;
                     }
                 }
@@ -2878,19 +2940,29 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             function fixContextMenuColors(root) {
                 const target = root || document.body;
-                target.querySelectorAll('div[role="menu"], ul[role="menu"], div[class*="ContextMenu"], div[class*="DropdownMenu"], div[class*="ActionMenu"], div[class*="dropdown-menu"], .react-contextmenu, div[class*="react-contextmenu"]').forEach(menu => {
+                target.querySelectorAll('nav.react-contextmenu, .react-contextmenu, div.react-contextmenu, div[role="menu"], ul[role="menu"], div[class*="ContextMenu"], div[class*="DropdownMenu"], div[class*="ActionMenu"], div[class*="dropdown-menu"]').forEach(menu => {
                     menu.style.setProperty('background', '#120e24', 'important');
                     menu.style.setProperty('background-color', '#120e24', 'important');
                     menu.style.setProperty('border', '1.5px solid #C268F2', 'important');
                     menu.style.setProperty('box-shadow', '0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35)', 'important');
-                    menu.querySelectorAll('*').forEach(child => {
+                    menu.style.setProperty('min-width', '190px', 'important');
+                    menu.querySelectorAll('.react-contextmenu-item, [role="menuitem"], button, a, li, span, div').forEach(child => {
                         if (child.tagName === 'SVG' || child.tagName === 'path') {
                             child.style.setProperty('color', '#C268F2', 'important');
                             child.style.setProperty('stroke', '#C268F2', 'important');
+                            child.style.setProperty('fill', 'currentColor', 'important');
                         } else {
                             child.style.setProperty('color', '#ffffff', 'important');
                         }
                     });
+                });
+
+                // Also ensure 3-dots action buttons in table rows never have borders
+                target.querySelectorAll('button:has(svg[data-icon="ellipsis-h"]), button:has(svg.fa-ellipsis-h), div[class*="FileObjectRow"] button').forEach(btn => {
+                    btn.style.setProperty('border', 'none', 'important');
+                    btn.style.setProperty('outline', 'none', 'important');
+                    btn.style.setProperty('box-shadow', 'none', 'important');
+                    btn.style.setProperty('background', 'transparent', 'important');
                 });
             }
 
