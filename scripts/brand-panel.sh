@@ -2489,9 +2489,42 @@ admin_content = re.sub(r"<!-- Nothing Admin Theme.*?<\/style>", "", admin_conten
 
 # Completely remove footer tags and eliminate any corrupted copyright text
 admin_content = re.sub(r'<footer\b[^>]*>.*?</footer>', '', admin_content, flags=re.DOTALL | re.IGNORECASE)
+admin_content = re.sub(r'<div\b[^>]*class="[^"]*main-footer[^"]*"[^>]*>.*?</div>', '', admin_content, flags=re.DOTALL | re.IGNORECASE)
 admin_content = re.sub(r'Copyright\s+(?:Copyright\s+)+[^\n<]*', '', admin_content, flags=re.IGNORECASE)
 admin_content = re.sub(r'(?:&copy;|©)\s*2015\s*-\s*(?:202[0-9]copy;\s*)+[^\n<]*', '', admin_content, flags=re.IGNORECASE)
 admin_content = re.sub(r'2026\s+Nothing\s+Panel\.?', '', admin_content, flags=re.IGNORECASE)
+
+# Drop any line containing copyright, copy;, laravel_start, appversion, or main-footer
+admin_lines = []
+for line in admin_content.splitlines(True):
+    l = line.lower()
+    if 'copyright' in l or 'copy;' in l or 'laravel_start' in l or '$appversion' in l or 'main-footer' in l or 'pterodactyl software' in l:
+        continue
+    admin_lines.append(line)
+admin_content = "".join(admin_lines)
+
+# Scan all blade files in resources/views to eliminate any stray footer or copyright lines
+for root, dirs, files in os.walk(os.path.join(panel_dir, "resources/views")):
+    for file in files:
+        if file.endswith('.blade.php'):
+            filepath = os.path.join(root, file)
+            try:
+                with open(filepath, 'r', encoding='utf-8', errors='ignore') as vf:
+                    vcontent = vf.read()
+                vlower = vcontent.lower()
+                if 'copyright' in vlower or 'main-footer' in vlower or 'copy;' in vlower or 'laravel_start' in vlower:
+                    vcontent = re.sub(r'<footer\b[^>]*>.*?</footer>', '', vcontent, flags=re.DOTALL | re.IGNORECASE)
+                    vlines = []
+                    for line in vcontent.splitlines(True):
+                        vl = line.lower()
+                        if 'copyright' in vl or 'copy;' in vl or 'laravel_start' in vl or '$appversion' in vl or 'main-footer' in vl or 'pterodactyl software' in vl:
+                            continue
+                        vlines.append(line)
+                    vcontent = "".join(vlines)
+                    with open(filepath, 'w', encoding='utf-8') as vf:
+                        vf.write(vcontent)
+            except Exception:
+                pass
 
 admin_css = """<!-- Nothing Admin Theme -->
         <style>
@@ -2712,7 +2745,7 @@ admin_css = """<!-- Nothing Admin Theme -->
                 background: #C268F2;
             }
             /* ELIMINATE FOOTER COMPLETELY */
-            .main-footer, footer {
+            .main-footer, footer, div.main-footer, .pull-right.small.text-gray {
                 display: none !important;
                 visibility: hidden !important;
                 height: 0 !important;
@@ -2722,6 +2755,7 @@ admin_css = """<!-- Nothing Admin Theme -->
                 margin: 0 !important;
                 border: none !important;
                 overflow: hidden !important;
+                pointer-events: none !important;
             }
             .content-wrapper {
                 margin-bottom: 0 !important;
@@ -2793,10 +2827,19 @@ PYEOF
 chown -R www-data:www-data "$PANEL_DIR"
 chmod -R 755 "$PANEL_DIR/storage" "$PANEL_DIR/bootstrap/cache"
 
-cd "$PANEL_DIR"
-php artisan view:clear >/dev/null 2>&1 || true
-php artisan config:clear >/dev/null 2>&1 || true
-php artisan cache:clear >/dev/null 2>&1 || true
+# Aggressively delete all compiled view caches
+rm -rf "$PANEL_DIR/storage/framework/views/"* 2>/dev/null || true
+rm -rf /var/www/nothing/storage/framework/views/* 2>/dev/null || true
+rm -rf /var/www/pterodactyl/storage/framework/views/* 2>/dev/null || true
+
+for pdir in "$PANEL_DIR" /var/www/nothing /var/www/pterodactyl; do
+    if [ -d "$pdir" ]; then
+        cd "$pdir"
+        php artisan view:clear >/dev/null 2>&1 || true
+        php artisan config:clear >/dev/null 2>&1 || true
+        php artisan cache:clear >/dev/null 2>&1 || true
+    fi
+done
 
 systemctl reload nginx 2>/dev/null || true
 systemctl restart php8.3-fpm 2>/dev/null || true
