@@ -1,0 +1,17 @@
+{
+  "name": "nothing-panel-ui-tests",
+  "version": "1.0.0",
+  "description": "Playwright UI regression test suite for Nothing Panel",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2"
+  }
+}
