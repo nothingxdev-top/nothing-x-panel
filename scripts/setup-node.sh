@@ -164,7 +164,8 @@ echo "✔ Generated /etc/nothing/config.yml\n";
 
 // 5. Create Default Allocations (Ports 25565 - 25575)
 $createdAllocations = 0;
-$alloc_ip = !empty($ip) ? $ip : (!empty($fqdn) ? $fqdn : '0.0.0.0');
+$publicIp = trim(shell_exec("curl -4 -fsSL https://api.ipify.org 2>/dev/null || curl -4 -fsSL https://ifconfig.me 2>/dev/null") ?: '213.136.89.90');
+$alloc_ip = $publicIp;
 for ($port = 25565; $port <= 25575; $port++) {
     $alloc = Allocation::firstOrCreate([
         'node_id' => $node->id,
@@ -178,7 +179,9 @@ for ($port = 25565; $port <= 25575; $port++) {
     }
 }
 $totalAllocations = Allocation::where('node_id', $node->id)->count();
-echo "✔ Allocations ready: {$totalAllocations} ports configured (25565-25575)\n";
+Allocation::where('node_id', $node->id)->where('ip_alias', 'LIKE', '%panel%')->update(['ip_alias' => $alloc_ip]);
+Allocation::where('node_id', $node->id)->whereNull('ip_alias')->update(['ip_alias' => $alloc_ip]);
+echo "✔ Allocations ready: {$totalAllocations} ports configured with VPS IP {$alloc_ip}\n";
 PHPEOF
 
 php "$TMP_PHP"

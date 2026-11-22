@@ -255,6 +255,8 @@ if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet wings; th
 fi
 
 # 4. Inject Modern Custom Theme into wrapper.blade.php
+SERVER_IP=$(curl -4 -fsSL https://api.ipify.org 2>/dev/null || curl -4 -fsSL https://ifconfig.me 2>/dev/null || curl -4 -fsSL https://icanhazip.com 2>/dev/null || echo "213.136.89.90")
+export SERVER_IP
 WRAPPER="$PANEL_DIR/resources/views/templates/wrapper.blade.php"
 if [ -f "$WRAPPER" ]; then
   sed -i "s@config('app.name', 'Pterodactyl')@config('app.name', 'Nothing Panel')@g" "$WRAPPER"
@@ -264,6 +266,7 @@ if [ -f "$WRAPPER" ]; then
 import os, re
 
 panel_dir = os.environ.get('PANEL_DIR', '/var/www/nothing')
+server_ip = os.environ.get('SERVER_IP', '213.136.89.90')
 wrapper_path = os.path.join(panel_dir, "resources/views/templates/wrapper.blade.php")
 with open(wrapper_path, "r", encoding="utf-8") as f:
     wrapper = f.read()
@@ -1623,6 +1626,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
         </style>
         <!-- Custom Domains & Cloudflare Tunnel Router Script -->
         <script>
+        window.NP_VPS_IP = '" + server_ip + "';
         // Clean daemon console output in real-time over WebSocket
         (function() {
             const OrigWebSocket = window.WebSocket;
@@ -2449,8 +2453,26 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
 
             // ============================================================
-            // CONSOLE ADDRESS STAT CARD: Real IP:Port or Custom Domain
+            // CONSOLE ADDRESS STAT CARD & SERVER ROWS: Always Show Real VPS IP:Port
             // ============================================================
+            function enforceVpsIpDisplay() {
+                const vpsIp = window.NP_VPS_IP || '213.136.89.90';
+
+                // 1. Dashboard server rows (Replace domain or 0.0.0.0 with real VPS IP)
+                document.querySelectorAll('a[href*="/server/"] div[class*="lg:col-span-2"] p, a[href*="/server/"] p').forEach(el => {
+                    const txt = (el.textContent || '').trim();
+                    if (txt.includes(':') && (txt.includes('panel.') || txt.includes('.nx.kg') || txt.includes('.top') || txt.includes('.com') || txt.includes('.net') || txt.includes('0.0.0.0') || txt.includes('localhost') || txt.includes('127.0.0.1'))) {
+                        const portM = txt.match(/:(\d+)$/);
+                        if (portM) {
+                            el.textContent = vpsIp + ':' + portM[1];
+                        }
+                    }
+                });
+
+                // 2. Console Address card
+                enforceVpsIpDisplay();
+            }
+
             function updateAddressStatCard() {
                 const path = window.location.pathname;
                 const match = path.match(/^\/server\/([a-zA-Z0-9]+)(\/|$)/);
@@ -2465,38 +2487,18 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 const valEl = card.querySelector('.truncate, div[class*="text-gray-50"]');
                 if (!valEl) return;
 
-                if (!card.hasAttribute('data-np-addr-init') || card.getAttribute('data-np-server') !== serverId) {
-                    card.setAttribute('data-np-addr-init', '1');
-                    card.setAttribute('data-np-server', serverId);
+                const vpsIp = window.NP_VPS_IP || '213.136.89.90';
 
-                    fetch('/api/server/' + serverId + '/domains', { headers: { 'Accept': 'application/json' } })
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.domains && data.domains.length > 0) {
-                                const primary = data.domains[0];
-                                card.setAttribute('data-np-domain', primary.domain);
-                                valEl.textContent = primary.domain;
-                            } else {
-                                card.removeAttribute('data-np-domain');
-                                const cur = valEl.textContent;
-                                const portM = cur.match(/:(\d+)$/);
-                                const port = portM ? portM[1] : (data.allocations && data.allocations[0] ? data.allocations[0].port : '25565');
-                                valEl.textContent = '213.136.89.90:' + port;
-                            }
-                        })
-                        .catch(() => {});
-                } else {
-                    const customDomain = card.getAttribute('data-np-domain');
-                    if (customDomain) {
-                        if (valEl.textContent !== customDomain) valEl.textContent = customDomain;
-                    } else {
-                        const cur = valEl.textContent;
-                        if (cur.includes('panel.fayas.nx.kg') || !cur.startsWith('213.')) {
-                            const portM = cur.match(/:(\d+)$/);
-                            const port = portM ? portM[1] : '25565';
-                            valEl.textContent = '213.136.89.90:' + port;
-                        }
-                    }
+                let cur = valEl.textContent.trim();
+                let port = '25565';
+                const portM = cur.match(/:(\d+)$/);
+                if (portM) {
+                    port = portM[1];
+                }
+
+                const target = vpsIp + ':' + port;
+                if (valEl.textContent !== target) {
+                    valEl.textContent = target;
                 }
             }
 
@@ -2718,7 +2720,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 initCustomSelects();
                 initFileManagerImagePreview();
                 syncToggles();
-                updateAddressStatCard();
+                enforceVpsIpDisplay();
                 initMarkdownPreview();
             }
 
@@ -3468,6 +3470,30 @@ chown -R www-data:www-data "$PANEL_DIR"
 chmod -R 755 "$PANEL_DIR/storage" "$PANEL_DIR/bootstrap/cache"
 
 # Aggressively delete all compiled view caches
+# Update all allocations in DB to use real VPS Public IP instead of panel domain
+SERVER_IP=$(curl -4 -fsSL https://api.ipify.org 2>/dev/null || curl -4 -fsSL https://ifconfig.me 2>/dev/null || echo "213.136.89.90")
+if [ -n "$SERVER_IP" ]; then
+    for pdir in "$PANEL_DIR" /var/www/nothing /var/www/pterodactyl; do
+        if [ -d "$pdir" ]; then
+            cd "$pdir"
+            php artisan tinker --execute="
+            \$ip = '$SERVER_IP';
+            if (!empty(\$ip)) {
+                \Pterodactyl\Models\Allocation::where('ip_alias', 'LIKE', '%panel%')
+                    ->orWhere('ip_alias', 'LIKE', '%.kg%')
+                    ->orWhere('ip_alias', 'LIKE', '%.com%')
+                    ->orWhere('ip_alias', 'LIKE', '%.net%')
+                    ->orWhere('ip_alias', 'LIKE', '%.top%')
+                    ->orWhere('ip_alias', 'LIKE', '%.org%')
+                    ->orWhereNull('ip_alias')
+                    ->orWhere('ip_alias', '')
+                    ->update(['ip_alias' => \$ip]);
+            }
+            " >/dev/null 2>&1 || true
+        fi
+    done
+fi
+
 rm -rf "$PANEL_DIR/storage/framework/views/"* 2>/dev/null || true
 rm -rf /var/www/nothing/storage/framework/views/* 2>/dev/null || true
 rm -rf /var/www/pterodactyl/storage/framework/views/* 2>/dev/null || true
