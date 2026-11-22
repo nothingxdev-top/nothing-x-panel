@@ -237,11 +237,13 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         content = content.replace('r.createElement(c,{title:"Domains"},r.createElement("div",{id:"np-domains-view-mount"}))', 'r.createElement("div",{id:"np-domains-view-mount",style:{width:"100%",minHeight:"400px",padding:"24px 0",boxSizing:"border-box"}})')
         changed = True
 
-    # Fix StartupContainer layout in JS bundles: make Startup Command & Docker Image flex column
-    for old_grid in ['grid-cols-1 md:grid-cols-4 gap-4', 'grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-4', 'grid-cols-1 md:grid-cols-4']:
-        if old_grid in content:
-            content = content.replace(old_grid, 'flex flex-col gap-6')
-            changed = True
+    # Restore Server Console grid layout if previously converted to flex-col
+    if 'flex flex-col gap-6' in content and 'ServerConsole' in content:
+        content = content.replace('flex flex-col gap-6', 'grid-cols-1 md:grid-cols-4 gap-4')
+        changed = True
+    elif 'flex flex-col gap-6' in content:
+        content = content.replace('flex flex-col gap-6', 'grid-cols-1 md:grid-cols-4 gap-4')
+        changed = True
 
     if changed:
         with open(path, 'w', encoding='utf-8') as f:
@@ -729,9 +731,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="file_row"] div[class*="DropdownMenu"],
             div[class*="style-module_HHpjDvv7"] button,
             div[class*="style-module_HHpjDvv7"] div[class*="DropdownMenu"],
+            div[class*="DropdownMenu"] > button,
+            div[class*="DropdownMenu"] button,
+            div[class*="DropdownMenu__Menu"],
             button:has(svg[data-icon="ellipsis-h"]),
             button:has(svg.fa-ellipsis-h),
             button:has(svg[class*="ellipsis"]),
+            button:has(svg[data-icon="ellipsis-v"]),
+            button:has(svg[class*="dots"]),
             button[class*="p-2"],
             button[class*="p-1"],
             button.p-2,
@@ -1177,33 +1184,69 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-sizing: border-box !important;
             }
 
+            /* STARTUP PAGE: REMOVE UNNECESSARY OUTER BOXES AND BORDERS */
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"],
+            div[class*="StartupContainer"] div.sc-gvsoy-0 {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin-bottom: 1.5rem !important;
+            }
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] > div:first-child,
+            div[class*="StartupContainer"] div.sc-gvsoy-1 {
+                background: transparent !important;
+                border: none !important;
+                border-bottom: none !important;
+                padding-bottom: 0.25rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] p,
+            div[class*="StartupContainer"] p.font-header {
+                font-size: 0.9rem !important;
+                font-weight: 800 !important;
+                color: #e2d2f7 !important;
+                letter-spacing: 0.6px !important;
+                text-transform: uppercase !important;
+            }
+
             /* SERVER CONSOLE: STAT CARDS FIRMLY ON THE RIGHT SIDE */
-            div[class*="ServerConsoleContainer"] > div,
-            div.grid:has(> div div[class*="ServerConsoleContainer"]),
-            div.grid:has(div[class*="TerminalContainer"]) {
-                display: grid !important;
-                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-                flex-direction: row !important;
-            }
-            div[class*="ServerConsoleContainer"] div.lg\:col-span-3,
-            div[class*="ServerConsoleContainer"] div[class*="lg:col-span-3"],
-            div[class*="ServerConsoleContainer"] div[class*="col-span-3"],
-            div.col-span-4.lg\:col-span-3 {
-                grid-column: span 3 / span 3 !important;
-                width: auto !important;
-                min-width: 0 !important;
-                max-width: none !important;
-                flex: none !important;
-            }
-            div[class*="ServerConsoleContainer"] div.lg\:col-span-1,
-            div[class*="ServerConsoleContainer"] div[class*="lg:col-span-1"],
-            div[class*="ServerConsoleContainer"] div[class*="col-span-1"],
-            div.col-span-4.lg\:col-span-1 {
-                grid-column: span 1 / span 1 !important;
-                width: auto !important;
-                min-width: 0 !important;
-                max-width: none !important;
-                flex: none !important;
+            @media (min-width: 1024px) {
+                div[class*="ServerConsoleContainer"],
+                div[class*="ServerConsoleContainer"] > div,
+                div[class*="ServerConsoleContainer"] div[class*="grid-cols-4"],
+                div.grid:has(> div div[class*="ServerConsoleContainer"]),
+                div.grid:has(div[class*="TerminalContainer"]) {
+                    display: grid !important;
+                    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                    gap: 1rem !important;
+                    flex-direction: row !important;
+                }
+                div[class*="ServerConsoleContainer"] div.lg\:col-span-3,
+                div[class*="ServerConsoleContainer"] div[class*="lg:col-span-3"],
+                div[class*="ServerConsoleContainer"] div[class*="col-span-3"],
+                div.col-span-4.lg\:col-span-3,
+                div[class*="ServerConsoleContainer"] > div > div:first-child,
+                div:has(> div[class*="TerminalContainer"]) > div:first-child {
+                    grid-column: span 3 / span 3 !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    max-width: none !important;
+                    flex: none !important;
+                }
+                div[class*="ServerConsoleContainer"] div.lg\:col-span-1,
+                div[class*="ServerConsoleContainer"] div[class*="lg:col-span-1"],
+                div[class*="ServerConsoleContainer"] div[class*="col-span-1"],
+                div.col-span-4.lg\:col-span-1,
+                div[class*="ServerConsoleContainer"] > div > div:last-child,
+                div:has(> div[class*="stat_block"]) > div:last-child {
+                    grid-column: span 1 / span 1 !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    max-width: none !important;
+                    flex: none !important;
+                }
             }
 
             /* Startup Command Box: 100% Full Width Legible Terminal */
@@ -1333,12 +1376,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             nav.react-contextmenu,
             .react-contextmenu,
             div.react-contextmenu,
-            div[role="menu"],
-            ul[role="menu"],
-            div[class*="ContextMenu"]:not([class*="Row"]):not([class*="Container"]),
-            div[class*="Menu___Styled"],
-            div[class*="DropdownMenu__Menu"],
-            div[class*="dropdown-menu"]:not([class*="btn"]):not([class*="toggle"]) {
+            div[role="menu"]:not([role="menubar"]):not([class*="file_row"]):not([class*="FileObjectRow"]),
+            ul[role="menu"] {
                 background-color: #120e24 !important;
                 background: #120e24 !important;
                 border: 1.5px solid #C268F2 !important;
@@ -1966,33 +2005,40 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     return;
                 }
 
-                // Locate SubNavigation bar container
-                const subNav = domainsLink.closest('div.bg-neutral-900, div[class*="SubNavigation"], div.flex.overflow-x-auto, nav') || domainsLink.parentElement.parentElement;
-                if (!subNav || !subNav.parentElement) {
-                    return;
-                }
-
-                // Dedicated mount target directly following SubNavigation
-                let fb = document.getElementById('np-domains-fallback-mount');
-                if (!fb) {
-                    fb = document.createElement('div');
-                    fb.id = 'np-domains-fallback-mount';
-                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
-                }
+                // Check if React route mounted np-domains-view-mount
+                let mount = document.getElementById('np-domains-view-mount');
                 
-                if (fb.parentElement !== subNav.parentElement) {
-                    subNav.insertAdjacentElement('afterend', fb);
+                if (mount) {
+                    const fb = document.getElementById('np-domains-fallback-mount');
+                    if (fb) fb.remove();
+                } else {
+                    const domainsLink = document.querySelector('a[href*="/domains"]');
+                    const subNav = domainsLink ? (domainsLink.closest('div.bg-neutral-900, div[class*="SubNavigation"], div.flex.overflow-x-auto, nav') || domainsLink.parentElement.parentElement) : null;
+                    
+                    let fb = document.getElementById('np-domains-fallback-mount');
+                    if (!fb) {
+                        fb = document.createElement('div');
+                        fb.id = 'np-domains-fallback-mount';
+                        fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                    }
+                    
+                    if (subNav && subNav.parentElement && fb.parentElement !== subNav.parentElement) {
+                        subNav.insertAdjacentElement('afterend', fb);
+                    } else if (!fb.parentElement) {
+                        const app = document.getElementById('app') || document.body;
+                        app.appendChild(fb);
+                    }
+                    mount = fb;
                 }
 
-                // Hide sibling content below subnav when on /domains route
-                Array.from(subNav.parentElement.children).forEach(child => {
-                    if (child !== subNav && child !== fb && child.style.display !== 'none' && !child.contains(fb)) {
-                        child.style.display = 'none';
-                        child.setAttribute('data-np-hidden-by-domains', 'true');
+                // Ensure mount and all parent containers up to body are fully visible
+                let curr = mount;
+                while (curr && curr !== document.body) {
+                    if (curr.style && curr.style.display === 'none') {
+                        curr.style.display = 'block';
                     }
-                });
-
-                let mount = document.getElementById('np-domains-view-mount') || fb;
+                    curr = curr.parentElement;
+                }
                 mount.style.display = 'block';
 
                 if (existing && mount.contains(existing) && existing.getAttribute('data-server-id') === serverId) {
@@ -2197,7 +2243,13 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                         </div>
                     `).join('');
                 })
-                .catch(e => console.error('Error loading domains:', e));
+                .catch(e => {
+                    console.error('Error loading domains:', e);
+                    const list = document.getElementById('np-domains-list');
+                    if (list) {
+                        list.innerHTML = `<div style="color:#a794c2; font-size:0.85rem; font-style:italic; padding:12px 0;">No active domains or tunnels. Use the controls above to connect your server.</div>`;
+                    }
+                });
             }
 
             function addServerDomain(serverId, mode) {
@@ -2952,7 +3004,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             function fixContextMenuColors(root) {
                 const target = root || document.body;
-                target.querySelectorAll('nav.react-contextmenu, .react-contextmenu, div.react-contextmenu, div[role="menu"], ul[role="menu"], div[class*="ContextMenu"]:not([class*="Row"]):not([class*="Container"]), div[class*="Menu___Styled"], div[class*="DropdownMenu__Menu"], div[class*="dropdown-menu"]:not([class*="btn"]):not([class*="toggle"])').forEach(menu => {
+                target.querySelectorAll('nav.react-contextmenu, .react-contextmenu, div.react-contextmenu, div[role="menu"]:not([role="menubar"]), ul[role="menu"]').forEach(menu => {
+                    // Safety: Never style elements inside table or file rows as floating menus
+                    if (menu.closest('div[class*="file_row"], div[class*="FileObjectRow"], div[class*="style-module_HHpjDvv7"], tr, td')) {
+                        menu.style.setProperty('border', 'none', 'important');
+                        menu.style.setProperty('background', 'transparent', 'important');
+                        menu.style.setProperty('box-shadow', 'none', 'important');
+                        return;
+                    }
                     menu.style.setProperty('background', '#120e24', 'important');
                     menu.style.setProperty('background-color', '#120e24', 'important');
                     menu.style.setProperty('border', '1.5px solid #C268F2', 'important');
@@ -2973,18 +3032,17 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 });
 
                 // Strictly ensure 3-dots action buttons and their wrappers in table rows are plain and borderless
-                target.querySelectorAll('div[class*="FileObjectRow"] button, div[class*="file_row"] button, div[class*="FileObjectRow"] div[class*="DropdownMenu"], div[class*="FileObjectRow"] div[class*="FileDropdownMenu"], div[class*="file_row"] div[class*="DropdownMenu"], div[class*="style-module_HHpjDvv7"] button, button:has(svg[data-icon="ellipsis-h"]), button:has(svg.fa-ellipsis-h), button:has(svg[class*="ellipsis"])').forEach(btn => {
-                    if (!btn.getAttribute('role') || btn.getAttribute('role') !== 'menu') {
-                        btn.style.setProperty('border', 'none', 'important');
-                        btn.style.setProperty('border-width', '0', 'important');
-                        btn.style.setProperty('outline', 'none', 'important');
-                        btn.style.setProperty('box-shadow', 'none', 'important');
-                        btn.style.setProperty('background', 'transparent', 'important');
-                        btn.style.setProperty('background-color', 'transparent', 'important');
-                        btn.style.setProperty('min-width', '0', 'important');
-                        btn.style.setProperty('width', 'auto', 'important');
-                        btn.style.setProperty('padding', '4px 6px', 'important');
-                    }
+                target.querySelectorAll('div[class*="FileObjectRow"] button, div[class*="file_row"] button, div[class*="FileObjectRow"] div[class*="DropdownMenu"], div[class*="FileObjectRow"] div[class*="FileDropdownMenu"], div[class*="file_row"] div[class*="DropdownMenu"], div[class*="style-module_HHpjDvv7"] button, div[class*="style-module_HHpjDvv7"] div[class*="DropdownMenu"], div[class*="DropdownMenu__Menu"], button:has(svg[data-icon="ellipsis-h"]), button:has(svg.fa-ellipsis-h), button:has(svg[class*="ellipsis"])').forEach(btn => {
+                    btn.style.setProperty('border', 'none', 'important');
+                    btn.style.setProperty('border-width', '0', 'important');
+                    btn.style.setProperty('border-color', 'transparent', 'important');
+                    btn.style.setProperty('outline', 'none', 'important');
+                    btn.style.setProperty('box-shadow', 'none', 'important');
+                    btn.style.setProperty('background', 'transparent', 'important');
+                    btn.style.setProperty('background-color', 'transparent', 'important');
+                    btn.style.setProperty('min-width', '0', 'important');
+                    btn.style.setProperty('width', 'auto', 'important');
+                    btn.style.setProperty('padding', '4px 6px', 'important');
                 });
             }
 
@@ -3048,15 +3106,17 @@ if os.path.exists(base_routes):
 
     route_block = """
 Route::prefix('/api/server/{server}/domains')->group(function () {
-    Route::get('/', [Base\\DomainManagerController::class, 'index']);
-    Route::post('/', [Base\\DomainManagerController::class, 'store']);
-    Route::post('/delete', [Base\\DomainManagerController::class, 'destroy']);
+    Route::get('/', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'index']);
+    Route::post('/', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'store']);
+    Route::post('/delete', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'destroy']);
 });
 """
+    if "[Base\\DomainManagerController::class" in routes_content:
+        routes_content = routes_content.replace("[Base\\DomainManagerController::class", "[\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class")
     if "DomainManagerController" not in routes_content:
         routes_content = routes_content.replace("Route::get('/{react}'", route_block + "\nRoute::get('/{react}'")
-        with open(base_routes, "w") as f:
-            f.write(routes_content)
+    with open(base_routes, "w") as f:
+        f.write(routes_content)
 PYEOF
 
 # 5. Universal Rebranding across all Views, Lang, and Configs & Inject Admin Theme
