@@ -85,6 +85,7 @@ while [ "$done" == false ]; do
     "Install Wings only" \
     "Update Panel" \
     "Domain Manager" \
+    "Update Panel (Theme & UI Fixes)" \
     "──────── Maintenance ────────" \
     "Uninstall Panel or Wings"
 
@@ -95,6 +96,7 @@ while [ "$done" == false ]; do
     "wings"
     "update"
     "domain_manager"
+    "theme"
     ""
     "uninstall"
   )
@@ -106,6 +108,12 @@ while [ "$done" == false ]; do
   fi
 
   if [ "$action" == "update" ]; then
+    echo "* Updating Nothing Panel (Engine, Files & Database)..."
+    curl -fsSL "$GITHUB_URL/scripts/update-panel.sh" | bash
+    exit 0
+  fi
+
+  if [ "$action" == "theme" ]; then
     echo "* Updating Nothing Panel with latest theme & fixes..."
     NP_NO_MENU=1 curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | NP_NO_MENU=1 bash
     exit 0

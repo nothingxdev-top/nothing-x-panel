@@ -69,10 +69,11 @@ When you launch the installer, you are greeted with a sleek, boxed terminal menu
   ║  [ 3] Install Wings only                                         ║
   ║  [ 4] Update Panel                                               ║
   ║  [ 5] Domain Manager                                             ║
+  ║  [ 6] Update Panel (Theme & UI Fixes)                            ║
   ╟──────────────────────────────────────────────────────────────────╢
   ║  ──────── Maintenance ────────                                   ║
   ╟──────────────────────────────────────────────────────────────────╢
-  ║  [ 7] Uninstall Panel or Wings                                   ║
+  ║  [ 8] Uninstall Panel or Wings                                   ║
   ╚══════════════════════════════════════════════════════════════════╝
 ```
 
@@ -81,9 +82,10 @@ When you launch the installer, you are greeted with a sleek, boxed terminal menu
 * **`[ 1] Install Panel on NAT VPS / IPv6 (via Cloudflare Tunnel)`**: Zero-port-forward setup. Exposes your panel through a free, automated Cloudflare Tunnel. Ideal for NAT VPS, CGNAT, dynamic IP, or IPv6-only servers.
 * **`[ 2] Install the Panel only`**: Installs only the Web Panel interface (`/var/www/nothing`). Wings can be installed separately on other nodes.
 * **`[ 3] Install Wings only`**: Installs only the Wings daemon (`/usr/local/bin/wings`) and Docker runtime for node servers.
-* **`[ 4] Update Panel`**: Seamlessly updates an existing Nothing Panel installation to the latest version while preserving your databases, servers, and configuration.
+* **`[ 4] Update Panel`**: Seamlessly updates an existing Nothing Panel installation (core engine, files, and database migrations) while preserving your databases, servers, and configuration.
 * **`[ 5] Domain Manager`**: Opens the `np-domain` interactive manager to map domains to game server ports with automatic Let's Encrypt SSL certificates.
-* **`[ 7] Uninstall Panel or Wings`**: Safe, interactive uninstaller to cleanly remove the Panel, Wings, or both.
+* **`[ 6] Update Panel (Theme & UI Fixes)`**: Quickly applies the latest Obsidian Electric Purple custom theme, UI fixes, and custom domain interface.
+* **`[ 8] Uninstall Panel or Wings`**: Safe, interactive uninstaller to cleanly remove the Panel, Wings, or both.
 
 ---
 

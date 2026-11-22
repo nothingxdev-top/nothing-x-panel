@@ -1153,13 +1153,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 visibility: visible !important;
             }
 
-            /* FORCE STARTUP COMMAND & DOCKER IMAGE TO STACK VERTICALLY FULL WIDTH (100%) AT ALL SCREEN SIZES */
-            div.grid.grid-cols-1.md\:grid-cols-4,
-            div[class*="grid-cols-4"],
-            div[class*="StartupContainer"] div[class*="grid-cols-4"],
-            div:has(> div p.font-mono),
-            div:has(> div > div p.font-mono),
-            div:has(> div > div > div p.font-mono) {
+            /* STARTUP PAGE ONLY: STACK STARTUP COMMAND & DOCKER IMAGE VERTICALLY */
+            div[class*="StartupContainer"] div.grid.grid-cols-1.md\:grid-cols-4,
+            div[class*="StartupContainer"] div[class*="grid-cols-4"] {
                 display: flex !important;
                 flex-direction: column !important;
                 grid-template-columns: 1fr !important;
@@ -1167,27 +1163,47 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 gap: 1.5rem !important;
             }
 
-            div.grid.grid-cols-1.md\:grid-cols-4 > div,
-            div[class*="grid-cols-4"] > div,
-            div.col-span-3,
-            div.col-span-1,
-            div.md\:col-span-3,
-            div.md\:col-span-1,
-            div[class*="col-span-3"],
-            div[class*="col-span-1"],
+            div[class*="StartupContainer"] div.grid.grid-cols-1.md\:grid-cols-4 > div,
+            div[class*="StartupContainer"] div[class*="grid-cols-4"] > div,
             div[class*="StartupContainer"] div[class*="md:col-span-1"],
             div[class*="StartupContainer"] div[class*="md:col-span-3"],
             div[class*="StartupContainer"] div[class*="col-span-1"],
-            div[class*="StartupContainer"] div[class*="col-span-3"],
-            div:has(> div p.font-mono) > div,
-            div:has(> div > div p.font-mono) > div,
-            div:has(> div > div > div p.font-mono) > div {
+            div[class*="StartupContainer"] div[class*="col-span-3"] {
                 grid-column: 1 / -1 !important;
                 width: 100% !important;
                 min-width: 100% !important;
                 max-width: 100% !important;
                 flex: 1 1 100% !important;
                 box-sizing: border-box !important;
+            }
+
+            /* SERVER CONSOLE: STAT CARDS FIRMLY ON THE RIGHT SIDE */
+            div[class*="ServerConsoleContainer"] > div,
+            div.grid:has(> div div[class*="ServerConsoleContainer"]),
+            div.grid:has(div[class*="TerminalContainer"]) {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                flex-direction: row !important;
+            }
+            div[class*="ServerConsoleContainer"] div.lg\:col-span-3,
+            div[class*="ServerConsoleContainer"] div[class*="lg:col-span-3"],
+            div[class*="ServerConsoleContainer"] div[class*="col-span-3"],
+            div.col-span-4.lg\:col-span-3 {
+                grid-column: span 3 / span 3 !important;
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                flex: none !important;
+            }
+            div[class*="ServerConsoleContainer"] div.lg\:col-span-1,
+            div[class*="ServerConsoleContainer"] div[class*="lg:col-span-1"],
+            div[class*="ServerConsoleContainer"] div[class*="col-span-1"],
+            div.col-span-4.lg\:col-span-1 {
+                grid-column: span 1 / span 1 !important;
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                flex: none !important;
             }
 
             /* Startup Command Box: 100% Full Width Legible Terminal */
