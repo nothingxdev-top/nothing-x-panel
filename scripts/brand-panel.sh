@@ -306,11 +306,78 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 --np-dark: #08060f;
                 --np-card: #120e22;
             }
+            html {
+                background-color: #08060f !important;
+                min-height: 100% !important;
+                height: 100% !important;
+            }
             body {
-                background: #08060f !important;
-                background-image: radial-gradient(circle at 50% 10%, rgba(194, 104, 242, 0.18) 0%, transparent 60%) !important;
+                min-height: 100vh !important;
+                min-height: 100dvh !important;
+                background-color: #08060f !important;
+                background-image: radial-gradient(circle at 50% 0%, #1c1033 0%, #0c071a 50%, #08060f 100%) !important;
+                background-repeat: no-repeat !important;
+                background-attachment: fixed !important;
+                background-size: cover !important;
+                background-position: center top !important;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
                 color: #f1f5f9 !important;
+            }
+            #app {
+                min-height: 100vh !important;
+                background: transparent !important;
+                background-color: transparent !important;
+            }
+
+            /* ========================================================= */
+            /* ACTIVE NAVIGATION TAB: THEME PURPLE (#C268F2)            */
+            /* ========================================================= */
+            div[class*="SubNavigation"] a.active,
+            div[class*="SubNavigation"] a[aria-current="page"],
+            div[class*="SubNavigation"] a[class*="active"],
+            div.flex.overflow-x-auto a.active,
+            div.flex.overflow-x-auto a[aria-current="page"],
+            div.flex.overflow-x-auto a[class*="active"],
+            nav a.active,
+            nav a[aria-current="page"],
+            a[class*="SubNavigation___StyledNavLink"].active,
+            a[class*="SubNavigation___StyledNavLink"][aria-current="page"],
+            a[class*="StyledNavLink"].active,
+            a[class*="StyledNavLink"][aria-current="page"],
+            a.active[class*="border-cyan"],
+            a[class*="border-cyan-500"],
+            a[class*="border-cyan-400"],
+            a[class*="text-cyan-500"],
+            a[class*="text-cyan-400"],
+            a.border-cyan-500,
+            a.border-cyan-400 {
+                border-color: #C268F2 !important;
+                border-bottom-color: #C268F2 !important;
+                color: #ffffff !important;
+                box-shadow: inset 0 -2px 0 0 #C268F2 !important;
+            }
+
+            div[class*="SubNavigation"] a:hover,
+            div.flex.overflow-x-auto a:hover,
+            a[class*="SubNavigation___StyledNavLink"]:hover {
+                color: #e2d2f7 !important;
+                border-bottom-color: rgba(194, 104, 242, 0.4) !important;
+            }
+
+            /* Unwanted border removal for 3-dots and row action buttons */
+            button[aria-label="More options"],
+            button[aria-label="More"],
+            button[aria-label="Actions"],
+            div[class*="DatabaseRow"] button:not([class*="btn-primary"]):not([class*="primary"]),
+            div[class*="ScheduleRow"] button:not([class*="btn-primary"]):not([class*="primary"]),
+            div[class*="UserRow"] button:not([class*="btn-primary"]):not([class*="primary"]),
+            div[class*="BackupRow"] button:not([class*="btn-primary"]):not([class*="primary"]) {
+                border: none !important;
+                border-width: 0 !important;
+                border-color: transparent !important;
+                outline: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
             }
             /* MASCOT AND FOOTER REMOVAL (Target all styled component classes & DOM elements) */
             .sc-cyh04c-4,
