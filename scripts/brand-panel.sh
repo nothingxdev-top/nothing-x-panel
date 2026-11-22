@@ -643,25 +643,116 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 from { transform: rotate(0deg); }
                 to { transform: rotate(360deg); }
             }
-            /* Buttons */
-            button, button[type="submit"], .btn-primary, [class*="Button___StyledButton"], [class*="Button"] {
+            /* PRIMARY CTA & SUBMIT BUTTONS ONLY (#C268F2 GRADIENT) */
+            button[type="submit"],
+            .btn-primary,
+            button.primary,
+            button[class*="Button__Primary"],
+            div[class*="Modal"] button[type="submit"],
+            button[class*="Button___StyledButton"]:not([class*="secondary"]):not([class*="danger"]):not([class*="text"]):not([class*="p-"]):not([class*="p-1"]):not([class*="p-2"]) {
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 background-color: #C268F2 !important;
                 color: #ffffff !important;
-                font-weight: 800 !important;
-                letter-spacing: 1px !important;
-                border-radius: 10px !important;
-                box-shadow: 0 4px 20px rgba(194, 104, 242, 0.5) !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.5px !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 16px rgba(194, 104, 242, 0.35) !important;
                 transition: all 0.2s ease !important;
                 text-transform: uppercase !important;
                 border: none !important;
-                padding: 0.85rem !important;
+                padding: 0.75rem 1.4rem !important;
                 cursor: pointer !important;
             }
-            button:hover, button[type="submit"]:hover, .btn-primary:hover, [class*="Button___StyledButton"]:hover, [class*="Button"]:hover {
-                transform: translateY(-2px) !important;
-                box-shadow: 0 6px 30px rgba(194, 104, 242, 0.8) !important;
-                filter: brightness(1.1) !important;
+            button[type="submit"]:hover,
+            .btn-primary:hover,
+            button.primary:hover,
+            button[class*="Button__Primary"]:hover {
+                transform: translateY(-1px) !important;
+                box-shadow: 0 6px 24px rgba(194, 104, 242, 0.6) !important;
+                filter: brightness(1.08) !important;
+            }
+
+            /* SECONDARY BUTTONS: MINIMAL FLAT WITH SUBTLE OUTLINE */
+            button[class*="secondary"],
+            button.btn-default,
+            button.btn-secondary,
+            button[class*="Button___StyledButton"][class*="secondary"] {
+                background: rgba(255, 255, 255, 0.05) !important;
+                color: #d1b8eb !important;
+                font-weight: 600 !important;
+                border-radius: 8px !important;
+                border: 1px solid rgba(194, 104, 242, 0.2) !important;
+                box-shadow: none !important;
+                padding: 0.65rem 1.25rem !important;
+                cursor: pointer !important;
+                transform: none !important;
+            }
+            button[class*="secondary"]:hover,
+            button.btn-default:hover,
+            button.btn-secondary:hover {
+                background: rgba(194, 104, 242, 0.12) !important;
+                color: #ffffff !important;
+                border-color: #C268F2 !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            /* 3-DOTS ACTION BUTTON & ALL ICON BUTTONS: ZERO BOX, COMPLETELY BORDERLESS */
+            button[class*="p-2"],
+            button[class*="p-1"],
+            button:has(svg:only-child),
+            button[aria-label],
+            button[title],
+            div[class*="file_row"] button,
+            div[class*="FileObjectRow"] button,
+            button.p-2,
+            button.p-1,
+            div[class*="flex"] > button[class*="p-2"],
+            div[class*="flex"] > button[class*="p-1"] {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                border-radius: 6px !important;
+                padding: 6px !important;
+                color: #a394bf !important;
+                margin: 0 !important;
+                cursor: pointer !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
+                transform: none !important;
+            }
+            button[class*="p-2"]:hover,
+            button[class*="p-1"]:hover,
+            button:has(svg:only-child):hover,
+            button[aria-label]:hover,
+            div[class*="file_row"] button:hover,
+            div[class*="FileObjectRow"] button:hover,
+            button.p-2:hover,
+            button.p-1:hover {
+                background: rgba(194, 104, 242, 0.12) !important;
+                background-color: rgba(194, 104, 242, 0.12) !important;
+                color: #C268F2 !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                transform: none !important;
+                filter: none !important;
+            }
+            button[class*="p-2"] svg,
+            button[class*="p-1"] svg,
+            div[class*="file_row"] button svg,
+            div[class*="FileObjectRow"] button svg {
+                color: #a394bf !important;
+                fill: currentColor !important;
+            }
+            button[class*="p-2"]:hover svg,
+            button[class*="p-1"]:hover svg,
+            div[class*="file_row"] button:hover svg,
+            div[class*="FileObjectRow"] button:hover svg {
+                color: #C268F2 !important;
+                fill: currentColor !important;
             }
             /* ALL SELECT MENUS & DROPDOWNS — ULTRA SLEEK #C268F2 CUSTOM STYLING */
             select,
@@ -1059,8 +1150,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-sizing: border-box !important;
                 display: block !important;
                 white-space: pre-wrap !important;
-                word-break: normal !important;
-                overflow-wrap: break-word !important;
+                word-break: break-all !important;
+                overflow-wrap: anywhere !important;
                 word-wrap: break-word !important;
                 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
                 font-size: 0.95rem !important;
@@ -1180,6 +1271,12 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             button[class*="ContextMenu__Item"] *,
             div[class*="FileDropdownMenu"],
             div[class*="FileDropdownMenu"] *,
+            .react-contextmenu,
+            .react-contextmenu *,
+            .react-contextmenu-item,
+            .react-contextmenu-item *,
+            div.react-contextmenu,
+            div.react-contextmenu *,
             div[class*="FileObjectRow"] + div,
             div[class*="FileObjectRow"] + div * {
                 color: #ffffff !important;
@@ -1514,7 +1611,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 outline: none !important;
             }
             /* BUTTONS IN SERVER PAGES */
-            button, button[type="submit"], [class*="Button"] {
+            button[type="submit"], [class*="Button__Primary"], .btn-primary {
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 background-color: #C268F2 !important;
                 color: #ffffff !important;
@@ -1524,7 +1621,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 4px 18px rgba(194, 104, 242, 0.45) !important;
                 border: none !important;
             }
-            button:hover, [class*="Button"]:hover {
+            button[type="submit"]:hover, [class*="Button__Primary"]:hover {
                 transform: translateY(-2px) !important;
                 box-shadow: 0 6px 28px rgba(194, 104, 242, 0.75) !important;
                 filter: brightness(1.1) !important;
@@ -1741,36 +1838,38 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     return;
                 }
 
-                // Locate the full sub-navigation bar container
-                let navBar = domainsLink.closest('div.flex.overflow-x-auto, div[class*="overflow-x-auto"], nav') || domainsLink.parentElement;
-                while (navBar && navBar.parentElement && navBar.parentElement.id !== 'app' && navBar.parentElement.querySelector('a[href*="/console"]')) {
-                    navBar = navBar.parentElement;
-                }
+                // 1. Primary mount target: React Router's mounted container
+                let mount = document.getElementById('np-domains-view-mount');
 
-                let fb = document.getElementById('np-domains-fallback-mount');
-                if (!fb) {
-                    fb = document.createElement('div');
-                    fb.id = 'np-domains-fallback-mount';
-                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; z-index: 5 !important; clear: both !important;';
-                }
-
-                // Place fb directly below the sub-navigation bar
-                if (navBar && navBar.parentElement) {
-                    if (fb.previousElementSibling !== navBar) {
-                        navBar.insertAdjacentElement('afterend', fb);
-                    }
-                    Array.from(navBar.parentElement.children).forEach(child => {
-                        if (child !== navBar && child !== fb && child.style.display !== 'none') {
-                            child.style.display = 'none';
-                            child.setAttribute('data-np-hidden-by-domains', 'true');
+                // 2. Fallback: Place directly below sub-nav inside ServerViewContainer
+                if (!mount) {
+                    const subNav = domainsLink.closest('div.flex.overflow-x-auto, div[class*="overflow-x-auto"], nav');
+                    if (subNav && subNav.parentElement) {
+                        let fb = document.getElementById('np-domains-fallback-mount');
+                        if (!fb) {
+                            fb = document.createElement('div');
+                            fb.id = 'np-domains-fallback-mount';
+                            fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; z-index: 5 !important; clear: both !important;';
                         }
-                    });
-                } else if (!fb.parentElement) {
-                    const app = document.getElementById('app') || document.body;
-                    app.appendChild(fb);
+                        if (fb.parentElement !== subNav.parentElement) {
+                            subNav.insertAdjacentElement('afterend', fb);
+                        }
+                        Array.from(subNav.parentElement.children).forEach(child => {
+                            if (child !== subNav && child !== fb && child.style.display !== 'none') {
+                                child.style.display = 'none';
+                                child.setAttribute('data-np-hidden-by-domains', 'true');
+                            }
+                        });
+                        mount = fb;
+                    }
                 }
 
-                let mount = fb;
+                if (!mount) {
+                    setTimeout(injectDomainManager, 60);
+                    return;
+                }
+
+                mount.style.display = 'block';
 
                 if (existing && mount.contains(existing) && existing.getAttribute('data-server-id') === serverId) {
                     return;
@@ -2681,13 +2780,15 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                                 });
                             }
 
-                            const codeBox = card.querySelector('p, code');
+                            const codeBox = card.querySelector('p.font-mono, p[class*="font-mono"], code') || card.querySelectorAll('p')[1] || card.querySelector('p');
                             if (codeBox) {
                                 codeBox.style.setProperty('width', '100%', 'important');
+                                codeBox.style.setProperty('min-width', '100%', 'important');
+                                codeBox.style.setProperty('box-sizing', 'border-box', 'important');
+                                codeBox.style.setProperty('display', 'block', 'important');
                                 codeBox.style.setProperty('white-space', 'pre-wrap', 'important');
-                                codeBox.style.setProperty('word-break', 'normal', 'important');
-                                codeBox.style.setProperty('overflow-wrap', 'break-word', 'important');
-                                codeBox.style.setProperty('word-wrap', 'break-word', 'important');
+                                codeBox.style.setProperty('word-break', 'break-all', 'important');
+                                codeBox.style.setProperty('overflow-wrap', 'anywhere', 'important');
                             }
                         }
                     }
@@ -2696,7 +2797,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             function fixContextMenuColors(root) {
                 const target = root || document.body;
-                target.querySelectorAll('div[role="menu"], ul[role="menu"], div[class*="ContextMenu"], div[class*="DropdownMenu"], div[class*="ActionMenu"], div[class*="dropdown-menu"]').forEach(menu => {
+                target.querySelectorAll('div[role="menu"], ul[role="menu"], div[class*="ContextMenu"], div[class*="DropdownMenu"], div[class*="ActionMenu"], div[class*="dropdown-menu"], .react-contextmenu, div[class*="react-contextmenu"]').forEach(menu => {
                     menu.style.setProperty('background', '#120e24', 'important');
                     menu.style.setProperty('background-color', '#120e24', 'important');
                     menu.style.setProperty('border', '1.5px solid #C268F2', 'important');
