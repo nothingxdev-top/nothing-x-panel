@@ -276,7 +276,7 @@ selinux_allow() {
 }
 
 php_fpm_conf() {
-  curl -fsSL -o /etc/php-fpm.d/www-pterodactyl.conf "$GITHUB_URL"/configs/www-pterodactyl.conf
+  curl -fsSL -o /etc/php-fpm.d/www-nothing.conf "$GITHUB_URL"/configs/www-nothing.conf
 
   systemctl enable php-fpm
   systemctl start php-fpm

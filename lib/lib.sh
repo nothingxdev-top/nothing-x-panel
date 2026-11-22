@@ -29,7 +29,7 @@ set -e
 export GITHUB_SOURCE=${GITHUB_SOURCE:-master}
 export SCRIPT_RELEASE=${SCRIPT_RELEASE:-master}
 
-# Pterodactyl versions (backend engine - kept for compatibility)
+# Engine versions (backend engine)
 export PANEL_MAJOR_VERSION="${PANEL_MAJOR_VERSION:-1}"
 export PTERODACTYL_PANEL_VERSION="${PTERODACTYL_PANEL_VERSION:-}"
 export PTERODACTYL_PANEL_COMMIT="${PTERODACTYL_PANEL_COMMIT:-}"
@@ -1071,7 +1071,7 @@ debian)
   esac
   ;;
 rocky)
-  PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+  PHP_SOCKET="/var/run/php-fpm/nothing.sock"
   CACHE_SERVICE="redis"
   case "$OS_VER_MAJOR" in
   8 | 9 | 10)
@@ -1080,7 +1080,7 @@ rocky)
   esac
   ;;
 almalinux)
-  PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+  PHP_SOCKET="/var/run/php-fpm/nothing.sock"
   CACHE_SERVICE="redis"
   case "$OS_VER_MAJOR" in
   8 | 9 | 10)

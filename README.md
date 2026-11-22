@@ -84,7 +84,7 @@ When you launch the installer, you are greeted with a sleek, boxed terminal menu
 | Feature | Description |
 |---|---|
 | 🎨 **Obsidian Purple Theme** | Custom Obsidian Purple (`#C268F2`) glass UI with neon accents, custom scrollbars, and glowing action buttons |
-| 🚫 **100% De-branded** | No "Pterodactyl" traces anywhere — all system paths migrated to `/var/www/nothing` and `/etc/nothing/config.yml` |
+| 🚫 **100% Custom Branded** | Complete custom obsidian purple branding — all system paths migrated to `/var/www/nothing` and `/etc/nothing/config.yml` |
 | ☁️ **NAT VPS & IPv6 Ready** | Built-in Cloudflare Tunnel integration for NAT VPS and IPv6-only servers |
 | 🌐 **Domain Manager (`np-domain`)** | Assign custom domains to game server ports with automatic Let's Encrypt SSL certificates |
 | 📝 **Markdown (.md) Live Editor** | Dual-pane Markdown editor with GitHub-style live preview and syntax highlighting in the file manager |

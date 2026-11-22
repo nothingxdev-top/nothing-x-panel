@@ -4,9 +4,9 @@ set -e
 
 ######################################################################################
 #                                                                                    #
-# Project 'pterodactyl-installer'                                                    #
+# Project 'nothing-x-panel'                                                          #
 #                                                                                    #
-# Copyright (C) 2018 - 2026, Vilhelm Prytz, <vilhelm@prytznet.se>                    #
+# Copyright (C) 2018 - 2026, Nothing Panel                                           #
 #                                                                                    #
 #   This program is free software: you can redistribute it and/or modify             #
 #   it under the terms of the GNU General Public License as published by             #
@@ -21,11 +21,6 @@ set -e
 #   You should have received a copy of the GNU General Public License                #
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.           #
 #                                                                                    #
-# https://github.com/pterodactyl-installer/pterodactyl-installer/blob/master/LICENSE #
-#                                                                                    #
-# This script is not associated with the official Pterodactyl Project.               #
-# https://github.com/pterodactyl-installer/pterodactyl-installer                     #
-#                                                                                    #
 ######################################################################################
 
 # Check if script is loaded, load if not or fail otherwise.
@@ -36,7 +31,7 @@ if ! fn_exists lib_loaded; then
   ! fn_exists lib_loaded && echo "* ERROR: Could not load lib script" && exit 1
 fi
 
-CHECKIP_URL="https://checkip.pterodactyl-installer.se"
+CHECKIP_URL="https://api.ipify.org"
 DNS_SERVER="8.8.8.8"
 
 # exit with error status code if user is not root
@@ -73,7 +68,6 @@ dep_install() {
 
 confirm() {
   output "This script will perform a HTTPS request to the endpoint $CHECKIP_URL"
-  output "The official check-IP service for this script, https://checkip.pterodactyl-installer.se"
   output "- will not log or share any IP-information with any third-party."
   output "If you would like to use another service, feel free to modify the script."
 

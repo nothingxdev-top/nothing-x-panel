@@ -52,7 +52,7 @@ git push
 
 output "Release $RELEASE pushed"
 
-output "Create a new release with tag $RELEASE targeting the pushed release commit - https://github.com/pterodactyl-installer/pterodactyl-installer/releases/new"
+output "Create a new release with tag $RELEASE targeting the pushed release commit - https://github.com/nothingxdev-top/nothing-x-panel/releases/new"
 output ""
 
 cat <<EOF
