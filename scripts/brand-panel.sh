@@ -216,6 +216,11 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         content = content.replace('r.createElement(c,{title:"Domains"},r.createElement("div",{id:"np-domains-view-mount"}))', 'r.createElement("div",{id:"np-domains-view-mount",style:{width:"100%",minHeight:"400px",padding:"24px 0",boxSizing:"border-box"}})')
         changed = True
 
+    # Fix StartupContainer layout in JS bundles: make Startup Command & Docker Image flex column
+    if 'grid-cols-1 md:grid-cols-4 gap-4' in content:
+        content = content.replace('grid-cols-1 md:grid-cols-4 gap-4', 'flex flex-col gap-6')
+        changed = True
+
     if changed:
         with open(path, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -990,7 +995,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 font-size: 0.82rem !important;
             }
 
-            /* STARTUP SETTINGS & VARIABLES — FULLY VISIBLE & VIBRANT */
+            /* ========================================================= */
+            /* STARTUP SETTINGS & COMMAND LAYOUT: WIDE TERMINAL CODE BOX */
+            /* ========================================================= */
             div[class*="StartupContainer"] p,
             div[class*="VariableBox"] p,
             div[class*="TitledGreyBox"] p,
@@ -999,24 +1006,84 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 opacity: 1 !important;
                 visibility: visible !important;
             }
+
+            /* Stack Startup Command and Docker Image cards vertically full-width */
+            div[class*="StartupContainer"] div[class*="grid-cols-4"],
+            div[class*="StartupContainer"] div[class*="grid"][class*="gap-4"]:first-of-type,
+            div[class*="StartupContainer"] > div > div[class*="grid"]:first-child,
+            div.grid.grid-cols-1.md\:grid-cols-4,
+            div:has(> div > div[class*="TitledGreyBox"] > div > p[class*="font-mono"]) {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+                width: 100% !important;
+            }
+
+            div[class*="StartupContainer"] div[class*="md:col-span-1"],
+            div[class*="StartupContainer"] div[class*="md:col-span-3"],
+            div[class*="StartupContainer"] div[class*="col-span-1"],
+            div[class*="StartupContainer"] div[class*="col-span-3"],
+            div.grid.grid-cols-1.md\:grid-cols-4 > div,
+            div:has(> div[class*="TitledGreyBox"] > div > p[class*="font-mono"]) {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 1 1 100% !important;
+                display: block !important;
+                min-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Make Startup Command a wide, legible, syntax-highlighted bash terminal box */
             p[class*="StartupContainer___StyledP"],
+            div[class*="StartupContainer"] p[class*="font-mono"],
+            div[class*="StartupContainer"] p.font-mono,
+            div[class*="StartupContainer"] code,
             p[class*="font-mono"] {
                 background-color: #0b0717 !important;
                 border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
                 color: #38ef7d !important;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-                padding: 0.75rem 1rem !important;
-                border-radius: 8px !important;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+                padding: 1.1rem 1.4rem !important;
+                border-radius: 10px !important;
                 display: block !important;
-                word-break: break-all !important;
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                line-height: 1.65 !important;
                 font-size: 0.95rem !important;
+                letter-spacing: 0.015em !important;
+                overflow-x: auto !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6) !important;
             }
+
+            /* Startup settings select input (Docker Image selector) */
+            div[class*="StartupContainer"] select,
+            div[class*="StartupContainer"] div[class*="Select"],
+            div[class*="StartupContainer"] input[type="text"],
+            div[class*="StartupContainer"] input:not([type="checkbox"]):not([type="radio"]) {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Variable box description styling */
             p[class*="text-neutral-300"],
             div[class*="VariableBox"] p {
                 color: #c9b6e3 !important;
                 font-size: 0.85rem !important;
                 margin-top: 0.4rem !important;
                 display: block !important;
+                line-height: 1.5 !important;
+            }
+
+            /* Variables section heading & grid */
+            div[class*="StartupContainer"] h3 {
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                margin-top: 2rem !important;
+                margin-bottom: 1rem !important;
             }
 
             /* ========================================================= */
