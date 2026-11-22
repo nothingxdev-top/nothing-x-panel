@@ -2908,7 +2908,32 @@ for pdir in "$PANEL_DIR" /var/www/nothing /var/www/pterodactyl; do
     fi
 done
 
-systemctl reload nginx 2>/dev/null || true
+# 8. Clean up Nginx conflicts & Ensure SSL certificate resolution
+rm -f /etc/nginx/sites-enabled/pterodactyl.conf /etc/nginx/sites-available/pterodactyl.conf 2>/dev/null || true
+rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
+
+# Auto-heal SSL certificates if Let's Encrypt certs exist
+if [ -n "$PANEL_URL" ]; then
+  DOMAIN_ONLY=$(echo "$PANEL_URL" | sed -e 's@^https://@@' -e 's@^http://@@' -e 's@/.*@@' -e 's@:.*@@')
+  if [ -n "$DOMAIN_ONLY" ] && [ -d "/etc/letsencrypt/live/$DOMAIN_ONLY" ]; then
+    mkdir -p /etc/ssl
+    ln -sf "/etc/letsencrypt/live/$DOMAIN_ONLY/fullchain.pem" "/etc/ssl/${DOMAIN_ONLY}.pem" 2>/dev/null || true
+    ln -sf "/etc/letsencrypt/live/$DOMAIN_ONLY/privkey.pem" "/etc/ssl/${DOMAIN_ONLY}.key" 2>/dev/null || true
+    if [ -f /etc/nginx/sites-available/nothing.conf ]; then
+      sed -i -e "s@/etc/ssl/${DOMAIN_ONLY}.pem@/etc/letsencrypt/live/${DOMAIN_ONLY}/fullchain.pem@g" /etc/nginx/sites-available/nothing.conf
+      sed -i -e "s@/etc/ssl/${DOMAIN_ONLY}.key@/etc/letsencrypt/live/${DOMAIN_ONLY}/privkey.pem@g" /etc/nginx/sites-available/nothing.conf
+    fi
+  fi
+fi
+
+# Ensure sites-enabled has nothing.conf
+if [ -f /etc/nginx/sites-available/nothing.conf ]; then
+  ln -sf /etc/nginx/sites-available/nothing.conf /etc/nginx/sites-enabled/nothing.conf 2>/dev/null || true
+fi
+
+if nginx -t >/dev/null 2>&1; then
+  systemctl restart nginx 2>/dev/null || systemctl reload nginx 2>/dev/null || true
+fi
 systemctl restart php8.3-fpm 2>/dev/null || true
 
 echo "Nothing Panel custom branding applied successfully!"

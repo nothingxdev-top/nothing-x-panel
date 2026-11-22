@@ -408,11 +408,22 @@ letsencrypt() {
 
   output "Configuring Let's Encrypt..."
 
+  # Purge any old duplicate configs or default sites to prevent certbot conflicts
+  rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/pterodactyl.conf "$CONFIG_PATH_AVAIL"/pterodactyl.conf 2>/dev/null || true
+  systemctl reload nginx 2>/dev/null || systemctl restart nginx 2>/dev/null || true
+
   # Obtain certificate
   certbot --nginx --redirect --no-eff-email --email "$email" -d "$FQDN" || FAILED=true
 
-  # Check if it succeded
-  if [ ! -d "/etc/letsencrypt/live/$FQDN/" ] || [ "$FAILED" == true ]; then
+  # Check if certificate files actually exist (certbot might succeed in issuing cert even if plugin had a reload glitch)
+  if [ -d "/etc/letsencrypt/live/$FQDN/" ] && [ -f "/etc/letsencrypt/live/$FQDN/fullchain.pem" ]; then
+    success "The process of obtaining a Let's Encrypt certificate succeeded!"
+    mkdir -p /etc/ssl
+    ln -sf "/etc/letsencrypt/live/$FQDN/fullchain.pem" "/etc/ssl/$FQDN.pem" 2>/dev/null || true
+    ln -sf "/etc/letsencrypt/live/$FQDN/privkey.pem" "/etc/ssl/$FQDN.key" 2>/dev/null || true
+    rm -f /etc/nginx/sites-enabled/pterodactyl.conf 2>/dev/null || true
+    nginx -t && systemctl restart nginx || true
+  else
     warning "The process of obtaining a Let's Encrypt certificate failed!"
     echo -n "* Still assume SSL? (y/N): "
     read -r CONFIGURE_SSL
@@ -429,8 +440,6 @@ letsencrypt() {
       "$PHP_BIN" artisan queue:restart
       configure_nginx
     fi
-  else
-    success "The process of obtaining a Let's Encrypt certificate succeeded!"
   fi
 }
 
@@ -475,20 +484,33 @@ configure_nginx() {
     }\n' "$CONFIG_PATH_AVAIL"/nothing.conf
   fi
 
+  # Purge any old pterodactyl.conf symlinks from sites-enabled to prevent duplicate listen conflicts!
+  rm -f "$CONFIG_PATH_ENABL"/pterodactyl.conf "$CONFIG_PATH_AVAIL"/pterodactyl.conf 2>/dev/null || true
+  rm -f /etc/nginx/conf.d/pterodactyl.conf 2>/dev/null || true
+
   case "$OS" in
   ubuntu | debian)
     ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_ENABL"/nothing.conf
-    ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_AVAIL"/pterodactyl.conf 2>/dev/null || true
-    ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_ENABL"/pterodactyl.conf 2>/dev/null || true
     ;;
   rocky | almalinux)
-    ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_AVAIL"/pterodactyl.conf 2>/dev/null || true
     ;;
   esac
 
-  if [ "$ASSUME_SSL" == false ] && [ "$CONFIGURE_LETSENCRYPT" == false ]; then
-    nginx -t
-    systemctl restart nginx
+  # Ensure SSL certificate paths resolve if SSL config is used
+  if [ "$DL_FILE" == "nginx_ssl.conf" ] || [ "$ASSUME_SSL" == true ]; then
+    mkdir -p /etc/ssl
+    if [ -f "/etc/letsencrypt/live/${FQDN}/fullchain.pem" ]; then
+      ln -sf "/etc/letsencrypt/live/${FQDN}/fullchain.pem" "/etc/ssl/${FQDN}.pem" 2>/dev/null || true
+      ln -sf "/etc/letsencrypt/live/${FQDN}/privkey.pem" "/etc/ssl/${FQDN}.key" 2>/dev/null || true
+      sed -i -e "s@/etc/ssl/${FQDN}.pem@/etc/letsencrypt/live/${FQDN}/fullchain.pem@g" "$CONFIG_PATH_AVAIL"/nothing.conf
+      sed -i -e "s@/etc/ssl/${FQDN}.key@/etc/letsencrypt/live/${FQDN}/privkey.pem@g" "$CONFIG_PATH_AVAIL"/nothing.conf
+    fi
+  fi
+
+  if nginx -t >/dev/null 2>&1; then
+    systemctl restart nginx 2>/dev/null || systemctl reload nginx 2>/dev/null || true
+  else
+    warning "Nginx configuration test returned a warning. Please check /etc/nginx/sites-available/nothing.conf"
   fi
 
   success "Nginx configured!"

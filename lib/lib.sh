@@ -404,8 +404,11 @@ load_install_settings() {
   local count=0
   while IFS='=' read -r key value || [ -n "$key$value" ]; do
     case "$key" in
-    CONFIGURE_FIREWALL | CONFIGURE_LETSENCRYPT | ASSUME_SSL)
+    CONFIGURE_FIREWALL | CONFIGURE_LETSENCRYPT | ASSUME_SSL | USE_CLOUDFLARE_TUNNEL)
       [[ "$value" =~ ^(true|false)$ ]] || return 1
+      ;;
+    CF_TUNNEL_MODE)
+      [[ "$value" =~ ^(quick|named|none)$ ]] || return 1
       ;;
     FQDN)
       valid_hostname "$value" || return 1
@@ -417,7 +420,7 @@ load_install_settings() {
       [[ "$value" =~ ^[12]$ ]] || return 1
       ;;
     *)
-      error "Invalid INSTALL_SETTINGS entry."
+      error "Invalid INSTALL_SETTINGS entry: $key"
       return 1
       ;;
     esac
@@ -429,7 +432,7 @@ load_install_settings() {
     count=$((count + 1))
     printf -v "$key" '%s' "$value"
   done <"$INSTALL_SETTINGS"
-  if [ "$count" != 6 ]; then
+  if [ "$count" -lt 6 ]; then
     error "INSTALL_SETTINGS is incomplete."
     return 1
   fi
