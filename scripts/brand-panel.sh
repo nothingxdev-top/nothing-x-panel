@@ -206,9 +206,14 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
 
     # Register dedicated /domains tab in server navigation and router
     target_route = 'r.createElement(o.A,{action:"settings.reinstall"},r.createElement(Ii,null)))))}},{path:"/activity"'
-    domains_route = 'r.createElement(o.A,{action:"settings.reinstall"},r.createElement(Ii,null)))))}},{path:"/domains",permission:null,name:"Domains",component:()=>{return r.createElement(c,{title:"Domains"},r.createElement("div",{id:"np-domains-view-mount"}))}},{path:"/activity"'
+    domains_route = 'r.createElement(o.A,{action:"settings.reinstall"},r.createElement(Ii,null)))))}},{path:"/domains",permission:null,name:"Domains",component:()=>{return r.createElement("div",{id:"np-domains-view-mount",style:{width:"100%",minHeight:"400px",padding:"24px 0",boxSizing:"border-box"}})}},{path:"/activity"'
     if target_route in content:
         content = content.replace(target_route, domains_route)
+        changed = True
+
+    # Fix any previously injected bundle that used undefined component 'c'
+    if 'r.createElement(c,{title:"Domains"}' in content:
+        content = content.replace('r.createElement(c,{title:"Domains"},r.createElement("div",{id:"np-domains-view-mount"}))', 'r.createElement("div",{id:"np-domains-view-mount",style:{width:"100%",minHeight:"400px",padding:"24px 0",boxSizing:"border-box"}})')
         changed = True
 
     if changed:
@@ -1328,17 +1333,21 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: 0 6px 28px rgba(194, 104, 242, 0.75) !important;
                 filter: brightness(1.1) !important;
             }
-            /* ELIMINATE ONLY PTERODACTYL COPYRIGHT & FOOTER LINKS */
+            /* ELIMINATE ALL FOOTER ELEMENTS AND BOTTOM COPYRIGHT */
+            footer,
+            .main-footer,
             a[href*="pterodactyl.io"],
             p:has(> a[href*="pterodactyl.io"]),
             p[class*="LoginFormContainer___StyledP"],
-            div[class*="ContentContainer"]:last-child:has(a[href*="pterodactyl.io"]),
-            footer,
-            .main-footer {
+            div[class*="ContentContainer"]:last-child:has(a),
+            p[class*="text-neutral-500"],
+            .text-neutral-500.text-xs.text-center,
+            p.text-center.text-xs {
                 display: none !important;
                 visibility: hidden !important;
                 opacity: 0 !important;
                 height: 0 !important;
+                min-height: 0 !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 overflow: hidden !important;
@@ -1519,16 +1528,40 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 // STRICT: Only show on /server/[id]/domains. Remove on ANY other route
                 if (!match) {
                     if (existing) existing.remove();
+                    const fb = document.getElementById('np-domains-fallback-mount');
+                    if (fb) fb.remove();
                     return;
                 }
                 
                 const serverId = match[1];
 
-                // Mount target from React component in server bundle
-                const mount = document.getElementById('np-domains-view-mount');
+                // 1. Preferred mount: dedicated mount container from React router
+                let mount = document.getElementById('np-domains-view-mount');
+
+                // 2. Fallback: If np-domains-view-mount is not in DOM, attach right under sub-navigation or in #app
                 if (!mount) {
-                    // React component is still mounting — retry quickly
-                    setTimeout(injectDomainManager, 60);
+                    let fb = document.getElementById('np-domains-fallback-mount');
+                    if (!fb) {
+                        const subNav = document.querySelector('div[class*="SubNavigation"]') || 
+                                       document.querySelector('nav') || 
+                                       document.querySelector('a[href*="/domains"]')?.closest('div');
+                        
+                        fb = document.createElement('div');
+                        fb.id = 'np-domains-fallback-mount';
+                        fb.style.cssText = 'width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important;';
+                        
+                        if (subNav && subNav.parentElement) {
+                            subNav.parentElement.appendChild(fb);
+                        } else {
+                            const app = document.getElementById('app') || document.body;
+                            app.appendChild(fb);
+                        }
+                    }
+                    mount = fb;
+                }
+
+                if (!mount) {
+                    setTimeout(injectDomainManager, 80);
                     return;
                 }
 
@@ -1544,7 +1577,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
                 card.setAttribute('data-server-id', serverId);
-                card.style.cssText = 'width: 100% !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; display: block !important;';
+                card.style.cssText = 'width: 100% !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; display: block !important; margin-top: 15px !important;';
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.15); padding-bottom:0.85rem; margin-bottom:1.25rem;">
