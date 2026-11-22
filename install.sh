@@ -56,9 +56,8 @@ execute() {
   fi
   echo -e "\n\n* nothing-panel-installer $(date) \n\n" >>$LOG_PATH
 
-  [[ "$1" == *"canary"* ]] && export GITHUB_SOURCE="master" && export SCRIPT_RELEASE="canary"
   update_lib_source
-  run_ui "${1//_canary/}" |& tee -a $LOG_PATH
+  run_ui "$1" |& tee -a $LOG_PATH
 
   if [[ -n $2 ]]; then
     echo ""
@@ -80,50 +79,23 @@ done=false
 while [ "$done" == false ]; do
 
   select_menu "Nothing Panel Installer — What would you like to do?" \
-    "Install Panel + Wings (Automatic 1-Click Setup - Recommended)" \
-    "Install Panel on NAT VPS / IPv6 (via Cloudflare Tunnel - No Open Ports)" \
-    "Install the Panel only" \
-    "Install Wings (Game Server Node) only" \
-    "Update Panel (Preserve Data & Database)" \
-    "Domain Manager (np-domain - Map domain to port)" \
-    "Rebrand / Apply Nothing UI Theme & Logo" \
-    "Uninstall Panel or Wings" \
-    "──────── Advanced / Canary ────────" \
-    "Install Panel (canary/dev version)" \
-    "Install Wings (canary/dev version)" \
-    "Install Panel + Wings (canary/dev)" \
-    "Uninstall using canary version"
+    "Install Panel + Wings" \
+    "Install Wings" \
+    "Update Panel" \
+    "Uninstall Wings" \
+    "Uninstall Panel"
 
   actions=(
     "panel"
-    "panel_nat"
-    "panel"
     "wings"
     "update"
-    "domain_manager"
-    "rebrand"
-    "uninstall"
-    ""
-    "panel_canary"
-    "wings_canary"
-    "panel_canary;wings_canary"
-    "uninstall_canary"
+    "uninstall_wings"
+    "uninstall_panel"
   )
-
-  # Skip the separator option
-  if [ "$MENU_RESULT" == "8" ]; then
-    continue
-  fi
 
   action="${actions[$MENU_RESULT]}"
 
   if [ -z "$action" ]; then
-    continue
-  fi
-
-  if [ "$action" == "panel_nat" ]; then
-    export USE_CLOUDFLARE_TUNNEL=true
-    execute "panel"
     continue
   fi
 
@@ -132,17 +104,17 @@ while [ "$done" == false ]; do
     exit 0
   fi
 
-  if [ "$action" == "domain_manager" ]; then
-    if [ -f "/usr/local/bin/np-domain" ]; then
-      /usr/local/bin/np-domain
-    else
-      curl -fsSL "$GITHUB_URL/scripts/np-domain.sh" | bash
-    fi
+  if [ "$action" == "uninstall_wings" ]; then
+    export RM_PANEL=false
+    export RM_WINGS=true
+    execute "uninstall"
     exit 0
   fi
 
-  if [ "$action" == "rebrand" ]; then
-    curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash
+  if [ "$action" == "uninstall_panel" ]; then
+    export RM_PANEL=true
+    export RM_WINGS=false
+    execute "uninstall"
     exit 0
   fi
 

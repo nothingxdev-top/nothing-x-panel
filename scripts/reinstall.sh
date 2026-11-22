@@ -109,15 +109,15 @@ if [ -d "/var/www/nothing" ] || [ -d "/var/www/pterodactyl" ]; then
 fi
 
 # Remove wings config
-if [ -d "/etc/pterodactyl" ]; then
+if [ -d "/etc/nothing" ] || [ -d "/etc/pterodactyl" ]; then
   echo -n "  Removing wings config ... "
-  rm -rf /etc/pterodactyl
+  rm -rf /etc/nothing /etc/pterodactyl
   echo -e "${GREEN}✔${NC}"
   CLEANED=true
 fi
 
 # Stop and remove services
-for svc in pteroq wings nginx php8.3-fpm; do
+for svc in nothingq pteroq wings nginx php8.3-fpm; do
   if systemctl is-active --quiet "$svc" 2>/dev/null; then
     echo -n "  Stopping $svc ... "
     systemctl stop "$svc" 2>/dev/null || true
@@ -126,10 +126,10 @@ for svc in pteroq wings nginx php8.3-fpm; do
 done
 
 # Remove nginx panel config
-if [ -f "/etc/nginx/sites-enabled/pterodactyl.conf" ]; then
+if [ -f "/etc/nginx/sites-enabled/nothing.conf" ] || [ -f "/etc/nginx/sites-enabled/pterodactyl.conf" ]; then
   echo -n "  Removing nginx panel config ... "
-  rm -f /etc/nginx/sites-enabled/pterodactyl.conf
-  rm -f /etc/nginx/sites-available/pterodactyl.conf
+  rm -f /etc/nginx/sites-enabled/nothing.conf /etc/nginx/sites-enabled/pterodactyl.conf
+  rm -f /etc/nginx/sites-available/nothing.conf /etc/nginx/sites-available/pterodactyl.conf
   echo -e "${GREEN}✔${NC}"
   CLEANED=true
 fi

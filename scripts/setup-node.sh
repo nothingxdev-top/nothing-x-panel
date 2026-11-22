@@ -39,7 +39,9 @@ fi
 systemctl start docker || true
 
 # 2. Download Wings Binary
-mkdir -p /etc/pterodactyl /var/log/pterodactyl /var/run/wings /home/daemon-files
+mkdir -p /etc/nothing /var/log/nothing /var/run/wings /home/daemon-files
+ln -sfn /etc/nothing /etc/pterodactyl
+ln -sfn /var/log/nothing /var/log/pterodactyl
 if [ ! -f "/usr/local/bin/wings" ]; then
   echo "* Downloading Wings binary..."
   ARCH="amd64"
@@ -61,10 +63,10 @@ PartOf=docker.service
 
 [Service]
 User=root
-WorkingDirectory=/etc/pterodactyl
+WorkingDirectory=/etc/nothing
 LimitNOFILE=4096
 PIDFile=/var/run/wings/daemon.pid
-ExecStart=/usr/local/bin/wings
+ExecStart=/usr/local/bin/wings --config /etc/nothing/config.yml
 Restart=on-failure
 StartLimitInterval=180
 StartLimitBurst=30
@@ -154,10 +156,11 @@ if (!$node) {
     echo "✔ Existing Node found: [ID {$node->id}] {$node->name} ({$node->fqdn})\n";
 }
 
-// 4. Write /etc/pterodactyl/config.yml
-@mkdir('/etc/pterodactyl', 0755, true);
-file_put_contents('/etc/pterodactyl/config.yml', $node->getYamlConfiguration());
-echo "✔ Generated /etc/pterodactyl/config.yml\n";
+// 4. Write /etc/nothing/config.yml
+@mkdir('/etc/nothing', 0755, true);
+file_put_contents('/etc/nothing/config.yml', $node->getYamlConfiguration());
+@symlink('/etc/nothing/config.yml', '/etc/pterodactyl/config.yml');
+echo "✔ Generated /etc/nothing/config.yml\n";
 
 // 5. Create Default Allocations (Ports 25565 - 25575)
 $createdAllocations = 0;

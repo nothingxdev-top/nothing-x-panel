@@ -20,29 +20,31 @@ fi
 
 # ------------------ Variables ----------------- #
 
-export RM_PANEL=false
-export RM_WINGS=false
+export RM_PANEL="${RM_PANEL:-false}"
+export RM_WINGS="${RM_WINGS:-false}"
 
 # --------------- Main functions --------------- #
 
 main() {
   welcome ""
 
-  if [ -d "/var/www/nothing" ] || [ -d "/var/www/pterodactyl" ]; then
-    output "Panel installation detected."
-    select_menu "Remove Nothing Panel?" \
-      "No - Keep the panel" \
-      "Yes - Remove the panel"
-    [ "$MENU_RESULT" == "1" ] && RM_PANEL=true
-  fi
+  if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then
+    if [ -d "/var/www/nothing" ] || [ -d "/var/www/pterodactyl" ]; then
+      output "Panel installation detected."
+      select_menu "Remove Nothing Panel?" \
+        "No - Keep the panel" \
+        "Yes - Remove the panel"
+      [ "$MENU_RESULT" == "1" ] && RM_PANEL=true
+    fi
 
-  if [ -d "/etc/pterodactyl" ]; then
-    output "Wings installation detected."
-    warning "Removing Wings will delete ALL game servers and their data!"
-    select_menu "Remove Wings (daemon)?" \
-      "No - Keep Wings" \
-      "Yes - Remove Wings and all servers"
-    [ "$MENU_RESULT" == "1" ] && RM_WINGS=true
+    if [ -d "/etc/nothing" ] || [ -d "/etc/pterodactyl" ]; then
+      output "Wings installation detected."
+      warning "Removing Wings will delete ALL game servers and their data!"
+      select_menu "Remove Wings (daemon)?" \
+        "No - Keep Wings" \
+        "Yes - Remove Wings and all servers"
+      [ "$MENU_RESULT" == "1" ] && RM_WINGS=true
+    fi
   fi
 
   if [ "$RM_PANEL" == false ] && [ "$RM_WINGS" == false ]; then

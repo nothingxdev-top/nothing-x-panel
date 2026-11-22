@@ -30,7 +30,7 @@ FQDN="${FQDN:-localhost}"
 
 # Default MySQL credentials
 MYSQL_DB="${MYSQL_DB:-panel}"
-MYSQL_USER="${MYSQL_USER:-pterodactyl}"
+MYSQL_USER="${MYSQL_USER:-nothing_user}"
 MYSQL_PASSWORD="${MYSQL_PASSWORD:-$(gen_passwd 64)}"
 
 # Environment
@@ -231,25 +231,28 @@ insert_cronjob() {
 }
 
 install_pteroq() {
-  output "Installing pteroq service.."
+  output "Installing Nothing Panel queue worker service.."
 
-  curl -fsSL -o /etc/systemd/system/pteroq.service "$GITHUB_URL"/configs/pteroq.service
-  sed -i -e "s@redis-server.service@${CACHE_SERVICE}.service@g" -e "s@/usr/bin/php @$PHP_BIN @g" /etc/systemd/system/pteroq.service
+  curl -fsSL -o /etc/systemd/system/nothingq.service "$GITHUB_URL"/configs/nothingq.service
+  sed -i -e "s@redis-server.service@${CACHE_SERVICE}.service@g" -e "s@/usr/bin/php @$PHP_BIN @g" /etc/systemd/system/nothingq.service
 
   case "$OS" in
   debian | ubuntu)
-    sed -i -e "s@<user>@www-data@g" /etc/systemd/system/pteroq.service
+    sed -i -e "s@<user>@www-data@g" /etc/systemd/system/nothingq.service
     ;;
   rocky | almalinux)
-    sed -i -e "s@<user>@nginx@g" /etc/systemd/system/pteroq.service
+    sed -i -e "s@<user>@nginx@g" /etc/systemd/system/nothingq.service
     ;;
   esac
 
-  systemctl daemon-reload
-  systemctl enable pteroq.service
-  systemctl start pteroq
+  ln -sf /etc/systemd/system/nothingq.service /etc/systemd/system/pteroq.service 2>/dev/null || true
 
-  success "Installed pteroq!"
+  systemctl daemon-reload
+  systemctl enable nothingq.service
+  systemctl start nothingq
+  systemctl enable pteroq.service 2>/dev/null || true
+
+  success "Installed queue worker service!"
 }
 
 # -------- OS specific install functions ------- #
@@ -449,7 +452,7 @@ configure_nginx() {
     CONFIG_PATH_ENABL="/etc/nginx/sites-enabled"
     ;;
   rocky | almalinux)
-    PHP_SOCKET="/var/run/php-fpm/pterodactyl.sock"
+    PHP_SOCKET="/var/run/php-fpm/nothing.sock"
     CONFIG_PATH_AVAIL="/etc/nginx/conf.d"
     CONFIG_PATH_ENABL="$CONFIG_PATH_AVAIL"
     ;;
@@ -457,11 +460,11 @@ configure_nginx() {
 
   rm -rf "$CONFIG_PATH_ENABL"/default
 
-  curl -fsSL -o "$CONFIG_PATH_AVAIL"/pterodactyl.conf "$GITHUB_URL"/configs/$DL_FILE
+  curl -fsSL -o "$CONFIG_PATH_AVAIL"/nothing.conf "$GITHUB_URL"/configs/$DL_FILE
 
-  sed -i -e "s@<domain>@${FQDN}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
+  sed -i -e "s@<domain>@${FQDN}@g" "$CONFIG_PATH_AVAIL"/nothing.conf
 
-  sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" "$CONFIG_PATH_AVAIL"/pterodactyl.conf
+  sed -i -e "s@<php_socket>@${PHP_SOCKET}@g" "$CONFIG_PATH_AVAIL"/nothing.conf
   if [ "$PANEL_MAJOR_VERSION" == "2" ]; then
     # ^~ prevents asset paths from falling through to the PHP handler.
     # shellcheck disable=SC2016
@@ -469,12 +472,17 @@ configure_nginx() {
     location ^~ /assets/ {\n\
         location ~ /\\. { deny all; }\n\
         try_files $uri =404;\n\
-    }\n' "$CONFIG_PATH_AVAIL"/pterodactyl.conf
+    }\n' "$CONFIG_PATH_AVAIL"/nothing.conf
   fi
 
   case "$OS" in
   ubuntu | debian)
-    ln -sf "$CONFIG_PATH_AVAIL"/pterodactyl.conf "$CONFIG_PATH_ENABL"/pterodactyl.conf
+    ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_ENABL"/nothing.conf
+    ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_AVAIL"/pterodactyl.conf 2>/dev/null || true
+    ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_ENABL"/pterodactyl.conf 2>/dev/null || true
+    ;;
+  rocky | almalinux)
+    ln -sf "$CONFIG_PATH_AVAIL"/nothing.conf "$CONFIG_PATH_AVAIL"/pterodactyl.conf 2>/dev/null || true
     ;;
   esac
 
@@ -565,7 +573,7 @@ EOF_CF
         local assigned_domain="${assigned_url#https://}"
         output "Assigned Cloudflare URL: $assigned_url"
         sed -i "s@^APP_URL=.*@APP_URL=${assigned_url}@" /var/www/nothing/.env
-        sed -i -e "s@server_name [^;]*;@server_name ${assigned_domain} localhost;@g" /etc/nginx/sites-available/pterodactyl.conf 2>/dev/null || true
+        sed -i -e "s@server_name [^;]*;@server_name ${assigned_domain} localhost;@g" /etc/nginx/sites-available/nothing.conf /etc/nginx/sites-available/pterodactyl.conf 2>/dev/null || true
         "$PHP_BIN" artisan config:clear
         "$PHP_BIN" artisan queue:restart
         systemctl reload nginx || true

@@ -67,7 +67,7 @@ chown -R www-data:www-data "$PANEL_DIR" 2>/dev/null || chown -R nginx:nginx "$PA
 
 # 9. Restart queue & web services
 echo "* Restarting services..."
-systemctl restart pteroq 2>/dev/null || true
+systemctl restart nothingq 2>/dev/null || systemctl restart pteroq 2>/dev/null || true
 systemctl restart php8.3-fpm 2>/dev/null || true
 systemctl reload nginx 2>/dev/null || true
 

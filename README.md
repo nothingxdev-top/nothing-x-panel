@@ -143,15 +143,11 @@ When you run the installer, you'll see this custom menu:
   ┌──────────────────────────────────────────────────────────────┐
   │  Nothing Panel Installer — What would you like to do?        │
   ├──────────────────────────────────────────────────────────────┤
-  │  [0] Install the Panel                                       │
+  │  [0] Install Panel + Wings                                   │
   │  [1] Install Wings (Game Server Node)                        │
-  │  [2] Install Panel + Wings on the same machine              │
-  │  [3] Uninstall Panel or Wings                               │
-  │  [4] ──────── Advanced / Canary ────────                    │
-  │  [5] Install Panel (canary/dev version)                      │
-  │  [6] Install Wings (canary/dev version)                      │
-  │  [7] Install Panel + Wings (canary/dev)                     │
-  │  [8] Uninstall using canary version                         │
+  │  [2] Update Panel                                            │
+  │  [3] Uninstall Wings                                         │
+  │  [4] Uninstall Panel                                         │
   └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -178,7 +174,7 @@ np-domain
 
 ### Wings config:
 ```
-/etc/pterodactyl/config.yml
+/etc/nothing/config.yml
 ```
 
 ### Domain mappings (nginx):
@@ -201,7 +197,7 @@ np-domain
 2. **Create a Location** (Admin → Locations)
 3. **Create a Node** (Admin → Nodes) — set the FQDN to your Wings server IP/domain
 4. **Copy the Wings config** from the Node's auto-deploy tab
-5. **Paste it on your Wings server** at `/etc/pterodactyl/config.yml`
+5. **Paste it on your Wings server** at `/etc/nothing/config.yml`
 6. **Start Wings**: `systemctl start wings`
 7. **Create an Allocation** in the Node settings (IP + port)
 8. **(Optional) Add a domain** to the allocation port: `np-domain add game.yourdomain.com <PORT> --ssl`

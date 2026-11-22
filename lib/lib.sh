@@ -27,10 +27,10 @@ set -e
 
 # Versioning
 export GITHUB_SOURCE=${GITHUB_SOURCE:-master}
-export SCRIPT_RELEASE=${SCRIPT_RELEASE:-canary}
+export SCRIPT_RELEASE=${SCRIPT_RELEASE:-master}
 
 # Pterodactyl versions (backend engine - kept for compatibility)
-export PANEL_MAJOR_VERSION="${PANEL_MAJOR_VERSION:-}"
+export PANEL_MAJOR_VERSION="${PANEL_MAJOR_VERSION:-1}"
 export PTERODACTYL_PANEL_VERSION="${PTERODACTYL_PANEL_VERSION:-}"
 export PTERODACTYL_PANEL_COMMIT="${PTERODACTYL_PANEL_COMMIT:-}"
 export PTERODACTYL_WINGS_VERSION="${PTERODACTYL_WINGS_VERSION:-}"
@@ -216,9 +216,9 @@ welcome() {
   output ""
   output "Running $OS version $OS_VER."
   if [ "$1" == "panel" ]; then
-    output "Panel engine version: $PTERODACTYL_PANEL_VERSION"
+    output "Nothing Panel version: $PTERODACTYL_PANEL_VERSION"
   elif [ "$1" == "wings" ]; then
-    output "Wings engine version: $PTERODACTYL_WINGS_VERSION"
+    output "Nothing Wings version: $PTERODACTYL_WINGS_VERSION"
   fi
   print_brake 64 "═"
   echo ""
@@ -243,27 +243,7 @@ validate_panel_version() {
 }
 
 ask_panel_version() {
-  if [ -z "$PANEL_MAJOR_VERSION" ]; then
-    select_menu "Select Nothing Panel Version" \
-      "v1 - Stable (Recommended)" \
-      "v2 - Experimental (Pre-release)"
-
-    if [ "$MENU_RESULT" == "0" ]; then
-      PANEL_MAJOR_VERSION="1"
-    else
-      PANEL_MAJOR_VERSION="2"
-    fi
-  fi
-  validate_panel_version || return 1
-  if [[ "$PANEL_MAJOR_VERSION" == "2" ]]; then
-    warning "Nothing Panel v2 uses experimental pre-release engine."
-    echo -n "  → Install experimental Panel v2? (y/N): "
-    read -r CONFIRM_EXPERIMENTAL
-    if ! is_yes "$CONFIRM_EXPERIMENTAL"; then
-      error "Installation aborted."
-      exit 1
-    fi
-  fi
+  export PANEL_MAJOR_VERSION="1"
 }
 
 get_latest_release() {

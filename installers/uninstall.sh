@@ -52,18 +52,19 @@ disable_service() {
 rm_panel_files() {
   output "Removing panel files..."
   rm -rf /var/www/nothing /var/www/pterodactyl
-  rm -f /var/log/nginx/pterodactyl.app-access.log* /var/log/nginx/pterodactyl.app-error.log*
+  rm -f /var/log/nginx/nothing-panel.* /var/log/nginx/pterodactyl.*
   case "$OS" in
   ubuntu | debian)
+    [ ! -L /etc/nginx/sites-enabled/nothing.conf ] || unlink /etc/nginx/sites-enabled/nothing.conf
     [ ! -L /etc/nginx/sites-enabled/pterodactyl.conf ] || unlink /etc/nginx/sites-enabled/pterodactyl.conf
-    rm -f /etc/nginx/sites-available/pterodactyl.conf
+    rm -f /etc/nginx/sites-available/nothing.conf /etc/nginx/sites-available/pterodactyl.conf
     [ -L /etc/nginx/sites-enabled/default ] || [ ! -f /etc/nginx/sites-available/default ] || ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
     ;;
   rocky | almalinux)
-    rm -f /etc/nginx/conf.d/pterodactyl.conf
+    rm -f /etc/nginx/conf.d/nothing.conf /etc/nginx/conf.d/pterodactyl.conf
     ;;
   esac
-  systemctl restart nginx
+  systemctl restart nginx 2>/dev/null || true
   success "Removed panel files."
 }
 
@@ -73,9 +74,9 @@ rm_docker_containers() {
   local container
   local containers
   type -P docker >/dev/null 2>&1 || return 0
-  containers=$(docker ps -aq --filter label=Service=Pterodactyl)
+  containers=$(docker ps -aq --filter label=Service=Pterodactyl; docker ps -aq --filter label=Service=Nothing)
   for container in $containers; do
-    docker rm -fv "$container"
+    docker rm -fv "$container" 2>/dev/null || true
   done
 
   success "Removed Wings docker containers. Shared images and named volumes are retained."
@@ -86,10 +87,12 @@ rm_wings_files() {
 
   [ -f /etc/systemd/system/wings.service ] && rm -rf /etc/systemd/system/wings.service
 
+  [ -d /etc/nothing ] && rm -rf /etc/nothing
   [ -d /etc/pterodactyl ] && rm -rf /etc/pterodactyl
   [ -f /usr/local/bin/wings ] && rm -rf /usr/local/bin/wings
+  [ -d /var/lib/nothing ] && rm -rf /var/lib/nothing
   [ -d /var/lib/pterodactyl ] && rm -rf /var/lib/pterodactyl
-  rm -rf /var/log/pterodactyl /run/wings /tmp/pterodactyl
+  rm -rf /var/log/nothing /var/log/pterodactyl /run/wings /tmp/nothing /tmp/pterodactyl
   rm -f /etc/logrotate.d/wings
   systemctl daemon-reload
   success "Removed wings files."
@@ -97,13 +100,14 @@ rm_wings_files() {
 
 rm_services() {
   output "Removing services..."
+  disable_service nothingq
   disable_service pteroq
-  rm -rf /etc/systemd/system/pteroq.service
+  rm -rf /etc/systemd/system/nothingq.service /etc/systemd/system/pteroq.service
   disable_service "$CACHE_SERVICE"
   case "$OS" in
   rocky | almalinux)
     disable_service php-fpm
-    rm -rf /etc/php-fpm.d/www-pterodactyl.conf
+    rm -rf /etc/php-fpm.d/www-nothing.conf /etc/php-fpm.d/www-pterodactyl.conf
     ;;
   esac
   systemctl daemon-reload
@@ -113,7 +117,7 @@ rm_services() {
 rm_cron() {
   output "Removing cron jobs..."
   { crontab -l 2>/dev/null || true; } | {
-    grep -vF "/var/www/pterodactyl/artisan schedule:run" || [ "$?" == 1 ]
+    grep -vF "/var/www/nothing/artisan schedule:run" | grep -vF "/var/www/pterodactyl/artisan schedule:run" || [ "$?" == 1 ]
   } | crontab -
   success "Removed cron jobs."
 }
@@ -132,7 +136,7 @@ rm_database() {
 
   warning "Be careful! This database will be deleted!"
   if grep -qxF panel <<<"$valid_db"; then
-    echo -n "* Database called panel has been detected. Is it the pterodactyl database? (y/N): "
+    echo -n "* Database called panel has been detected. Is it the Nothing Panel database? (y/N): "
     read -r is_panel
     if is_yes "$is_panel"; then
       DATABASE=panel
@@ -171,8 +175,16 @@ rm_database() {
   fi
 
   warning "Be careful! This user will be deleted!"
-  if grep -qxF pterodactyl <<<"$valid_users"; then
-    echo -n "* User called pterodactyl has been detected. Is it the pterodactyl user? (y/N): "
+  if grep -qxF nothing_user <<<"$valid_users"; then
+    echo -n "* User called nothing_user has been detected. Is it the panel database user? (y/N): "
+    read -r is_user
+    if is_yes "$is_user"; then
+      DB_USER=nothing_user
+    else
+      print_list "$valid_users"
+    fi
+  elif grep -qxF pterodactyl <<<"$valid_users"; then
+    echo -n "* User called pterodactyl has been detected. Is it the panel database user? (y/N): "
     read -r is_user
     if is_yes "$is_user"; then
       DB_USER=pterodactyl
@@ -213,7 +225,7 @@ rm_certificates() {
   local confirm
   for certificate in $certificates; do
     [ -d "/etc/letsencrypt/live/$certificate" ] || continue
-    if grep -rFq "/etc/letsencrypt/live/$certificate/" /etc/nginx /etc/pterodactyl 2>/dev/null; then
+    if grep -rFq "/etc/letsencrypt/live/$certificate/" /etc/nginx /etc/nothing /etc/pterodactyl 2>/dev/null; then
       output "Keeping shared certificate $certificate."
       continue
     fi
@@ -230,10 +242,10 @@ rm_certificates() {
 perform_uninstall() {
   certificates=$({
     if [ "$RM_PANEL" == true ]; then
-      grep -hEo '/etc/letsencrypt/live/[^/[:space:]]+/' /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/conf.d/pterodactyl.conf 2>/dev/null || true
+      grep -hEo '/etc/letsencrypt/live/[^/[:space:]]+/' /etc/nginx/sites-available/nothing.conf /etc/nginx/sites-available/pterodactyl.conf /etc/nginx/conf.d/nothing.conf /etc/nginx/conf.d/pterodactyl.conf 2>/dev/null || true
     fi
     if [ "$RM_WINGS" == true ]; then
-      grep -Eo '/etc/letsencrypt/live/[^/[:space:]]+/' /etc/pterodactyl/config.yml 2>/dev/null || true
+      grep -Eo '/etc/letsencrypt/live/[^/[:space:]]+/' /etc/nothing/config.yml /etc/pterodactyl/config.yml 2>/dev/null || true
     fi
   } | cut -d/ -f5 | sort -u)
   [ "$RM_PANEL" == true ] && rm_services

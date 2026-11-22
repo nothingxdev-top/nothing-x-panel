@@ -224,12 +224,14 @@ if [ -f "$CONSOLE_TSX" ]; then
 fi
 
 # Update Wings config for daemon name (Nothing Daemon)
-if [ -f "/etc/pterodactyl/config.yml" ]; then
-    sed -i "s/app_name: Pterodactyl/app_name: Nothing/g" /etc/pterodactyl/config.yml
-    sed -i "s/app_name: "Pterodactyl"/app_name: "Nothing"/g" /etc/pterodactyl/config.yml
-    if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet wings; then
-        systemctl restart wings || true
+for cfg in /etc/nothing/config.yml /etc/pterodactyl/config.yml; do
+    if [ -f "$cfg" ]; then
+        sed -i "s/app_name: Pterodactyl/app_name: Nothing/g" "$cfg"
+        sed -i 's/app_name: "Pterodactyl"/app_name: "Nothing"/g' "$cfg"
     fi
+done
+if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet wings; then
+    systemctl restart wings || true
 fi
 
 # 4. Inject Modern Custom Theme into wrapper.blade.php
@@ -1430,8 +1432,11 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     if (typeof data === 'string' && (data.includes('pterodactyl') || data.includes('Pterodactyl'))) {
                         return data
                             .replace(/container@pterodactyl~/g, 'container@nothing~')
+                            .replace(/container@pterodactyl/g, 'container@nothing')
                             .replace(/\[Pterodactyl Daemon\]:/g, '[Nothing Daemon]:')
-                            .replace(/Pterodactyl Daemon/g, 'Nothing Daemon');
+                            .replace(/Pterodactyl Daemon/g, 'Nothing Daemon')
+                            .replace(/pterodactyl/g, 'nothing')
+                            .replace(/Pterodactyl/g, 'Nothing');
                     }
                     return data;
                 }
@@ -2712,7 +2717,7 @@ fi
 # 6. Configure Nginx Cache-Control (Force Fresh Bundles) & SVG MIME type
 python3 - << 'PYEOF'
 import os
-nginx_file = "/etc/nginx/sites-available/pterodactyl.conf"
+nginx_file = "/etc/nginx/sites-available/nothing.conf" if os.path.exists("/etc/nginx/sites-available/nothing.conf") else "/etc/nginx/sites-available/pterodactyl.conf"
 if os.path.exists(nginx_file):
     with open(nginx_file, "r") as f:
         conf = f.read()

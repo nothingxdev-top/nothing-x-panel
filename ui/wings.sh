@@ -100,7 +100,7 @@ ask_database_firewall() {
 
 main() {
   # check if we can detect an already existing installation
-  if [ -d "/etc/pterodactyl" ]; then
+  if [ -d "/etc/nothing" ] || [ -d "/etc/pterodactyl" ]; then
     warning "Wings is already installed on this system!"
     select_menu "Wings already detected. Continue anyway?" \
       "No - Abort installation" \
@@ -121,7 +121,7 @@ main() {
   echo -e "  ${COLOR_CYAN}╠══════════════════════════════════════════════════════════════╣${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}  This will install Docker and the Wings daemon.              ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}  After installation, create a Node in your panel and         ${COLOR_CYAN}║${COLOR_NC}"
-  echo -e "  ${COLOR_CYAN}║${COLOR_NC}  place the config at /etc/pterodactyl/config.yml             ${COLOR_CYAN}║${COLOR_NC}"
+  echo -e "  ${COLOR_CYAN}║${COLOR_NC}  place the config at /etc/nothing/config.yml                 ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}                                                              ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}  ${COLOR_YELLOW}⚠${COLOR_NC}  Wings will NOT start automatically after install.      ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}  ${COLOR_YELLOW}⚠${COLOR_NC}  Swap is NOT enabled by this script.                   ${COLOR_CYAN}║${COLOR_NC}"
@@ -204,7 +204,7 @@ function goodbye {
   echo -e "  ${COLOR_CYAN}╠══════════════════════════════════════════════════════════════╣${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}  Next steps:                                                 ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}  1. Create a Node in your Nothing Panel                      ${COLOR_CYAN}║${COLOR_NC}"
-  echo -e "  ${COLOR_CYAN}║${COLOR_NC}  2. Copy the config to /etc/pterodactyl/config.yml           ${COLOR_CYAN}║${COLOR_NC}"
+  echo -e "  ${COLOR_CYAN}║${COLOR_NC}  2. Copy the config to /etc/nothing/config.yml               ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}     (or use the auto-deploy button in your panel)            ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}  3. Test Wings manually:                                     ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}       sudo wings                                             ${COLOR_CYAN}║${COLOR_NC}"
@@ -212,8 +212,7 @@ function goodbye {
   echo -e "  ${COLOR_CYAN}║${COLOR_NC}       systemctl start wings                                  ${COLOR_CYAN}║${COLOR_NC}"
   echo -e "  ${COLOR_CYAN}╚══════════════════════════════════════════════════════════════╝${COLOR_NC}"
   echo ""
-  echo -e "  ${COLOR_YELLOW}⚠${COLOR_NC}  Docs: $(hyperlink "https://docs.pterodactyl.io/v${PANEL_MAJOR_VERSION:-1}/wings/installing#configuring-wings")"
-  echo -e "  ${COLOR_YELLOW}⚠${COLOR_NC}  Enable swap for Docker! (see docs for details)"
+  echo -e "  ${COLOR_YELLOW}⚠${COLOR_NC}  Enable swap for Docker! (see documentation for details)"
   [ "$CONFIGURE_FIREWALL" == false ] && echo -e "  ${COLOR_RED}⚠${COLOR_NC}  Ports 8080 and 2022 must be open in your firewall!"
   echo ""
 

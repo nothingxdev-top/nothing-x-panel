@@ -39,7 +39,7 @@ EMAIL="${EMAIL:-}"
 CONFIGURE_DBHOST="${CONFIGURE_DBHOST:-false}"
 CONFIGURE_DB_FIREWALL="${CONFIGURE_DB_FIREWALL:-false}"
 MYSQL_DBHOST_HOST="${MYSQL_DBHOST_HOST:-127.0.0.1}"
-MYSQL_DBHOST_USER="${MYSQL_DBHOST_USER:-pterodactyluser}"
+MYSQL_DBHOST_USER="${MYSQL_DBHOST_USER:-nothing_db_user}"
 MYSQL_DBHOST_PASSWORD="${MYSQL_DBHOST_PASSWORD:-}"
 
 if [[ $CONFIGURE_DBHOST == true && -z "${MYSQL_DBHOST_PASSWORD}" ]]; then
@@ -113,7 +113,9 @@ dep_install() {
 ptdl_dl() {
   echo "* Downloading Nothing Panel Wings engine..."
 
-  mkdir -p /etc/pterodactyl
+  mkdir -p /etc/nothing /var/log/nothing
+  ln -sfn /etc/nothing /etc/pterodactyl
+  ln -sfn /var/log/nothing /var/log/pterodactyl
   curl -fL -o /usr/local/bin/wings "$WINGS_DL_BASE_URL$ARCH"
 
   chmod u+x /usr/local/bin/wings

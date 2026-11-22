@@ -1,15 +1,15 @@
 [Unit]
-Description=Pterodactyl Wings Daemon
+Description=Nothing Panel Wings Daemon
 After=docker.service
 Requires=docker.service
 PartOf=docker.service
 
 [Service]
 User=root
-WorkingDirectory=/etc/pterodactyl
+WorkingDirectory=/etc/nothing
 LimitNOFILE=4096
 PIDFile=/var/run/wings/daemon.pid
-ExecStart=/usr/local/bin/wings
+ExecStart=/usr/local/bin/wings --config /etc/nothing/config.yml
 Restart=on-failure
 StartLimitInterval=180
 StartLimitBurst=30
