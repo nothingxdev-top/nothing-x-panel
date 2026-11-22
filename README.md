@@ -120,16 +120,34 @@ When you launch the installer, you are greeted with a sleek, boxed terminal menu
 
 ---
 
-## 🌐 Domain → Port Mapping (`np-domain`)
+## 🌐 Domain & Reverse Proxy Architecture
 
-Easily map friendly subdomains directly to specific game server ports with automatic Let's Encrypt SSL certificates:
+### Web Applications vs. Game Servers (Important Note)
+The built-in **Domains Manager** (via web UI `/server/{id}/domains` or CLI `np-domain`) configures an **Nginx HTTP/HTTPS reverse proxy** (with automatic Let's Encrypt SSL) or a **Cloudflare Tunnel**.
+* **Best suited for:** Web dashboards, Discord bot dashboards, REST/GraphQL APIs, WebSocket apps, dynmaps, and web panels hosted on allocated ports.
+* **For Raw TCP/UDP Game Servers (e.g. Minecraft 25565, Rust, Terraria):**
+  Minecraft and other game clients speak raw TCP/UDP protocols rather than HTTP. An HTTP reverse proxy does not forward raw Minecraft packets. Instead:
+  1. **Standard Port (25565):** Point a DNS **A record** (`play.yourdomain.com` → `VPS_PUBLIC_IP`). Players can then connect directly using `play.yourdomain.com`.
+  2. **Non-Standard Ports (e.g. 25577):** Configure a DNS **SRV record** at your DNS provider:
+     * **Service:** `_minecraft`
+     * **Protocol:** `_tcp`
+     * **Name:** `play` (or `@` for root domain)
+     * **Priority:** `0`, **Weight:** `5`
+     * **Port:** `<Allocated Game Port, e.g. 25577>`
+     * **Target:** `play.yourdomain.com` (pointing to your server A record)
+
+---
+
+## 🚀 HTTP Domain Mapping (`np-domain`)
+
+Easily map friendly subdomains directly to web apps, bot dashboards, or APIs running on server ports:
 
 ```
-Player connects to: game.yourdomain.com (port 80/443)
+Browser connects to: web.yourdomain.com (port 80/443)
         ↓
-Nginx Reverse Proxy
+Nginx Reverse Proxy / Cloudflare Tunnel
         ↓
-Game Server Port (e.g., 25565)
+Target Application Port (e.g., 3000, 8080)
         ↓
 Automatic Let's Encrypt SSL ✔
 ```
@@ -141,22 +159,22 @@ Automatic Let's Encrypt SSL ✔
 np-domain
 
 # Add a domain mapping (HTTP)
-np-domain add game.yourdomain.com 25565
+np-domain add web.yourdomain.com 3000
 
 # Add a domain mapping with automated SSL
-np-domain add game.yourdomain.com 25565 --ssl
+np-domain add web.yourdomain.com 3000 --ssl
 
 # Add with SSL specifying your email address
-np-domain add game.yourdomain.com 25565 --ssl --email you@example.com
+np-domain add web.yourdomain.com 3000 --ssl --email you@example.com
 
 # List all active domain mappings
 np-domain list
 
 # Remove a domain mapping
-np-domain remove 25565
+np-domain remove 3000
 
 # Obtain SSL certificate for an existing mapped domain
-np-domain ssl game.yourdomain.com
+np-domain ssl web.yourdomain.com
 ```
 
 ---
@@ -169,9 +187,10 @@ np-domain ssl game.yourdomain.com
 | **Wings Configuration** | `/etc/nothing/config.yml` |
 | **Wings Service** | `systemctl status wings` |
 | **Panel Queue Worker** | `systemctl status nothingq` |
-| **Domain Mappings** | `/etc/nginx/sites-available/np-port-<PORT>.conf` |
-| **Installer Log** | `/var/log/nothing-panel-installer.log` |
+| **Domain Mappings** | `/etc/nginx/sites-available/np-srv-<UUID>-port-<PORT>.conf` |
+| **Domain Root Helper** | `/usr/local/sbin/np-domain-helper` |
 | **Domain Manager CLI** | `/usr/local/bin/np-domain` |
+| **Installer Log** | `/var/log/nothing-panel-installer.log` |
 
 ---
 
