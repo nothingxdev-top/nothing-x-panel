@@ -23,9 +23,15 @@ jobs:
           cache: 'npm'
           cache-dependency-path: tests/ui/package.json
 
+      - name: Validate injected JS syntax
+        run: bash scripts/tests/check-injected-js.sh
+
       - name: Install dependencies
         working-directory: tests/ui
         run: npm ci
+
+      - name: Run JSDOM Domains Test
+        run: node tests/ui/domains.test.js
 
       - name: Install Playwright Browsers
         working-directory: tests/ui

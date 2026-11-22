@@ -1,0 +1,1697 @@
+@keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            :root {
+                --np-primary: #C268F2;
+                --np-secondary: #8A2BE2;
+                --np-accent: #DA70D6;
+                --np-dark: #08060f;
+                --np-card: #120e22;
+            }
+            html {
+                background-color: #08060f !important;
+                min-height: 100% !important;
+                height: 100% !important;
+            }
+            body {
+                min-height: 100vh !important;
+                min-height: 100dvh !important;
+                background-color: #08060f !important;
+                background-image: radial-gradient(circle at 50% 0%, #1c1033 0%, #0c071a 50%, #08060f 100%) !important;
+                background-repeat: no-repeat !important;
+                background-attachment: fixed !important;
+                background-size: cover !important;
+                background-position: center top !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+                color: #f1f5f9 !important;
+            }
+            #app {
+                min-height: 100vh !important;
+                background: transparent !important;
+                background-color: transparent !important;
+            }
+
+            /* ========================================================= */
+            /* ACTIVE NAVIGATION TAB: THEME PURPLE (#C268F2)            */
+            /* ========================================================= */
+            div[class*="SubNavigation"] a.active,
+            div[class*="SubNavigation"] a[aria-current="page"],
+            div[class*="SubNavigation"] a[class*="active"],
+            div.flex.overflow-x-auto a.active,
+            div.flex.overflow-x-auto a[aria-current="page"],
+            div.flex.overflow-x-auto a[class*="active"],
+            nav a.active,
+            nav a[aria-current="page"],
+            a[class*="SubNavigation___StyledNavLink"].active,
+            a[class*="SubNavigation___StyledNavLink"][aria-current="page"],
+            a[class*="StyledNavLink"].active,
+            a[class*="StyledNavLink"][aria-current="page"],
+            a.active[class*="border-cyan"],
+            a[class*="border-cyan-500"],
+            a[class*="border-cyan-400"],
+            a[class*="text-cyan-500"],
+            a[class*="text-cyan-400"],
+            a.border-cyan-500,
+            a.border-cyan-400 {
+                border-color: #C268F2 !important;
+                border-bottom-color: #C268F2 !important;
+                color: #ffffff !important;
+                box-shadow: inset 0 -2px 0 0 #C268F2 !important;
+            }
+
+            div[class*="SubNavigation"] a:hover,
+            div.flex.overflow-x-auto a:hover,
+            a[class*="SubNavigation___StyledNavLink"]:hover {
+                color: #e2d2f7 !important;
+                border-bottom-color: rgba(194, 104, 242, 0.4) !important;
+            }
+
+            /* Unwanted border removal for 3-dots and row action buttons */
+            button[aria-label="More options"],
+            button[aria-label="More"],
+            button[aria-label="Actions"],
+            div[class*="DatabaseRow"] button:not([class*="btn-primary"]):not([class*="primary"]),
+            div[class*="ScheduleRow"] button:not([class*="btn-primary"]):not([class*="primary"]),
+            div[class*="UserRow"] button:not([class*="btn-primary"]):not([class*="primary"]),
+            div[class*="BackupRow"] button:not([class*="btn-primary"]):not([class*="primary"]) {
+                border: none !important;
+                border-width: 0 !important;
+                border-color: transparent !important;
+                outline: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+            }
+            /* MASCOT AND FOOTER REMOVAL (Target all styled component classes & DOM elements) */
+            .sc-cyh04c-4,
+            .sc-cyh04c-5,
+            .sc-cyh04c-7,
+            .sc-cyh04c-8,
+            [class*="sc-cyh04c-4"],
+            [class*="sc-cyh04c-5"],
+            [class*="sc-cyh04c-7"],
+            [class*="sc-cyh04c-8"],
+            div[class*="LoginFormContainer___StyledDiv2"],
+            img[src*="pterodactyl"],
+            img[alt*="pterodactyl"],
+            img[src*="svgs/"],
+            img[src*="/assets/svgs"],
+            div[class*="LoginFormContainer"] img,
+            div[class*="sc-cyh04c"] img,
+            div.sc-cyh04c-0 img,
+            div.sc-cyh04c-3 img,
+            div.sc-cyh04c-6 img,
+            p[class*="LoginFormContainer___StyledP"],
+            a[href*="pterodactyl"] {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                width: 0 !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+            /* ========================================================= */
+            /* LOGIN CARD: CLEAN SINGLE OBSIDIAN CARD (NO NESTED BOXES)  */
+            /* ========================================================= */
+            div.sc-cyh04c-0,
+            div[class*="LoginFormContainer__Container"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+            }
+            div[class*="LoginFormContainer"] form,
+            div.sc-cyh04c-6,
+            div[class*="LoginFormContainer___StyledDiv3"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            div[class*="LoginFormContainer"] form::before,
+            div.sc-cyh04c-0::before,
+            div.sc-cyh04c-6::before {
+                content: none !important;
+                display: none !important;
+            }
+            div.sc-cyh04c-3,
+            div[class*="LoginFormContainer___StyledDiv"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"]) {
+                max-width: 440px !important;
+                margin: 4rem auto 2rem auto !important;
+                background-color: #120e22 !important;
+                background: #120e22 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
+                box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85), 0 0 35px rgba(194, 104, 242, 0.25) !important;
+                border-radius: 16px !important;
+                padding: 2.5rem 2rem !important;
+                display: block !important;
+                box-sizing: border-box !important;
+            }
+            /* BRAND LOGO ONLY ONCE ON LOGIN CARD */
+            /* Circular Glowing Logo on /auth/login */
+            div.sc-cyh04c-3::before,
+            div[class*="LoginFormContainer___StyledDiv"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"])::before {
+                content: "" !important;
+                display: block !important;
+                width: 88px !important;
+                height: 88px !important;
+                margin: 0 auto 1.75rem auto !important;
+                background-image: url("/assets/logo.png") !important;
+                background-size: cover !important;
+                background-repeat: no-repeat !important;
+                background-position: center center !important;
+                border-radius: 50% !important;
+                border: 2.5px solid #C268F2 !important;
+                box-shadow: 0 0 25px rgba(194, 104, 242, 0.75), inset 0 0 12px rgba(194, 104, 242, 0.35) !important;
+                overflow: hidden !important;
+            }
+            div[class*="LoginFormContainer___StyledDiv3"],
+            .sc-cyh04c-6,
+            [class*="sc-cyh04c-6"] {
+                width: 100% !important;
+                flex: none !important;
+                color: #f1f5f9 !important;
+            }
+            /* Login Title */
+            h2[class*="LoginFormContainer"], h2, .sc-cyh04c-1, [class*="sc-cyh04c-1"] {
+                color: #ffffff !important;
+                font-weight: 800 !important;
+                letter-spacing: -0.5px !important;
+                text-align: center !important;
+                font-size: 1.85rem !important;
+                margin-bottom: 1.5rem !important;
+            }
+            /* Form Labels — Scoped to label headers only */
+            label.form-label,
+            label[class*="Label"],
+            div[class*="TitledGreyBox"] > div:first-child label,
+            div[class*="FormField"] > label {
+                color: #d1b8eb !important;
+                font-weight: 700 !important;
+                font-size: 0.75rem !important;
+                letter-spacing: 0.8px !important;
+                text-transform: uppercase !important;
+                margin-bottom: 0.4rem !important;
+                display: block !important;
+            }
+            label {
+                color: #d1b8eb !important;
+                font-weight: 600 !important;
+                margin-bottom: 0.4rem !important;
+            }
+
+            /* PROTECTIVE RULE: STRICTLY PREVENT UPPERCASE ON CODE, INPUTS & HELP TEXT */
+            pre,
+            code,
+            kbd,
+            samp,
+            .font-mono,
+            p.font-mono,
+            p[class*="font-mono"],
+            textarea,
+            input,
+            select,
+            option,
+            [class*="Console"],
+            [class*="terminal"],
+            .xterm,
+            .xterm * {
+                text-transform: none !important;
+                font-variant: normal !important;
+                letter-spacing: normal !important;
+            }
+            /* Inputs & Textareas — Sleek Obsidian Dark Background (Excluding Checkboxes & Radios) */
+            input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
+            input[type="text"],
+            input[type="password"],
+            input[type="email"],
+            input[type="number"],
+            input[type="search"],
+            textarea {
+                background-color: #0b0717 !important;
+                background: #0b0717 !important;
+                border: 1.5px solid #281f3d !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+                padding: 0.75rem 1rem !important;
+                transition: all 0.2s ease !important;
+                font-size: 0.95rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            /* Startup VariableBox inputs — force dark bg to override styled-components */
+            div[class*="VariableBox"] input[type="text"],
+            div[class*="VariableBox"] input:not([type="checkbox"]):not([type="radio"]),
+            div[class*="VariableBox"] textarea,
+            div[class*="StartupContainer"] input[type="text"],
+            div[class*="StartupContainer"] input:not([type="checkbox"]):not([type="radio"]),
+            div[class*="StartupContainer"] textarea,
+            div[class*="SettingsContainer"] input[type="text"],
+            div[class*="SettingsContainer"] input:not([type="checkbox"]):not([type="radio"]),
+            div[class*="TitledGreyBox"] input[type="text"],
+            div[class*="TitledGreyBox"] input:not([type="checkbox"]):not([type="radio"]),
+            div[class*="TitledGreyBox"] textarea {
+                background-color: #0b0717 !important;
+                background: #0b0717 !important;
+                border: 1.5px solid #281f3d !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+                padding: 0.75rem 1rem !important;
+                transition: all 0.2s ease !important;
+                font-size: 0.95rem !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            input:not([type="checkbox"]):not([type="radio"]):focus,
+            input[type="text"]:focus,
+            input[type="password"]:focus,
+            input[type="email"]:focus,
+            textarea:focus,
+            input[class*="sc-19rce1w"]:not([type="checkbox"]):not([type="radio"]):focus,
+            div[class*="VariableBox"] input:not([type="checkbox"]):focus,
+            div[class*="StartupContainer"] input:not([type="checkbox"]):focus,
+            div[class*="SettingsContainer"] input:not([type="checkbox"]):focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
+                background-color: #0e0920 !important;
+                background: #0e0920 !important;
+                color: #ffffff !important;
+                outline: none !important;
+            }
+            /* ========================================================= */
+            /* SWITCH / TOGGLE COMPONENT RESET (REMOVES FLOATING CIRCLE) */
+            /* ========================================================= */
+            div[class*="Switch"] input[type="checkbox"],
+            div[class*="sc-1nxt82m"] input[type="checkbox"],
+            div[class*="Toggle"] input[type="checkbox"],
+            div[class*="ToggleContainer"] input[type="checkbox"],
+            [role="switch"] input {
+                display: none !important;
+                position: absolute !important;
+                opacity: 0 !important;
+                width: 0 !important;
+                height: 0 !important;
+                min-width: 0 !important;
+                max-width: 0 !important;
+                min-height: 0 !important;
+                max-height: 0 !important;
+                pointer-events: none !important;
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                visibility: hidden !important;
+            }
+            /* Switch Track */
+            div[class*="Switch__ToggleContainer"],
+            div[class*="sc-1nxt82m-0"],
+            div[class*="sc-1nxt82m-1"] {
+                width: 3.4rem !important;
+                height: 1.85rem !important;
+                position: relative !important;
+                display: inline-block !important;
+                user-select: none !important;
+            }
+            div[class*="Switch__ToggleContainer"] > label,
+            div[class*="sc-1nxt82m-0"] > label,
+            div[class*="sc-1nxt82m-1"] > label {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 9999px !important;
+                background-color: #1a1330 !important;
+                background: #1a1330 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                position: relative !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                box-sizing: border-box !important;
+                margin: 0 !important;
+            }
+            /* Switch Thumb Knob */
+            div[class*="Switch__ToggleContainer"] > label::before,
+            div[class*="sc-1nxt82m-0"] > label::before,
+            div[class*="sc-1nxt82m-1"] > label::before {
+                content: "" !important;
+                position: absolute !important;
+                top: 2px !important;
+                left: 3px !important;
+                right: auto !important;
+                width: 1.35rem !important;
+                height: 1.35rem !important;
+                border-radius: 50% !important;
+                background: #ffffff !important;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+                transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            }
+            /* Switch Track Checked */
+            div[class*="Switch__ToggleContainer"] > input:checked + label,
+            div[class*="sc-1nxt82m-0"] > input:checked + label,
+            div[class*="sc-1nxt82m-1"] > input:checked + label,
+            label.np-toggle-active {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 14px rgba(194, 104, 242, 0.6) !important;
+            }
+            /* Switch Thumb Knob Checked */
+            div[class*="Switch__ToggleContainer"] > input:checked + label::before,
+            div[class*="sc-1nxt82m-0"] > input:checked + label::before,
+            div[class*="sc-1nxt82m-1"] > input:checked + label::before,
+            label.np-toggle-active::before {
+                transform: translateX(1.5rem) !important;
+                left: 3px !important;
+                right: auto !important;
+                background: #ffffff !important;
+            }
+            /* ========================================================= */
+            /* ALL CHECKBOXES: SOLID VISIBLE UNCHECKED & PURPLE CHECKED  */
+            /* ========================================================= */
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]) {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                width: 20px !important;
+                height: 20px !important;
+                min-width: 20px !important;
+                max-width: 20px !important;
+                min-height: 20px !important;
+                max-height: 20px !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 5px !important;
+                border: 1.5px solid #5d447a !important;
+                background-color: #0b0717 !important;
+                background-image: none !important;
+                cursor: pointer !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                vertical-align: middle !important;
+                box-sizing: border-box !important;
+                outline: none !important;
+                transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+            }
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]):hover {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 8px rgba(194, 104, 242, 0.4) !important;
+            }
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]):checked,
+            input[type="checkbox"][name="selectedFiles"]:checked {
+                background-color: #C268F2 !important;
+                background: #C268F2 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 11 8 15 16 6'/%3E%3C/svg%3E") no-repeat center center / 14px 14px !important;
+                border: 1.5px solid #ffffff !important;
+                border-color: #ffffff !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 11 8 15 16 6'/%3E%3C/svg%3E") !important;
+                background-size: 14px 14px !important;
+                background-position: center center !important;
+                background-repeat: no-repeat !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.75) !important;
+            }
+            input[type="checkbox"]:not([role="switch"]):not([id*="switch"]):not([name*="UPLOAD"]):not([name*="UPDATE"]):indeterminate,
+            input[class*="FileActionCheckbox"]:indeterminate {
+                background-color: #C268F2 !important;
+                border: 1.5px solid #ffffff !important;
+                border-color: #ffffff !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='8' width='14' height='4' rx='2' fill='white'/%3E%3C/svg%3E") !important;
+                background-size: 14px 14px !important;
+                background-position: center center !important;
+                background-repeat: no-repeat !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.75) !important;
+            }
+            label[class*="SelectFileCheckbox___StyledLabel"],
+            label[class*="sc-1cv6gsl-1"],
+            div[class*="file_row"] label {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                width: 36px !important;
+                min-width: 36px !important;
+                max-width: 36px !important;
+                padding: 0 6px !important;
+                flex: none !important;
+                box-sizing: border-box !important;
+            }
+            /* File Manager Row Sizing & Sleek Hover */
+            div[class*="file_row"],
+            div[class*="style-module_HHpjDvv7"] {
+                display: flex !important;
+                align-items: center !important;
+                padding: 0.55rem 0.85rem !important;
+                border-radius: 8px !important;
+                background: #120e24 !important;
+                border: 1px solid rgba(194, 104, 242, 0.12) !important;
+                margin-bottom: 4px !important;
+                transition: all 0.18s ease !important;
+            }
+            div[class*="file_row"]:hover,
+            div[class*="style-module_HHpjDvv7"]:hover {
+                background: rgba(194, 104, 242, 0.1) !important;
+                border-color: rgba(194, 104, 242, 0.4) !important;
+            }
+            div[class*="file_row"] svg,
+            div[class*="style-module_HHpjDvv7"] svg {
+                color: #C268F2 !important;
+                flex-shrink: 0 !important;
+            }
+            @keyframes npFadeIn {
+                from { opacity: 0; transform: scale(0.97); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes npSpin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            /* PRIMARY CTA & ACTION BUTTONS (#C268F2 GRADIENT) */
+            button[type="submit"],
+            .btn-primary,
+            button.primary,
+            button[class*="primary"],
+            button[class*="Primary"],
+            button[class*="bg-primary"],
+            button[class*="bg-blue"],
+            .np-btn-purple,
+            div[class*="FileManagerContainer"] button:not([class*="secondary"]):not([class*="p-"]):not([class*="danger"]),
+            div[class*="FileManagerContainer"] a > button,
+            div[class*="flex"] > a > button,
+            div[class*="Modal"] button[type="submit"],
+            button[class*="Button"]:not([class*="secondary"]):not([class*="danger"]):not([class*="text"]):not([class*="p-"]):not([class*="p-1"]):not([class*="p-2"]):not([aria-haspopup="true"]) {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.5px !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 16px rgba(194, 104, 242, 0.35) !important;
+                transition: all 0.2s ease !important;
+                text-transform: uppercase !important;
+                border: none !important;
+                padding: 0.75rem 1.4rem !important;
+                cursor: pointer !important;
+            }
+            button[type="submit"]:hover,
+            .btn-primary:hover,
+            button.primary:hover,
+            button[class*="bg-primary"]:hover,
+            button[class*="bg-blue"]:hover,
+            .np-btn-purple:hover,
+            div[class*="FileManagerContainer"] button:not([class*="secondary"]):not([class*="p-"]):not([class*="danger"]):hover,
+            div[class*="FileManagerContainer"] a > button:hover,
+            button[class*="Button"]:not([class*="secondary"]):not([class*="danger"]):not([class*="text"]):not([class*="p-"]):not([class*="p-1"]):not([class*="p-2"]):hover {
+                transform: translateY(-1px) !important;
+                box-shadow: 0 6px 24px rgba(194, 104, 242, 0.6) !important;
+                filter: brightness(1.08) !important;
+            }
+
+            /* SECONDARY BUTTONS: MINIMAL FLAT WITH SUBTLE OUTLINE */
+            button[class*="secondary"],
+            button.btn-default,
+            button.btn-secondary,
+            button[class*="Button___StyledButton"][class*="secondary"] {
+                background: rgba(255, 255, 255, 0.05) !important;
+                color: #d1b8eb !important;
+                font-weight: 600 !important;
+                border-radius: 8px !important;
+                border: 1px solid rgba(194, 104, 242, 0.2) !important;
+                box-shadow: none !important;
+                padding: 0.65rem 1.25rem !important;
+                cursor: pointer !important;
+                transform: none !important;
+            }
+            button[class*="secondary"]:hover,
+            button.btn-default:hover,
+            button.btn-secondary:hover {
+                background: rgba(194, 104, 242, 0.12) !important;
+                color: #ffffff !important;
+                border-color: #C268F2 !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            /* 3-DOTS ACTION BUTTON & ALL ICON-ONLY BUTTONS: STRICT ZERO OUTLINE & ZERO BORDER */
+            div[class*="FileObjectRow"] button,
+            div[class*="file_row"] button,
+            div[class*="FileObjectRow"] div[class*="DropdownMenu"],
+            div[class*="FileObjectRow"] div[class*="FileDropdownMenu"],
+            div[class*="file_row"] div[class*="DropdownMenu"],
+            div[class*="style-module_HHpjDvv7"] button,
+            div[class*="style-module_HHpjDvv7"] div[class*="DropdownMenu"],
+            div[class*="DropdownMenu"] > button,
+            div[class*="DropdownMenu"] button,
+            div[class*="DropdownMenu__Menu"],
+            button:has(svg[data-icon="ellipsis-h"]),
+            button:has(svg.fa-ellipsis-h),
+            button:has(svg[class*="ellipsis"]),
+            button:has(svg[data-icon="ellipsis-v"]),
+            button:has(svg[class*="dots"]),
+            button[class*="p-2"],
+            button[class*="p-1"],
+            button.p-2,
+            button.p-1,
+            div[class*="FileManager"] button:not([class*="bg-"]):not([type="submit"]):not([class*="btn"]):not([class*="primary"]):not([class*="Primary"]):not([class*="purple"]),
+            div[class*="flex items-center"] > button:has(svg:only-child),
+            button:has(svg:only-child):not([class*="bg-"]):not([type="submit"]):not([class*="primary"]) {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                border-width: 0 !important;
+                border-color: transparent !important;
+                outline: none !important;
+                box-shadow: none !important;
+                border-radius: 4px !important;
+                padding: 4px 6px !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                width: auto !important;
+                height: auto !important;
+                color: #a394bf !important;
+                margin: 0 !important;
+                cursor: pointer !important;
+                text-transform: none !important;
+                letter-spacing: normal !important;
+                transform: none !important;
+            }
+            button[class*="p-2"]:hover,
+            button[class*="p-1"]:hover,
+            button:has(svg:only-child):hover,
+            button[aria-label]:hover,
+            div[class*="file_row"] button:hover,
+            div[class*="FileObjectRow"] button:hover,
+            div[class*="style-module_HHpjDvv7"] button:hover,
+            button.p-2:hover,
+            button.p-1:hover {
+                background: rgba(194, 104, 242, 0.12) !important;
+                background-color: rgba(194, 104, 242, 0.12) !important;
+                color: #C268F2 !important;
+                border: none !important;
+                outline: none !important;
+                box-shadow: none !important;
+                transform: none !important;
+                filter: none !important;
+            }
+            button[class*="p-2"] svg,
+            button[class*="p-1"] svg,
+            div[class*="file_row"] button svg,
+            div[class*="FileObjectRow"] button svg,
+            div[class*="style-module_HHpjDvv7"] button svg {
+                color: #a394bf !important;
+                fill: currentColor !important;
+            }
+            button[class*="p-2"]:hover svg,
+            button[class*="p-1"]:hover svg,
+            div[class*="file_row"] button:hover svg,
+            div[class*="FileObjectRow"] button:hover svg,
+            div[class*="style-module_HHpjDvv7"] button:hover svg {
+                color: #C268F2 !important;
+                fill: currentColor !important;
+            }
+            /* ALL SELECT MENUS & DROPDOWNS — ULTRA SLEEK #C268F2 CUSTOM STYLING */
+            select,
+            .form-control select,
+            select.form-control,
+            [class*="Select"] select,
+            select[class*="Select"],
+            [class*="Select___StyledSelect"] {
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+                background-color: #0d091a !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23C268F2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: right 1rem center !important;
+                background-size: 14px 14px !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.45) !important;
+                border-radius: 8px !important;
+                color: #ffffff !important;
+                padding: 0.75rem 2.5rem 0.75rem 1rem !important;
+                cursor: pointer !important;
+                transition: all 0.2s ease !important;
+                font-size: 0.95rem !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+            }
+            select:focus,
+            .form-control select:focus,
+            select.form-control:focus,
+            [class*="Select___StyledSelect"]:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 20px rgba(194, 104, 242, 0.55) !important;
+                outline: none !important;
+                background-color: #120c24 !important;
+            }
+            /* Options list and dropdown menu styling (fixes gray unreadable items) */
+            html, body, select, option {
+                color-scheme: dark !important;
+            }
+            select option,
+            select optgroup,
+            .form-control select option,
+            [class*="Select"] option,
+            ul[role="listbox"],
+            div[role="listbox"],
+            div[class*="menu"],
+            div[class*="Select__menu"],
+            div[class*="-menu"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                color: #ffffff !important;
+                border: 1px solid rgba(194, 104, 242, 0.3) !important;
+                border-radius: 8px !important;
+            }
+            select option,
+            li[role="option"],
+            div[role="option"],
+            div[class*="option"],
+            div[class*="Select__option"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                color: #ffffff !important;
+                padding: 10px 14px !important;
+            }
+            select option:hover,
+            select option:checked,
+            li[role="option"]:hover,
+            div[role="option"]:hover,
+            div[class*="Select__option"]:hover,
+            div[class*="Select__option--is-focused"] {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                color: #ffffff !important;
+            }
+            /* Links */
+            a {
+                color: #C268F2 !important;
+                transition: all 0.2s ease !important;
+            }
+            a:hover {
+                color: #e29eff !important;
+                text-shadow: 0 0 8px rgba(194, 104, 242, 0.6) !important;
+            }
+            /* Flash & Error boxes */
+            div[class*="FlashMessageRender"], .sc-cyh04c-2, [class*="sc-cyh04c-2"] {
+                border-radius: 10px !important;
+            }
+            /* ========================================================= */
+            /* 1. CLEAN SINGLE-CONTAINER ARCHITECTURE (NO NESTED BOXES)   */
+            /* ========================================================= */
+            div[class*="ServerContentBlock"],
+            div[class*="PageContentBlock"],
+            div[class*="SettingsContainer"],
+            div[class*="sc-1e5ycmz-1"],
+            div[class*="sc-1e5ycmz-2"],
+            div[class*="sc-1e5ycmz-15"],
+            div[class*="ContentBox"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+
+            /* THE ONE AND ONLY MAIN CARD: TitledGreyBox & Settings Cards */
+            div.sc-gvsoy-0,
+            div[class*="sc-gvsoy-0"],
+            div[class*="sc-1bh2mfg-0"],
+            div[class*="sc-1prmksw-1"],
+            div[class*="sc-1e5ycmz-3"],
+            div[class*="sc-1e5ycmz-10"],
+            div[class*="TitledGreyBox"]:not([class*="StyledDiv2"]):not([class*="StyledDiv3"]) {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+                padding: 1.5rem !important;
+                margin-bottom: 1.5rem !important;
+                box-sizing: border-box !important;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+            }
+            div.sc-gvsoy-0:hover,
+            div[class*="sc-gvsoy-0"]:hover,
+            div[class*="sc-1bh2mfg-0"]:hover,
+            div[class*="sc-1prmksw-1"]:hover,
+            div[class*="sc-1e5ycmz-3"]:hover,
+            div[class*="sc-1e5ycmz-10"]:hover {
+                border-color: rgba(194, 104, 242, 0.45) !important;
+                box-shadow: 0 6px 25px rgba(0, 0, 0, 0.55), 0 0 15px rgba(194, 104, 242, 0.15) !important;
+            }
+
+            /* REMOVE nested header box and borders inside TitledGreyBox */
+            div[class*="TitledGreyBox___StyledDiv2"],
+            div.sc-gvsoy-1,
+            div[class*="sc-gvsoy-1"] {
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.15) !important;
+                border-radius: 0 !important;
+                padding: 0 0 0.85rem 0 !important;
+                margin-bottom: 1.25rem !important;
+            }
+            div[class*="TitledGreyBox___StyledDiv3"],
+            div.sc-gvsoy-4,
+            div[class*="sc-gvsoy-4"] {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* ========================================================= */
+            /* SETTINGS PAGE: CLEAN 2-COLUMN BALANCED LAYOUT             */
+            /* ========================================================= */
+            /* Outer container: 2 equal-width columns on desktop, stacked on mobile */
+            div.sc-1e5ycmz-1,
+            div.SettingsContainer___StyledDiv-sc-1e5ycmz-1 {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 1.75rem !important;
+                width: 100% !important;
+                align-items: flex-start !important;
+            }
+            @media (max-width: 900px) {
+                div.sc-1e5ycmz-1,
+                div.SettingsContainer___StyledDiv-sc-1e5ycmz-1 {
+                    flex-direction: column !important;
+                }
+            }
+
+            /* Left column (SFTP Details + Debug Information stacked vertically) */
+            div.sc-1e5ycmz-2,
+            div.SettingsContainer___StyledDiv2-sc-1e5ycmz-2 {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                max-width: 50% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Right column (Change Server Details + Reinstall Server stacked vertically) */
+            div.sc-1e5ycmz-15,
+            div.SettingsContainer___StyledDiv0-sc-1e5ycmz-15 {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                max-width: 50% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1.5rem !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+
+            @media (max-width: 900px) {
+                div.sc-1e5ycmz-2,
+                div.SettingsContainer___StyledDiv2-sc-1e5ycmz-2,
+                div.sc-1e5ycmz-15,
+                div.SettingsContainer___StyledDiv0-sc-1e5ycmz-15 {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                }
+            }
+
+            /* Settings cards (SFTP Details, Debug Info, Change Details, Reinstall Server) */
+            div.sc-gvsoy-0,
+            div[class*="TitledGreyBox___StyledDiv"] {
+                display: flex !important;
+                flex-direction: column !important;
+                background: #110d22 !important;
+                background-color: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 12px !important;
+                padding: 1.5rem !important;
+                margin: 0 0 1.5rem 0 !important;
+                box-sizing: border-box !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            /* Card Header: stays on TOP, full width, with bottom border */
+            div.sc-gvsoy-1,
+            div[class*="TitledGreyBox___StyledDiv2"] {
+                display: block !important;
+                width: 100% !important;
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.15) !important;
+                border-radius: 0 !important;
+                padding: 0 0 0.85rem 0 !important;
+                margin-bottom: 1.25rem !important;
+            }
+
+            /* Card Body: stays BELOW header, full width */
+            div.sc-gvsoy-4,
+            div[class*="TitledGreyBox___StyledDiv3"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+                width: 100% !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+
+            /* Inputs & Textareas inside settings cards: 100% width */
+            div[class*="TitledGreyBox"] input[type="text"],
+            div[class*="TitledGreyBox"] textarea,
+            div.sc-gvsoy-4 input {
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* SFTP action row (note on left, button on right) */
+            div.sc-1e5ycmz-5,
+            div[class*="SettingsContainer___StyledDiv4"] {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 1rem !important;
+                margin-top: 0.5rem !important;
+            }
+
+            /* Debug info rows (Node on left/badge on right, UUID on left/badge on right) */
+            div.sc-1e5ycmz-11,
+            div.sc-1e5ycmz-13,
+            div[class*="SettingsContainer___StyledDiv8"],
+            div[class*="SettingsContainer___StyledDiv9"] {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 0.5rem 0 !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.1) !important;
+            }
+            div.sc-1e5ycmz-13,
+            div[class*="SettingsContainer___StyledDiv9"] {
+                border-bottom: none !important;
+            }
+
+            /* Rename & Reinstall Server Forms */
+            div[class*="RenameServerBox"] form,
+            div[class*="ReinstallServerBox"] form,
+            form[class*="RenameServerBox"] {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+                width: 100% !important;
+            }
+
+            /* REMOVE ALL decorative rectangular outlines & nested borders inside settings & forms */
+            div[class*="SettingsContainer___StyledDiv"],
+            div[class*="sc-1e5ycmz-4"],
+            div[class*="sc-1e5ycmz-5"],
+            div[class*="sc-1e5ycmz-6"],
+            div[class*="sc-1e5ycmz-7"],
+            div[class*="sc-1e5ycmz-8"],
+            div[class*="sc-1e5ycmz-9"],
+            div[class*="RenameServerBox___StyledDiv"],
+            div[class*="RenameServerBox___StyledDiv2"],
+            div[class*="sc-1bh2mfg-1"],
+            div[class*="sc-1bh2mfg-2"],
+            div[class*="sc-1bh2mfg-3"],
+            div[class*="ReinstallServerBox___StyledDiv"],
+            div[class*="sc-1prmksw-2"],
+            div[class*="sc-1prmksw-3"],
+            div[class*="sc-1prmksw-4"],
+            div[class*="TitledGreyBox"] form,
+            div[class*="TitledGreyBox"] form > div,
+            div[class*="TitledGreyBox"] form div,
+            div[class*="TitledGreyBox"] div[class*="FormikFieldWrapper"],
+            div[class*="TitledGreyBox"] div[class*="Field"],
+            div[class*="RenameServerBox"] form,
+            div[class*="RenameServerBox"] form > div,
+            div[class*="RenameServerBox"] div,
+            div[class*="SettingsContainer"] form > div,
+            div[class*="ReinstallServerBox"] form > div {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                max-width: 100% !important;
+            }
+            div[class*="RenameServerBox"] form > div,
+            div[class*="TitledGreyBox"] form > div {
+                margin: 0 0 1.25rem 0 !important;
+                padding: 0 !important;
+            }
+            div[class*="RenameServerBox"] form > div:last-child,
+            div[class*="TitledGreyBox"] form > div:last-child {
+                margin-bottom: 0 !important;
+            }
+            /* Code badge in debug info */
+            code[class*="SettingsContainer___StyledCode"],
+            div[class*="sc-1e5ycmz-12"],
+            div[class*="sc-1e5ycmz-14"] {
+                background: rgba(194, 104, 242, 0.12) !important;
+                border: 1px solid rgba(194, 104, 242, 0.25) !important;
+                color: #e2d2f7 !important;
+                border-radius: 6px !important;
+                padding: 3px 8px !important;
+                font-size: 0.82rem !important;
+            }
+
+            /* ========================================================= */
+            /* STARTUP SETTINGS & COMMAND LAYOUT: WIDE TERMINAL CODE BOX */
+            /* ========================================================= */
+            div[class*="StartupContainer"] p,
+            div[class*="VariableBox"] p,
+            div[class*="TitledGreyBox"] p,
+            div[class*="TitledGreyBox"] span,
+            div[class*="TitledGreyBox"] code {
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+
+            /* STARTUP PAGE ONLY: STACK STARTUP COMMAND & DOCKER IMAGE VERTICALLY */
+            body[data-np-route="startup"] div[class*="StartupContainer"],
+            div[class*="StartupContainer"] {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                overflow-x: clip !important;
+            }
+
+            body[data-np-route="startup"] div.grid,
+            body[data-np-route="startup"] div[class*="grid"],
+            div[class*="StartupContainer"] div.grid,
+            div[class*="StartupContainer"] div[class*="grid-cols-4"],
+            div[class*="StartupContainer"] div[class*="grid"] {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                gap: 1.5rem !important;
+            }
+
+            body[data-np-route="startup"] div.grid > div,
+            body[data-np-route="startup"] div[class*="grid"] > div,
+            div[class*="StartupContainer"] div.grid > div,
+            div[class*="StartupContainer"] div[class*="grid-cols-4"] > div,
+            div[class*="StartupContainer"] div[class*="col-span"],
+            div[class*="StartupContainer"] div[class*="col-span-1"],
+            div[class*="StartupContainer"] div[class*="col-span-2"],
+            div[class*="StartupContainer"] div[class*="col-span-3"],
+            div[class*="StartupContainer"] div[class*="col-span-4"],
+            div[class*="StartupContainer"] div[class*="md:col-span-1"],
+            div[class*="StartupContainer"] div[class*="md:col-span-2"],
+            div[class*="StartupContainer"] div[class*="md:col-span-3"],
+            div[class*="StartupContainer"] div[class*="md:col-span-4"] {
+                grid-column: 1 / -1 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                flex: 1 1 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* STARTUP PAGE: REMOVE UNNECESSARY OUTER BOXES AND BORDERS */
+            body[data-np-route="startup"] div[class*="TitledGreyBox"],
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"],
+            div[class*="StartupContainer"] div.sc-gvsoy-0 {
+                background: transparent !important;
+                background-color: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin-bottom: 1.5rem !important;
+                overflow: visible !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            body[data-np-route="startup"] div[class*="TitledGreyBox"] > div,
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] > div {
+                overflow: visible !important;
+                box-sizing: border-box !important;
+            }
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] > div:first-child,
+            div[class*="StartupContainer"] div.sc-gvsoy-1 {
+                background: transparent !important;
+                border: none !important;
+                border-bottom: none !important;
+                padding-bottom: 0.25rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] > div:first-child p,
+            div[class*="StartupContainer"] p.font-header,
+            div[class*="StartupContainer"] h3 {
+                font-size: 0.9rem !important;
+                font-weight: 800 !important;
+                color: #e2d2f7 !important;
+                letter-spacing: 0.6px !important;
+                text-transform: uppercase !important;
+            }
+
+            /* Descriptive help paragraphs: normal sentence case, UI font, no uppercase */
+            div[class*="StartupContainer"] p:not(.font-header):not([class*="title"]),
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] div:not(:first-child) p,
+            div[class*="StartupContainer"] p[class*="text-neutral"],
+            div[class*="StartupContainer"] p[class*="text-gray"] {
+                text-transform: none !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+                font-variant: normal !important;
+                letter-spacing: normal !important;
+            }
+
+            /* SERVER CONSOLE: STAT CARDS FIRMLY ON THE RIGHT SIDE */
+            @media (min-width: 1024px) {
+                div[class*="ServerConsoleContainer"],
+                div[class*="ServerConsoleContainer"] > div,
+                div[class*="ServerConsoleContainer"] div[class*="grid-cols-4"],
+                div.grid:has(> div div[class*="ServerConsoleContainer"]),
+                div.grid:has(div[class*="TerminalContainer"]) {
+                    display: grid !important;
+                    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                    gap: 1rem !important;
+                    flex-direction: row !important;
+                }
+                div[class*="ServerConsoleContainer"] div.lg\:col-span-3,
+                div[class*="ServerConsoleContainer"] div[class*="lg:col-span-3"],
+                div[class*="ServerConsoleContainer"] div[class*="col-span-3"],
+                div.col-span-4.lg\:col-span-3,
+                div[class*="ServerConsoleContainer"] > div > div:first-child,
+                div:has(> div[class*="TerminalContainer"]) > div:first-child {
+                    grid-column: span 3 / span 3 !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    max-width: none !important;
+                    flex: none !important;
+                }
+                div[class*="ServerConsoleContainer"] div.lg\:col-span-1,
+                div[class*="ServerConsoleContainer"] div[class*="lg:col-span-1"],
+                div[class*="ServerConsoleContainer"] div[class*="col-span-1"],
+                div.col-span-4.lg\:col-span-1,
+                div[class*="ServerConsoleContainer"] > div > div:last-child,
+                div:has(> div[class*="stat_block"]) > div:last-child {
+                    grid-column: span 1 / span 1 !important;
+                    width: 100% !important;
+                    min-width: 0 !important;
+                    max-width: none !important;
+                    flex: none !important;
+                }
+            }
+
+            /* Startup Command Box: 100% Full Width Legible Terminal */
+            body[data-np-route="startup"] p[class*="font-mono"],
+            body[data-np-route="startup"] p.font-mono,
+            body[data-np-route="startup"] code,
+            div[class*="StartupContainer"] p[class*="font-mono"],
+            div[class*="StartupContainer"] p.font-mono,
+            div[class*="StartupContainer"] code,
+            p[class*="StartupContainer___StyledP"] {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                display: block !important;
+                white-space: pre-wrap !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+                overflow-x: auto !important;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+                font-size: 0.95rem !important;
+                line-height: 1.6 !important;
+                color: #38ef7d !important;
+                background-color: #0b0717 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                border-radius: 10px !important;
+                padding: 1.25rem 1.5rem !important;
+                box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7) !important;
+            }
+
+            /* Completely hide native selects once enhanced by custom select */
+            select[data-np-select="true"],
+            .np-custom-select-wrap select {
+                display: none !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                position: absolute !important;
+                visibility: hidden !important;
+            }
+
+            /* Startup settings select input (Docker Image selector) */
+            body[data-np-route="startup"] .np-custom-select-wrap,
+            div[class*="StartupContainer"] .np-custom-select-wrap,
+            div[class*="StartupContainer"] select,
+            div[class*="StartupContainer"] div[class*="Select"],
+            div[class*="StartupContainer"] input[type="text"],
+            div[class*="StartupContainer"] input:not([type="checkbox"]):not([type="radio"]) {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                overflow: visible !important;
+                position: relative !important;
+                z-index: 50 !important;
+                margin-top: 4px !important;
+            }
+
+            /* Variable box description styling */
+            p[class*="text-neutral-300"],
+            div[class*="VariableBox"] p {
+                color: #c9b6e3 !important;
+                font-size: 0.85rem !important;
+                margin-top: 0.4rem !important;
+                display: block !important;
+                line-height: 1.5 !important;
+            }
+
+            /* Variables section heading & grid */
+            div[class*="StartupContainer"] h3 {
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                margin-top: 2rem !important;
+                margin-bottom: 1rem !important;
+            }
+
+            /* ========================================================= */
+            /* 2. FILES PAGE CLEANUP (CLEAN STANDARD TABLE LAYOUT)       */
+            /* ========================================================= */
+            div[class*="FileManagerContainer"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            div[class*="FileManagerBreadcrumbs"],
+            div[class*="sc-1yfrkfk"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0.5rem 0 !important;
+                margin-bottom: 0.75rem !important;
+            }
+            /* File rows: Clean table-like rows with only a subtle bottom divider, NO pill-shaped boxes */
+            div[class*="file_row"],
+            div[class*="style-module_HHpjDvv7"] {
+                background: transparent !important;
+                border: none !important;
+                border-bottom: 1px solid rgba(194, 104, 242, 0.12) !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 0.75rem 0.5rem !important;
+                margin-bottom: 0 !important;
+                transition: background 0.15s ease !important;
+            }
+            div[class*="file_row"]:hover,
+            div[class*="style-module_HHpjDvv7"]:hover {
+                background: rgba(194, 104, 242, 0.08) !important;
+                border-radius: 6px !important;
+            }
+            /* File details: NO inner pill outlines */
+            div[class*="details"],
+            div[class*="style-module_le7taa7N"],
+            div[class*="FileObjectRow"] > div {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+            /* File name, size, date typography */
+            div[class*="FileObjectRow___StyledDiv2"],
+            div[class*="sc-wrdnyp-1"] {
+                color: #ffffff !important;
+                font-weight: 500 !important;
+            }
+            div[class*="FileObjectRow___StyledDiv3"],
+            div[class*="FileObjectRow___StyledDiv4"],
+            div[class*="sc-wrdnyp-2"],
+            div[class*="sc-wrdnyp-3"] {
+                color: #a394bf !important;
+                font-size: 0.85rem !important;
+            }
+
+            /* ========================================================= */
+            /* 2b. CONTEXT MENUS & ACTION DROPDOWNS (READABLE WHITE TEXT)*/
+            /* ========================================================= */
+            nav.react-contextmenu,
+            .react-contextmenu,
+            div.react-contextmenu,
+            div[role="menu"]:not([role="menubar"]):not([class*="file_row"]):not([class*="FileObjectRow"]),
+            ul[role="menu"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                border: 1.5px solid #C268F2 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35) !important;
+                padding: 6px !important;
+                min-width: 190px !important;
+                z-index: 999999 !important;
+            }
+
+            .react-contextmenu-item,
+            nav.react-contextmenu .react-contextmenu-item,
+            div.react-contextmenu .react-contextmenu-item,
+            [role="menuitem"],
+            div[role="menu"] button,
+            div[role="menu"] a,
+            div[role="menu"] div[role="menuitem"],
+            ul[role="menu"] li,
+            div[class*="ContextMenu"] button,
+            div[class*="ContextMenu"] a,
+            div[class*="Menu___Styled"] button,
+            div[class*="DropdownMenu__Menu"] button,
+            div[class*="DropdownMenu__Menu"] a,
+            button[class*="ContextMenu__Item"] {
+                display: flex !important;
+                align-items: center !important;
+                color: #ffffff !important;
+                padding: 8px 14px !important;
+                margin: 2px 0 !important;
+                font-size: 0.88rem !important;
+                font-weight: 600 !important;
+                border-radius: 6px !important;
+                background: transparent !important;
+                border: none !important;
+                cursor: pointer !important;
+                transition: all 0.15s ease !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                white-space: nowrap !important;
+            }
+
+            .react-contextmenu-item *,
+            nav.react-contextmenu *,
+            div.react-contextmenu *,
+            div[role="menu"] *,
+            ul[role="menu"] *,
+            div[class*="ContextMenu"]:not([class*="Row"]) *,
+            div[class*="Menu___Styled"] *,
+            div[class*="DropdownMenu__Menu"] *,
+            button[class*="ContextMenu__Item"] * {
+                color: #ffffff !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+
+            .react-contextmenu-item:hover,
+            .react-contextmenu-item--active,
+            nav.react-contextmenu .react-contextmenu-item:hover,
+            [role="menuitem"]:hover,
+            div[role="menu"] button:hover,
+            div[role="menu"] a:hover,
+            div[role="menu"] div[role="menuitem"]:hover,
+            ul[role="menu"] li:hover,
+            div[class*="ContextMenu"] button:hover,
+            div[class*="ContextMenu"] a:hover,
+            div[class*="Menu___Styled"] button:hover,
+            div[class*="DropdownMenu__Menu"] button:hover,
+            button[class*="ContextMenu__Item"]:hover {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                color: #ffffff !important;
+                box-shadow: 0 2px 10px rgba(194, 104, 242, 0.4) !important;
+            }
+
+            div[role="menu"] button:hover *,
+            div[role="menu"] a:hover *,
+            div[class*="ContextMenu"] button:hover *,
+            div[class*="Menu___Styled"] button:hover *,
+            div[class*="DropdownMenu__Menu"] button:hover * {
+                color: #ffffff !important;
+            }
+
+            div[role="menu"] svg,
+            ul[role="menu"] svg,
+            div[class*="ContextMenu"] svg,
+            div[class*="ActionMenu"] svg,
+            div[class*="Menu___Styled"] svg,
+            div[class*="DropdownMenu__Menu"] svg {
+                color: #C268F2 !important;
+                stroke: #C268F2 !important;
+                fill: currentColor !important;
+                width: 16px !important;
+                height: 16px !important;
+                margin-right: 10px !important;
+                flex-shrink: 0 !important;
+            }
+
+            div[role="menu"] button:hover svg,
+            div[class*="ContextMenu"] button:hover svg,
+            div[class*="Menu___Styled"] button:hover svg,
+            div[class*="DropdownMenu__Menu"] button:hover svg {
+                color: #ffffff !important;
+                stroke: #ffffff !important;
+                fill: #ffffff !important;
+            }
+            /* ========================================================= */
+            /* 3. DASHBOARD SERVER ROWS (CLEAN SINGLE CARDS, NO INNER BOXES) */
+            /* ========================================================= */
+            /* The outer server row link is the ONLY card */
+            a[class*="ServerRow__StatusIndicatorBox"],
+            a[class*="sc-1ibsw91-2"],
+            div[class*="DashboardContainer"] a[href*="/server/"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
+                transition: all 0.2s ease !important;
+                margin-bottom: 0.85rem !important;
+                display: grid !important;
+            }
+            a[class*="ServerRow__StatusIndicatorBox"]:hover,
+            a[class*="sc-1ibsw91-2"]:hover,
+            div[class*="DashboardContainer"] a[href*="/server/"]:hover {
+                border-color: #C268F2 !important;
+                box-shadow: 0 6px 24px rgba(194, 104, 242, 0.35) !important;
+                transform: translateY(-2px) !important;
+            }
+
+            /* ALL INNER DIVS AND SPANS INSIDE SERVER ROW MUST BE COMPLETELY PLAIN & BORDERLESS */
+            a[class*="ServerRow__StatusIndicatorBox"] div,
+            a[class*="ServerRow__StatusIndicatorBox"] span:not(.status-bar),
+            a[class*="sc-1ibsw91-2"] div,
+            a[class*="sc-1ibsw91-2"] span:not(.status-bar),
+            div[class*="DashboardContainer"] a[href*="/server/"] div,
+            div[class*="DashboardContainer"] a[href*="/server/"] span:not(.status-bar),
+            div[class*="sc-1ibsw91-3"],
+            div[class*="sc-1ibsw91-4"],
+            div[class*="sc-1ibsw91-6"],
+            div[class*="sc-1ibsw91-7"],
+            div[class*="sc-1ibsw91-8"],
+            div[class*="sc-1ibsw91-10"],
+            div[class*="sc-1ibsw91-11"],
+            div[class*="sc-1ibsw91-13"],
+            div[class*="sc-1ibsw91-15"],
+            div[class*="sc-1ibsw91-17"],
+            div[class*="sc-1ibsw91-18"],
+            div[class*="sc-1ibsw91-20"],
+            div[class*="sc-1ibsw91-21"],
+            div[class*="sc-1ibsw91-23"],
+            div[class*="sc-1ibsw91-24"] {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                transform: none !important;
+                border-radius: 0 !important;
+            }
+
+            /* ALL STATS, LABELS & ICONS ALWAYS 100% VISIBLE (FIX HOVER-ONLY BUG) */
+            a[href*="/server/"] div,
+            a[href*="/server/"] p,
+            a[href*="/server/"] span,
+            a[href*="/server/"] svg {
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            a[href*="/server/"] p,
+            div[class*="sc-1ibsw91"] p,
+            div[class*="ServerRow"] p {
+                color: #ffffff !important;
+                font-weight: 600 !important;
+            }
+            /* Server name styling */
+            a[href*="/server/"] p[class*="break-words"] {
+                color: #ffffff !important;
+                font-weight: 700 !important;
+                font-size: 1.1rem !important;
+            }
+            /* Server IP / Port allocation */
+            a[href*="/server/"] div[class*="lg:col-span-2"] p {
+                color: #d1b8eb !important;
+                font-weight: 600 !important;
+            }
+            /* Limit subtitles ("of Unlimited") */
+            a[href*="/server/"] div[class*="flex-1"] p:last-child {
+                color: #a394bf !important;
+                font-size: 0.75rem !important;
+                font-weight: 400 !important;
+            }
+            /* Server Row Icon Container (Eliminate Big Purple Blob) */
+            a[href*="/server/"] div.icon,
+            a[class*="ServerRow"] div.icon,
+            div[class*="GreyRowBox"] div.icon,
+            div.icon.mr-4 {
+                background: transparent !important;
+                background-color: transparent !important;
+                width: 2.25rem !important;
+                height: 2.25rem !important;
+                min-width: 2.25rem !important;
+                max-width: 2.25rem !important;
+                padding: 0 !important;
+                border-radius: 8px !important;
+                box-shadow: none !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            /* Icons */
+            a[href*="/server/"] svg,
+            a[class*="ServerRow"] div.icon svg,
+            div.icon.mr-4 svg {
+                color: #C268F2 !important;
+                width: 1.35rem !important;
+                height: 1.35rem !important;
+                font-size: 1.35rem !important;
+            }
+
+            /* ========================================================= */
+            /* 4. OTHER ROWS (Databases, Schedules, Users, Backups)      */
+            /* ========================================================= */
+            div[class*="GreyRowBox"],
+            div[class*="sc-1xo9c6v"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.2) !important;
+                border-radius: 10px !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+                padding: 1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            div[class*="GreyRowBox"] > div,
+            div[class*="sc-1xo9c6v"] > div {
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+
+            /* ========================================================= */
+            /* 5. CONSOLE TERMINAL, STAT CARDS & CHARTS                  */
+            /* ========================================================= */
+            div[class*="ServerConsoleContainer"],
+            div[class*="TerminalContainer"],
+            div[class*="ConsoleContainer"] {
+                background-color: #0b0717 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5) !important;
+                overflow: hidden !important;
+            }
+            input[class*="CommandInput"],
+            div[class*="ServerConsoleContainer"] input,
+            div[class*="Terminal"] + div input {
+                background-color: #080512 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+            }
+            input[class*="CommandInput"]:focus,
+            div[class*="ServerConsoleContainer"] input:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
+            }
+            div[class*="stat_block"],
+            div[class*="style-module_V4CSEpa4"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
+                overflow: hidden !important;
+            }
+            div[class*="status_bar"],
+            div[class*="style-module_M2eytJMi"] {
+                background: #C268F2 !important;
+                border: none !important;
+            }
+            div[class*="icon"][class*="style-module"] {
+                background: transparent !important;
+                border: none !important;
+            }
+            div[class*="chart_container"],
+            div[class*="style-module_j35sQtg2"] {
+                background-color: #110d22 !important;
+                background: #110d22 !important;
+                border: 1px solid rgba(194, 104, 242, 0.22) !important;
+                border-bottom: 3px solid #C268F2 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35) !important;
+            }
+            div[class*="chart_container"]:hover,
+            div[class*="style-module_j35sQtg2"]:hover {
+                border-color: #C268F2 !important;
+                box-shadow: 0 10px 32px rgba(194, 104, 242, 0.35) !important;
+            }
+            div[class*="chart_container"] h3,
+            div[class*="style-module_j35sQtg2"] h3 {
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+            div[class*="chart_container"] p,
+            div[class*="style-module_j35sQtg2"] p,
+            /* CONSOLE STAT CARDS: ALL VALUES, TEXT & OFFLINE LABELS BRIGHT WHITE */
+            div[class*="stat_block"],
+            div[class*="style-module_V4CSEpa4"] {
+                color: #ffffff !important;
+            }
+            div[class*="stat_block"] *,
+            div[class*="style-module_V4CSEpa4"] * {
+                color: #ffffff !important;
+            }
+            div[class*="stat_block"] p,
+            div[class*="style-module_V4CSEpa4"] p {
+                color: #c9b6e3 !important;
+                font-weight: 600 !important;
+            }
+            div[class*="stat_block"] span,
+            div[class*="stat_block"] div,
+            div[class*="style-module_V4CSEpa4"] span,
+            div[class*="style-module_V4CSEpa4"] div,
+            div[class*="stat_block"] .text-gray-400,
+            div[class*="style-module_V4CSEpa4"] .text-gray-400,
+            .text-gray-400 {
+                color: #ffffff !important;
+                font-weight: 700 !important;
+            }
+            /* CARD HEADINGS */
+            p[class*="TitledGreyBox___StyledP"],
+            div[class*="TitledGreyBox"] > div:first-child p {
+                color: #e2d2f7 !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.8px !important;
+                text-transform: uppercase !important;
+                font-size: 0.85rem !important;
+            }
+            /* INPUTS AND TEXTAREAS */
+            input[type="text"], input[type="password"], textarea {
+                background-color: #0b0818 !important;
+                border: 1.5px solid #2d1e4d !important;
+                color: #ffffff !important;
+                border-radius: 8px !important;
+            }
+            input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 16px rgba(194, 104, 242, 0.5) !important;
+                background-color: #100b22 !important;
+                outline: none !important;
+            }
+            /* BUTTONS IN SERVER PAGES */
+            button[type="submit"], [class*="Button__Primary"], .btn-primary {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                color: #ffffff !important;
+                font-weight: 800 !important;
+                letter-spacing: 0.8px !important;
+                border-radius: 8px !important;
+                box-shadow: 0 4px 18px rgba(194, 104, 242, 0.45) !important;
+                border: none !important;
+            }
+            button[type="submit"]:hover, [class*="Button__Primary"]:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 28px rgba(194, 104, 242, 0.75) !important;
+                filter: brightness(1.1) !important;
+            }
+            /* ELIMINATE ALL FOOTER ELEMENTS AND BOTTOM COPYRIGHT */
+            footer,
+            .main-footer,
+            a[href*="pterodactyl.io"],
+            p:has(> a[href*="pterodactyl.io"]),
+            p[class*="LoginFormContainer___StyledP"],
+            div[class*="ContentContainer"]:last-child:has(a),
+            p[class*="text-neutral-500"],
+            .text-neutral-500.text-xs.text-center,
+            p.text-center.text-xs {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                pointer-events: none !important;
+            }
+
+            /* ========================================================= */
+            /* ALL MODALS & DIALOGS: OBSIDIAN PURPLE GLASS THEME         */
+            /* ========================================================= */
+            div[role="dialog"],
+            div[class*="Modal"] > div,
+            div[class*="Dialog"] > div,
+            div[class*="Modal__Container"],
+            div[class*="Dialog___StyledDiv"],
+            div[class*="ModalMask"] > div,
+            div[class*="ConfirmationModal"] {
+                background: #110d22 !important;
+                background-color: #110d22 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
+                border-radius: 14px !important;
+                box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(194, 104, 242, 0.25) !important;
+                color: #ffffff !important;
+            }
+            div[role="dialog"] h2,
+            div[role="dialog"] p[class*="font-header"],
+            div[class*="Modal"] h2,
+            div[class*="Modal"] p[class*="title"],
+            div[role="dialog"] label,
+            div[role="dialog"] span {
+                color: #ffffff !important;
+            }
+            div[role="dialog"] input,
+            div[role="dialog"] textarea,
+            div[class*="Modal"] input {
+                background: #0b0717 !important;
+                background-color: #0b0717 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.3) !important;
+                border-radius: 8px !important;
+                color: #ffffff !important;
+                padding: 10px 14px !important;
+            }
+            div[role="dialog"] input:focus,
+            div[role="dialog"] textarea:focus,
+            div[class*="Modal"] input:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.5) !important;
+            }
+
+            /* ========================================================= */
+            /* ALL SELECT DROPDOWNS: OBSIDIAN PURPLE THEME               */
+            /* ========================================================= */
+            select,
+            select[class*="Select"],
+            div[class*="Select"] select {
+                background-color: #0b0717 !important;
+                background: #0b0717 !important;
+                color: #ffffff !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                border-radius: 8px !important;
+                padding: 8px 32px 8px 12px !important;
+                outline: none !important;
+                box-shadow: none !important;
+            }
+            select:focus {
+                border-color: #C268F2 !important;
+                box-shadow: 0 0 12px rgba(194, 104, 242, 0.5) !important;
+            }
+            select option {
+                background-color: #110d22 !important;
+                color: #ffffff !important;
+                padding: 10px 14px !important;
+            }
+            select option:hover,
+            select option:focus,
+            select option:checked {
+                background-color: #C268F2 !important;
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                color: #ffffff !important;
+            }

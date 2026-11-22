@@ -5,3 +5,6 @@ scratch/
 *.pyc
 __pycache__/
 scripts/*.py
+node_modules/
+playwright-report/
+test-results/

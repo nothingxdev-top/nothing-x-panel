@@ -12,6 +12,7 @@
     "@axe-core/playwright": "^4.10.1",
     "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.1",
+    "jsdom": "^31.0.1",
     "typescript": "^5.7.2"
   }
 }
