@@ -1017,55 +1017,57 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 visibility: visible !important;
             }
 
-            /* Stack Startup Command and Docker Image cards vertically full-width */
+            /* FORCE STARTUP COMMAND & DOCKER IMAGE TO STACK VERTICALLY FULL WIDTH (100%) AT ALL SCREEN SIZES */
+            div[class*="StartupContainer"] > div > div:first-child,
+            div[class*="StartupContainer"] div[class*="grid"]:first-of-type,
             div[class*="StartupContainer"] div[class*="grid-cols-4"],
-            div[class*="StartupContainer"] div[class*="grid"][class*="gap-4"]:first-of-type,
-            div[class*="StartupContainer"] > div > div[class*="grid"]:first-child,
-            div.grid.grid-cols-1.md\:grid-cols-4,
-            div:has(> div > div[class*="TitledGreyBox"] > div > p[class*="font-mono"]) {
+            div.grid.grid-cols-1.md\:grid-cols-4 {
                 display: flex !important;
                 flex-direction: column !important;
-                gap: 1.5rem !important;
+                grid-template-columns: 1fr !important;
                 width: 100% !important;
+                gap: 1.5rem !important;
             }
 
             div[class*="StartupContainer"] div[class*="md:col-span-1"],
             div[class*="StartupContainer"] div[class*="md:col-span-3"],
             div[class*="StartupContainer"] div[class*="col-span-1"],
             div[class*="StartupContainer"] div[class*="col-span-3"],
-            div.grid.grid-cols-1.md\:grid-cols-4 > div,
-            div:has(> div[class*="TitledGreyBox"] > div > p[class*="font-mono"]) {
+            .md\:col-span-1,
+            .md\:col-span-3,
+            div[class*="StartupContainer"] div:has(> p[class*="font-mono"]),
+            div[class*="StartupContainer"] div:has(> div > p[class*="font-mono"]) {
+                grid-column: 1 / -1 !important;
                 width: 100% !important;
+                min-width: 100% !important;
                 max-width: 100% !important;
                 flex: 1 1 100% !important;
-                display: block !important;
-                min-width: 100% !important;
                 box-sizing: border-box !important;
             }
 
-            /* Make Startup Command a wide, legible, syntax-highlighted bash terminal box */
-            p[class*="StartupContainer___StyledP"],
+            /* Startup Command Box: 100% Full Width Legible Terminal */
             div[class*="StartupContainer"] p[class*="font-mono"],
             div[class*="StartupContainer"] p.font-mono,
             div[class*="StartupContainer"] code,
-            p[class*="font-mono"] {
-                background-color: #0b0717 !important;
-                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
-                color: #38ef7d !important;
-                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
-                padding: 1.1rem 1.4rem !important;
-                border-radius: 10px !important;
+            p[class*="StartupContainer___StyledP"] {
+                width: 100% !important;
+                min-width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
                 display: block !important;
                 white-space: pre-wrap !important;
-                word-break: break-word !important;
+                word-break: normal !important;
                 overflow-wrap: break-word !important;
-                line-height: 1.65 !important;
+                word-wrap: break-word !important;
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
                 font-size: 0.95rem !important;
-                letter-spacing: 0.015em !important;
-                overflow-x: auto !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-                box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6) !important;
+                line-height: 1.6 !important;
+                color: #38ef7d !important;
+                background-color: #0b0717 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.4) !important;
+                border-radius: 10px !important;
+                padding: 1.25rem 1.5rem !important;
+                box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7) !important;
             }
 
             /* Startup settings select input (Docker Image selector) */
@@ -1150,6 +1152,120 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[class*="sc-wrdnyp-3"] {
                 color: #a394bf !important;
                 font-size: 0.85rem !important;
+            }
+
+            /* ========================================================= */
+            /* 2b. CONTEXT MENUS & ACTION DROPDOWNS (READABLE WHITE TEXT)*/
+            /* ========================================================= */
+            div[role="menu"],
+            div[role="menu"] *,
+            ul[role="menu"],
+            ul[role="menu"] *,
+            div[class*="ContextMenu"],
+            div[class*="ContextMenu"] *,
+            div[class*="DropdownMenu"],
+            div[class*="DropdownMenu"] *,
+            div[class*="ActionMenu"],
+            div[class*="ActionMenu"] *,
+            div[class*="dropdown-menu"],
+            div[class*="dropdown-menu"] *,
+            div[class*="Popover"],
+            div[class*="Popover"] *,
+            div[class*="Menu___Styled"],
+            div[class*="Menu___Styled"] *,
+            button[class*="ContextMenu__Item"],
+            button[class*="ContextMenu__Item"] *,
+            div[class*="FileDropdownMenu"],
+            div[class*="FileDropdownMenu"] *,
+            div[class*="FileObjectRow"] + div,
+            div[class*="FileObjectRow"] + div * {
+                color: #ffffff !important;
+            }
+
+            div[role="menu"],
+            ul[role="menu"],
+            div[class*="ContextMenu"],
+            div[class*="DropdownMenu"],
+            div[class*="ActionMenu"],
+            div[class*="dropdown-menu"],
+            div[class*="Popover"],
+            div[class*="Menu___Styled"] {
+                background-color: #120e24 !important;
+                background: #120e24 !important;
+                border: 1.5px solid #C268F2 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35) !important;
+                padding: 6px !important;
+                z-index: 999999 !important;
+            }
+
+            div[role="menu"] button,
+            div[role="menu"] a,
+            div[role="menu"] div[role="menuitem"],
+            ul[role="menu"] li,
+            div[class*="ContextMenu"] button,
+            div[class*="ContextMenu"] a,
+            div[class*="DropdownMenu"] button,
+            div[class*="DropdownMenu"] a,
+            div[class*="Menu___Styled"] button,
+            button[class*="ContextMenu__Item"] {
+                display: flex !important;
+                align-items: center !important;
+                color: #ffffff !important;
+                padding: 8px 14px !important;
+                margin: 2px 0 !important;
+                font-size: 0.9rem !important;
+                font-weight: 500 !important;
+                border-radius: 6px !important;
+                background: transparent !important;
+                border: none !important;
+                cursor: pointer !important;
+                transition: all 0.15s ease !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            div[role="menu"] button:hover,
+            div[role="menu"] a:hover,
+            div[role="menu"] div[role="menuitem"]:hover,
+            ul[role="menu"] li:hover,
+            div[class*="ContextMenu"] button:hover,
+            div[class*="ContextMenu"] a:hover,
+            div[class*="DropdownMenu"] button:hover,
+            div[class*="DropdownMenu"] a:hover,
+            div[class*="Menu___Styled"] button:hover,
+            button[class*="ContextMenu__Item"]:hover {
+                background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
+                background-color: #C268F2 !important;
+                color: #ffffff !important;
+                box-shadow: 0 2px 10px rgba(194, 104, 242, 0.4) !important;
+            }
+
+            div[role="menu"] button:hover *,
+            div[role="menu"] a:hover *,
+            div[class*="ContextMenu"] button:hover *,
+            div[class*="DropdownMenu"] button:hover *,
+            div[class*="Menu___Styled"] button:hover * {
+                color: #ffffff !important;
+            }
+
+            div[role="menu"] svg,
+            ul[role="menu"] svg,
+            div[class*="ContextMenu"] svg,
+            div[class*="DropdownMenu"] svg,
+            div[class*="ActionMenu"] svg {
+                color: #C268F2 !important;
+                stroke: #C268F2 !important;
+                width: 16px !important;
+                height: 16px !important;
+                margin-right: 10px !important;
+                flex-shrink: 0 !important;
+            }
+
+            div[role="menu"] button:hover svg,
+            div[class*="ContextMenu"] button:hover svg {
+                color: #ffffff !important;
+                stroke: #ffffff !important;
             }
 
             /* ========================================================= */
@@ -1602,47 +1718,56 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 const match = path.match(/^\/server\/([a-zA-Z0-9]+)\/domains/);
                 const existing = document.getElementById('np-domain-manager-card');
 
-                // STRICT: Only show on /server/[id]/domains. Remove on ANY other route
                 if (!match) {
                     if (existing) existing.remove();
                     const fb = document.getElementById('np-domains-fallback-mount');
                     if (fb) fb.remove();
+                    document.querySelectorAll('[data-np-hidden-by-domains="true"]').forEach(el => {
+                        el.style.display = '';
+                        el.removeAttribute('data-np-hidden-by-domains');
+                    });
                     return;
                 }
                 
                 const serverId = match[1];
 
-                // 1. Preferred mount: dedicated mount container from React router
-                let mount = document.getElementById('np-domains-view-mount');
-
-                // 2. Fallback: If np-domains-view-mount is not in DOM, attach right under sub-navigation or in #app
-                if (!mount) {
-                    let fb = document.getElementById('np-domains-fallback-mount');
-                    if (!fb) {
-                        const subNav = document.querySelector('div[class*="SubNavigation"]') || 
-                                       document.querySelector('nav') || 
-                                       document.querySelector('a[href*="/domains"]')?.closest('div');
-                        
-                        fb = document.createElement('div');
-                        fb.id = 'np-domains-fallback-mount';
-                        fb.style.cssText = 'width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important;';
-                        
-                        if (subNav && subNav.parentElement) {
-                            subNav.parentElement.appendChild(fb);
-                        } else {
-                            const app = document.getElementById('app') || document.body;
-                            app.appendChild(fb);
-                        }
-                    }
-                    mount = fb;
-                }
-
-                if (!mount) {
-                    setTimeout(injectDomainManager, 80);
+                const domainsLink = document.querySelector('a[href*="/domains"]');
+                if (!domainsLink) {
+                    setTimeout(injectDomainManager, 60);
                     return;
                 }
 
-                // If card already exists INSIDE mount on this server's domains, keep it
+                // Locate the full sub-navigation bar container
+                let navBar = domainsLink.closest('div.flex.overflow-x-auto, div[class*="overflow-x-auto"], nav') || domainsLink.parentElement;
+                while (navBar && navBar.parentElement && navBar.parentElement.id !== 'app' && navBar.parentElement.querySelector('a[href*="/console"]')) {
+                    navBar = navBar.parentElement;
+                }
+
+                let fb = document.getElementById('np-domains-fallback-mount');
+                if (!fb) {
+                    fb = document.createElement('div');
+                    fb.id = 'np-domains-fallback-mount';
+                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; z-index: 5 !important; clear: both !important;';
+                }
+
+                // Place fb directly below the sub-navigation bar
+                if (navBar && navBar.parentElement) {
+                    if (fb.previousElementSibling !== navBar) {
+                        navBar.insertAdjacentElement('afterend', fb);
+                    }
+                    Array.from(navBar.parentElement.children).forEach(child => {
+                        if (child !== navBar && child !== fb && child.style.display !== 'none') {
+                            child.style.display = 'none';
+                            child.setAttribute('data-np-hidden-by-domains', 'true');
+                        }
+                    });
+                } else if (!fb.parentElement) {
+                    const app = document.getElementById('app') || document.body;
+                    app.appendChild(fb);
+                }
+
+                let mount = fb;
+
                 if (existing && mount.contains(existing) && existing.getAttribute('data-server-id') === serverId) {
                     return;
                 }
@@ -1654,7 +1779,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 const card = document.createElement('div');
                 card.id = 'np-domain-manager-card';
                 card.setAttribute('data-server-id', serverId);
-                card.style.cssText = 'width: 100% !important; background: #110d22 !important; border: 1px solid rgba(194, 104, 242, 0.22) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; box-sizing: border-box !important; display: block !important; margin-top: 15px !important;';
+                card.style.cssText = 'width: 100% !important; background: #110d22 !important; border: 1.5px solid rgba(194, 104, 242, 0.35) !important; border-radius: 14px !important; padding: 1.75rem !important; box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(194, 104, 242, 0.15) !important; box-sizing: border-box !important; display: block !important;';
                 
                 card.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.15); padding-bottom:0.85rem; margin-bottom:1.25rem;">
@@ -1664,7 +1789,6 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                             <span style="background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.35); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
                         </div>
                     </div>
-                    
 
                     <!-- MODE SELECTOR TABS -->
                     <div style="display:flex; gap:10px; margin-bottom:1.25rem;">
@@ -1736,7 +1860,6 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 mount.appendChild(card);
                 loadServerDomains(serverId);
                 
-                // Tab switcher logic
                 const tabNginx = document.getElementById('np-tab-nginx');
                 const tabCf = document.getElementById('np-tab-cf');
                 const formNginx = document.getElementById('np-form-nginx');
@@ -2527,8 +2650,70 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 }
             }
 
+            function fixStartupLayout() {
+                if (!window.location.pathname.includes('/startup')) return;
+
+                document.querySelectorAll('div, h2, h3, p, span').forEach(el => {
+                    const txt = (el.textContent || '').trim();
+                    if (txt === 'STARTUP COMMAND' || txt === 'Startup Command') {
+                        const card = el.closest('div[class*="TitledGreyBox"]') || el.closest('.rounded-lg') || el.parentElement;
+                        if (card) {
+                            card.style.setProperty('width', '100%', 'important');
+                            card.style.setProperty('max-width', '100%', 'important');
+                            card.style.setProperty('min-width', '100%', 'important');
+                            card.style.setProperty('flex', '1 1 100%', 'important');
+                            card.style.setProperty('grid-column', '1 / -1', 'important');
+
+                            const parent = card.parentElement;
+                            if (parent) {
+                                parent.style.setProperty('display', 'flex', 'important');
+                                parent.style.setProperty('flex-direction', 'column', 'important');
+                                parent.style.setProperty('width', '100%', 'important');
+                                parent.style.setProperty('gap', '1.5rem', 'important');
+                                Array.from(parent.children).forEach(child => {
+                                    child.style.setProperty('width', '100%', 'important');
+                                    child.style.setProperty('max-width', '100%', 'important');
+                                    child.style.setProperty('min-width', '100%', 'important');
+                                    child.style.setProperty('flex', '1 1 100%', 'important');
+                                    child.style.setProperty('grid-column', '1 / -1', 'important');
+                                });
+                            }
+
+                            const codeBox = card.querySelector('p, code');
+                            if (codeBox) {
+                                codeBox.style.setProperty('width', '100%', 'important');
+                                codeBox.style.setProperty('white-space', 'pre-wrap', 'important');
+                                codeBox.style.setProperty('word-break', 'normal', 'important');
+                                codeBox.style.setProperty('overflow-wrap', 'break-word', 'important');
+                                codeBox.style.setProperty('word-wrap', 'break-word', 'important');
+                            }
+                        }
+                    }
+                });
+            }
+
+            function fixContextMenuColors(root) {
+                const target = root || document.body;
+                target.querySelectorAll('div[role="menu"], ul[role="menu"], div[class*="ContextMenu"], div[class*="DropdownMenu"], div[class*="ActionMenu"], div[class*="dropdown-menu"]').forEach(menu => {
+                    menu.style.setProperty('background', '#120e24', 'important');
+                    menu.style.setProperty('background-color', '#120e24', 'important');
+                    menu.style.setProperty('border', '1.5px solid #C268F2', 'important');
+                    menu.style.setProperty('box-shadow', '0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35)', 'important');
+                    menu.querySelectorAll('*').forEach(child => {
+                        if (child.tagName === 'SVG' || child.tagName === 'path') {
+                            child.style.setProperty('color', '#C268F2', 'important');
+                            child.style.setProperty('stroke', '#C268F2', 'important');
+                        } else {
+                            child.style.setProperty('color', '#ffffff', 'important');
+                        }
+                    });
+                });
+            }
+
             function onNavigate() {
                 sanitizePterodactylText(document.body);
+                fixStartupLayout();
+                fixContextMenuColors(document.body);
                 injectDomainManager();
                 initCustomSelects();
                 initFileManagerImagePreview();
@@ -2540,11 +2725,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             window.addEventListener('popstate', onNavigate);
             window.addEventListener('np:locationchange', onNavigate);
 
-            // Interval safety net for fast route rendering
-            setInterval(onNavigate, 150);
+            setInterval(onNavigate, 120);
 
-            // MutationObserver on document body to catch instant tab switches without refresh
-            const bodyObserver = new MutationObserver(() => {
+            const bodyObserver = new MutationObserver((mutations) => {
+                mutations.forEach(m => {
+                    m.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) {
+                            fixContextMenuColors(node);
+                        }
+                    });
+                });
                 onNavigate();
             });
             bodyObserver.observe(document.body, { childList: true, subtree: true });
