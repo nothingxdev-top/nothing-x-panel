@@ -594,9 +594,11 @@ EOF_CF
   output "Applying Nothing Panel custom branding & theme..."
   curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash || true
 
-  # Automatically install and configure Wings daemon, Node & Allocations
-  output "Automatically installing and configuring Wings Daemon, Node & Allocations..."
-  curl -fsSL "$GITHUB_URL/scripts/setup-node.sh" | bash || true
+  # Automatically install and configure Wings daemon, Node & Allocations (unless panel only is selected)
+  if [ "${SKIP_WINGS_AUTO_SETUP:-false}" != "true" ]; then
+    output "Automatically installing and configuring Wings Daemon, Node & Allocations..."
+    curl -fsSL "$GITHUB_URL/scripts/setup-node.sh" | bash || true
+  fi
 
   if [ -n "${INSTALL_SETTINGS:-}" ]; then
     check_install_settings

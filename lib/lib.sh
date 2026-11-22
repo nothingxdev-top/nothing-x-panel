@@ -196,14 +196,15 @@ select_menu() {
 welcome() {
   get_latest_versions "$1"
 
-  clear
+  # Wipe terminal screen and scrollback buffer cleanly
+  printf "\033[2J\033[3J\033[H" 2>/dev/null || clear 2>/dev/null || true
   echo ""
-  echo -e "${COLOR_CYAN}  ███╗   ██╗ ██████╗ ████████╗██╗  ██╗██╗███╗   ██╗ ██████╗ ${COLOR_NC}"
-  echo -e "${COLOR_CYAN}  ████╗  ██║██╔═══██╗╚══██╔══╝██║  ██║██║████╗  ██║██╔════╝ ${COLOR_NC}"
-  echo -e "${COLOR_CYAN}  ██╔██╗ ██║██║   ██║   ██║   ███████║██║██╔██╗ ██║██║  ███╗${COLOR_NC}"
-  echo -e "${COLOR_CYAN}  ██║╚██╗██║██║   ██║   ██║   ██╔══██║██║██║╚██╗██║██║   ██║${COLOR_NC}"
-  echo -e "${COLOR_CYAN}  ██║ ╚████║╚██████╔╝   ██║   ██║  ██║██║██║ ╚████║╚██████╔╝${COLOR_NC}"
-  echo -e "${COLOR_CYAN}  ╚═╝  ╚═══╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ${COLOR_NC}"
+  echo -e "${COLOR_PURPLE}  ███╗   ██╗ ██████╗ ████████╗██╗  ██╗██╗███╗   ██╗ ██████╗ ${COLOR_NC}"
+  echo -e "${COLOR_PURPLE}  ████╗  ██║██╔═══██╗╚══██╔══╝██║  ██║██║████╗  ██║██╔════╝ ${COLOR_NC}"
+  echo -e "${COLOR_PURPLE}  ██╔██╗ ██║██║   ██║   ██║   ███████║██║██╔██╗ ██║██║  ███╗${COLOR_NC}"
+  echo -e "${COLOR_PURPLE}  ██║╚██╗██║██║   ██║   ██║   ██╔══██║██║██║╚██╗██║██║   ██║${COLOR_NC}"
+  echo -e "${COLOR_PURPLE}  ██║ ╚████║╚██████╔╝   ██║   ██║  ██║██║██║ ╚████║╚██████╔╝${COLOR_NC}"
+  echo -e "${COLOR_PURPLE}  ╚═╝  ╚═══╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ${COLOR_NC}"
   echo -e "${COLOR_WHITE}  ██████╗  █████╗ ███╗   ██╗███████╗██╗     ${COLOR_NC}"
   echo -e "${COLOR_WHITE}  ██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     ${COLOR_NC}"
   echo -e "${COLOR_WHITE}  ██████╔╝███████║██╔██╗ ██║█████╗  ██║     ${COLOR_NC}"

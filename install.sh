@@ -80,17 +80,23 @@ while [ "$done" == false ]; do
 
   select_menu "Nothing Panel Installer — What would you like to do?" \
     "Install Panel + Wings" \
-    "Install Wings" \
+    "Install Panel on NAT VPS / IPv6 (via Cloudflare Tunnel)" \
+    "Install the Panel only" \
+    "Install Wings only" \
     "Update Panel" \
-    "Uninstall Wings" \
-    "Uninstall Panel"
+    "Domain Manager" \
+    "──────── Maintenance ────────" \
+    "Uninstall Panel or Wings"
 
   actions=(
     "panel"
+    "panel_nat"
+    "panel_only"
     "wings"
     "update"
-    "uninstall_wings"
-    "uninstall_panel"
+    "domain_manager"
+    ""
+    "uninstall"
   )
 
   action="${actions[$MENU_RESULT]}"
@@ -104,16 +110,30 @@ while [ "$done" == false ]; do
     exit 0
   fi
 
-  if [ "$action" == "uninstall_wings" ]; then
-    export RM_PANEL=false
-    export RM_WINGS=true
-    execute "uninstall"
+  if [ "$action" == "domain_manager" ]; then
+    if command -v np-domain >/dev/null 2>&1; then
+      np-domain
+    else
+      curl -fsSL "$GITHUB_URL/scripts/np-domain.sh" -o /tmp/np-domain.sh
+      chmod +x /tmp/np-domain.sh
+      /tmp/np-domain.sh
+    fi
     exit 0
   fi
 
-  if [ "$action" == "uninstall_panel" ]; then
-    export RM_PANEL=true
-    export RM_WINGS=false
+  if [ "$action" == "panel_nat" ]; then
+    export USE_CLOUDFLARE_TUNNEL=true
+    execute "panel"
+    exit 0
+  fi
+
+  if [ "$action" == "panel_only" ]; then
+    export SKIP_WINGS_AUTO_SETUP=true
+    execute "panel"
+    exit 0
+  fi
+
+  if [ "$action" == "uninstall" ]; then
     execute "uninstall"
     exit 0
   fi

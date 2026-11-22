@@ -2443,7 +2443,6 @@ if [ -f "$ADMIN_BLADE" ]; then
   sed -i 's@Pterodactyl Software@Nothing Panel@g' "$ADMIN_BLADE"
   sed -i 's@<b>Pterodactyl</b>@<b>Nothing</b> Panel@g' "$ADMIN_BLADE"
   sed -i "s@<span>{{ config('app.name', 'Pterodactyl') }}</span>@<span>Nothing Panel</span>@g" "$ADMIN_BLADE"
-  sed -i "s@Copyright &copy; 2015 - {{ date('Y') }}@Copyright &copy; {{ date('Y') }}@g" "$ADMIN_BLADE"
 
   python3 - << 'PYEOF'
 import os, re
@@ -2454,6 +2453,13 @@ with open(admin_blade, "r", encoding="utf-8") as f:
     admin_content = f.read()
 
 admin_content = re.sub(r"<!-- Nothing Admin Theme.*?<\/style>", "", admin_content, flags=re.DOTALL)
+
+# Completely remove footer tags and eliminate any corrupted copyright text
+admin_content = re.sub(r'<footer\b[^>]*>.*?</footer>', '', admin_content, flags=re.DOTALL | re.IGNORECASE)
+admin_content = re.sub(r'Copyright\s+(?:Copyright\s+)+[^\n<]*', '', admin_content, flags=re.IGNORECASE)
+admin_content = re.sub(r'(?:&copy;|©)\s*2015\s*-\s*(?:202[0-9]copy;\s*)+[^\n<]*', '', admin_content, flags=re.IGNORECASE)
+admin_content = re.sub(r'2026\s+Nothing\s+Panel\.?', '', admin_content, flags=re.IGNORECASE)
+
 admin_css = """<!-- Nothing Admin Theme -->
         <style>
             :root {
@@ -2672,13 +2678,21 @@ admin_css = """<!-- Nothing Admin Theme -->
             ::-webkit-scrollbar-thumb:hover {
                 background: #C268F2;
             }
-            .main-footer {
-                background: #0a0715 !important;
-                border-top: 1px solid rgba(194, 104, 242, 0.2) !important;
-                color: #8c76ab !important;
+            /* ELIMINATE FOOTER COMPLETELY */
+            .main-footer, footer {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                min-height: 0 !important;
+                max-height: 0 !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                overflow: hidden !important;
             }
-            .main-footer a {
-                color: #C268F2 !important;
+            .content-wrapper {
+                margin-bottom: 0 !important;
+                padding-bottom: 25px !important;
             }
         </style>
     </head>"""
@@ -2698,7 +2712,7 @@ path = os.environ.get('PANEL_DIR', '/var/www/nothing') + '/resources/lang/en/str
 if os.path.exists(path):
     with open(path, 'r', encoding='utf-8') as f:
         content = f.read()
-    content = re.sub(r"'copyright'\s*=>\s*.*", "'copyright' => '&copy; 2015 - :year Nothing Panel',", content)
+    content = re.sub(r"'copyright'\s*=>\s*.*", "'copyright' => '',", content)
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content)
 PYEOF
