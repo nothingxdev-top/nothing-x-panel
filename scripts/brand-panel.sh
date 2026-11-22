@@ -722,6 +722,13 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             /* 3-DOTS ACTION BUTTON & ALL ICON-ONLY BUTTONS: STRICT ZERO OUTLINE & ZERO BORDER */
+            div[class*="FileObjectRow"] button,
+            div[class*="file_row"] button,
+            div[class*="FileObjectRow"] div[class*="DropdownMenu"],
+            div[class*="FileObjectRow"] div[class*="FileDropdownMenu"],
+            div[class*="file_row"] div[class*="DropdownMenu"],
+            div[class*="style-module_HHpjDvv7"] button,
+            div[class*="style-module_HHpjDvv7"] div[class*="DropdownMenu"],
             button:has(svg[data-icon="ellipsis-h"]),
             button:has(svg.fa-ellipsis-h),
             button:has(svg[class*="ellipsis"]),
@@ -729,8 +736,6 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             button[class*="p-1"],
             button.p-2,
             button.p-1,
-            div[class*="file_row"] button,
-            div[class*="FileObjectRow"] button,
             div[class*="FileManager"] button:not([class*="bg-"]):not([type="submit"]):not([class*="btn"]):not([class*="primary"]):not([class*="Primary"]):not([class*="purple"]),
             div[class*="flex items-center"] > button:has(svg:only-child),
             button:has(svg:only-child):not([class*="bg-"]):not([type="submit"]):not([class*="primary"]) {
@@ -741,8 +746,12 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 border-color: transparent !important;
                 outline: none !important;
                 box-shadow: none !important;
-                border-radius: 6px !important;
-                padding: 6px 8px !important;
+                border-radius: 4px !important;
+                padding: 4px 6px !important;
+                min-width: 0 !important;
+                max-width: none !important;
+                width: auto !important;
+                height: auto !important;
                 color: #a394bf !important;
                 margin: 0 !important;
                 cursor: pointer !important;
@@ -756,6 +765,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             button[aria-label]:hover,
             div[class*="file_row"] button:hover,
             div[class*="FileObjectRow"] button:hover,
+            div[class*="style-module_HHpjDvv7"] button:hover,
             button.p-2:hover,
             button.p-1:hover {
                 background: rgba(194, 104, 242, 0.12) !important;
@@ -770,14 +780,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             button[class*="p-2"] svg,
             button[class*="p-1"] svg,
             div[class*="file_row"] button svg,
-            div[class*="FileObjectRow"] button svg {
+            div[class*="FileObjectRow"] button svg,
+            div[class*="style-module_HHpjDvv7"] button svg {
                 color: #a394bf !important;
                 fill: currentColor !important;
             }
             button[class*="p-2"]:hover svg,
             button[class*="p-1"]:hover svg,
             div[class*="file_row"] button:hover svg,
-            div[class*="FileObjectRow"] button:hover svg {
+            div[class*="FileObjectRow"] button:hover svg,
+            div[class*="style-module_HHpjDvv7"] button:hover svg {
                 color: #C268F2 !important;
                 fill: currentColor !important;
             }
@@ -1302,48 +1314,15 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             /* ========================================================= */
             /* 2b. CONTEXT MENUS & ACTION DROPDOWNS (READABLE WHITE TEXT)*/
             /* ========================================================= */
-            div[role="menu"],
-            div[role="menu"] *,
-            ul[role="menu"],
-            ul[role="menu"] *,
-            div[class*="ContextMenu"],
-            div[class*="ContextMenu"] *,
-            div[class*="DropdownMenu"],
-            div[class*="DropdownMenu"] *,
-            div[class*="ActionMenu"],
-            div[class*="ActionMenu"] *,
-            div[class*="dropdown-menu"],
-            div[class*="dropdown-menu"] *,
-            div[class*="Popover"],
-            div[class*="Popover"] *,
-            div[class*="Menu___Styled"],
-            div[class*="Menu___Styled"] *,
-            button[class*="ContextMenu__Item"],
-            button[class*="ContextMenu__Item"] *,
-            div[class*="FileDropdownMenu"],
-            div[class*="FileDropdownMenu"] *,
-            .react-contextmenu,
-            .react-contextmenu *,
-            .react-contextmenu-item,
-            .react-contextmenu-item *,
-            div.react-contextmenu,
-            div.react-contextmenu *,
-            div[class*="FileObjectRow"] + div,
-            div[class*="FileObjectRow"] + div * {
-                color: #ffffff !important;
-            }
-
             nav.react-contextmenu,
             .react-contextmenu,
             div.react-contextmenu,
             div[role="menu"],
             ul[role="menu"],
-            div[class*="ContextMenu"],
-            div[class*="DropdownMenu"],
-            div[class*="ActionMenu"],
-            div[class*="dropdown-menu"],
-            div[class*="Popover"],
-            div[class*="Menu___Styled"] {
+            div[class*="ContextMenu"]:not([class*="Row"]):not([class*="Container"]),
+            div[class*="Menu___Styled"],
+            div[class*="DropdownMenu__Menu"],
+            div[class*="dropdown-menu"]:not([class*="btn"]):not([class*="toggle"]) {
                 background-color: #120e24 !important;
                 background: #120e24 !important;
                 border: 1.5px solid #C268F2 !important;
@@ -1364,9 +1343,9 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             ul[role="menu"] li,
             div[class*="ContextMenu"] button,
             div[class*="ContextMenu"] a,
-            div[class*="DropdownMenu"] button,
-            div[class*="DropdownMenu"] a,
             div[class*="Menu___Styled"] button,
+            div[class*="DropdownMenu__Menu"] button,
+            div[class*="DropdownMenu__Menu"] a,
             button[class*="ContextMenu__Item"] {
                 display: flex !important;
                 align-items: center !important;
@@ -1387,8 +1366,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             .react-contextmenu-item *,
             nav.react-contextmenu *,
-            div.react-contextmenu * {
+            div.react-contextmenu *,
+            div[role="menu"] *,
+            ul[role="menu"] *,
+            div[class*="ContextMenu"]:not([class*="Row"]) *,
+            div[class*="Menu___Styled"] *,
+            div[class*="DropdownMenu__Menu"] *,
+            button[class*="ContextMenu__Item"] * {
                 color: #ffffff !important;
+                opacity: 1 !important;
+                visibility: visible !important;
             }
 
             .react-contextmenu-item:hover,
@@ -1401,9 +1388,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             ul[role="menu"] li:hover,
             div[class*="ContextMenu"] button:hover,
             div[class*="ContextMenu"] a:hover,
-            div[class*="DropdownMenu"] button:hover,
-            div[class*="DropdownMenu"] a:hover,
             div[class*="Menu___Styled"] button:hover,
+            div[class*="DropdownMenu__Menu"] button:hover,
             button[class*="ContextMenu__Item"]:hover {
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 background-color: #C268F2 !important;
@@ -1414,18 +1400,20 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             div[role="menu"] button:hover *,
             div[role="menu"] a:hover *,
             div[class*="ContextMenu"] button:hover *,
-            div[class*="DropdownMenu"] button:hover *,
-            div[class*="Menu___Styled"] button:hover * {
+            div[class*="Menu___Styled"] button:hover *,
+            div[class*="DropdownMenu__Menu"] button:hover * {
                 color: #ffffff !important;
             }
 
             div[role="menu"] svg,
             ul[role="menu"] svg,
             div[class*="ContextMenu"] svg,
-            div[class*="DropdownMenu"] svg,
-            div[class*="ActionMenu"] svg {
+            div[class*="ActionMenu"] svg,
+            div[class*="Menu___Styled"] svg,
+            div[class*="DropdownMenu__Menu"] svg {
                 color: #C268F2 !important;
                 stroke: #C268F2 !important;
+                fill: currentColor !important;
                 width: 16px !important;
                 height: 16px !important;
                 margin-right: 10px !important;
@@ -1433,11 +1421,13 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             div[role="menu"] button:hover svg,
-            div[class*="ContextMenu"] button:hover svg {
+            div[class*="ContextMenu"] button:hover svg,
+            div[class*="Menu___Styled"] button:hover svg,
+            div[class*="DropdownMenu__Menu"] button:hover svg {
                 color: #ffffff !important;
                 stroke: #ffffff !important;
+                fill: #ffffff !important;
             }
-
             /* ========================================================= */
             /* 3. DASHBOARD SERVER ROWS (CLEAN SINGLE CARDS, NO INNER BOXES) */
             /* ========================================================= */
@@ -1957,39 +1947,36 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
                 const domainsLink = document.querySelector('a[href*="/domains"]');
                 if (!domainsLink) {
-                    setTimeout(injectDomainManager, 60);
                     return;
                 }
 
-                // Clean up any stray hidden-by-domains tags
-                document.querySelectorAll('[data-np-hidden-by-domains="true"]').forEach(el => {
-                    el.style.display = '';
-                    el.removeAttribute('data-np-hidden-by-domains');
+                // Locate SubNavigation bar container
+                const subNav = domainsLink.closest('div.bg-neutral-900, div[class*="SubNavigation"], div.flex.overflow-x-auto, nav') || domainsLink.parentElement.parentElement;
+                if (!subNav || !subNav.parentElement) {
+                    return;
+                }
+
+                // Dedicated mount target directly following SubNavigation
+                let fb = document.getElementById('np-domains-fallback-mount');
+                if (!fb) {
+                    fb = document.createElement('div');
+                    fb.id = 'np-domains-fallback-mount';
+                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                }
+                
+                if (fb.parentElement !== subNav.parentElement) {
+                    subNav.insertAdjacentElement('afterend', fb);
+                }
+
+                // Hide sibling content below subnav when on /domains route
+                Array.from(subNav.parentElement.children).forEach(child => {
+                    if (child !== subNav && child !== fb && child.style.display !== 'none' && !child.contains(fb)) {
+                        child.style.display = 'none';
+                        child.setAttribute('data-np-hidden-by-domains', 'true');
+                    }
                 });
 
-                // 1. Primary mount target: React Router's mounted container
-                let mount = document.getElementById('np-domains-view-mount');
-
-                // 2. Fallback: Mount inside server view container or right below subnavigation
-                if (!mount) {
-                    let contentArea = document.querySelector('div[class*="ServerViewContainer"] > div, div.my-4, div.sm\\:my-10') || document.querySelector('main') || document.getElementById('app');
-                    if (contentArea) {
-                        let fb = document.getElementById('np-domains-fallback-mount');
-                        if (!fb) {
-                            fb = document.createElement('div');
-                            fb.id = 'np-domains-fallback-mount';
-                            fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 10 !important;';
-                            contentArea.prepend(fb);
-                        }
-                        mount = fb;
-                    }
-                }
-
-                if (!mount) {
-                    setTimeout(injectDomainManager, 60);
-                    return;
-                }
-
+                let mount = document.getElementById('np-domains-view-mount') || fb;
                 mount.style.display = 'block';
 
                 if (existing && mount.contains(existing) && existing.getAttribute('data-server-id') === serverId) {
@@ -2701,6 +2688,15 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     if (el.children.length === 0 && (el.textContent || '').trim() === 'Address') {
                         const card = el.closest('div[class*="style-module_V4CSEpa4"]') || el.closest('div[class*="StatBlock"]') || el.parentElement?.parentElement || el.parentElement;
                         if (card) {
+                            if (!card.hasAttribute('data-np-vps-copy')) {
+                                card.setAttribute('data-np-vps-copy', 'true');
+                                card.addEventListener('click', () => {
+                                    const portM = card.textContent.match(/:(\d+)/);
+                                    if (portM) {
+                                        navigator.clipboard.writeText(vpsIp + ':' + portM[1]);
+                                    }
+                                }, true);
+                            }
                             card.querySelectorAll('p, div, span').forEach(valEl => {
                                 if (valEl !== el && valEl.children.length === 0) {
                                     const txt = (valEl.textContent || '').trim();
@@ -2940,29 +2936,39 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
 
             function fixContextMenuColors(root) {
                 const target = root || document.body;
-                target.querySelectorAll('nav.react-contextmenu, .react-contextmenu, div.react-contextmenu, div[role="menu"], ul[role="menu"], div[class*="ContextMenu"], div[class*="DropdownMenu"], div[class*="ActionMenu"], div[class*="dropdown-menu"]').forEach(menu => {
+                target.querySelectorAll('nav.react-contextmenu, .react-contextmenu, div.react-contextmenu, div[role="menu"], ul[role="menu"], div[class*="ContextMenu"]:not([class*="Row"]):not([class*="Container"]), div[class*="Menu___Styled"], div[class*="DropdownMenu__Menu"], div[class*="dropdown-menu"]:not([class*="btn"]):not([class*="toggle"])').forEach(menu => {
                     menu.style.setProperty('background', '#120e24', 'important');
                     menu.style.setProperty('background-color', '#120e24', 'important');
                     menu.style.setProperty('border', '1.5px solid #C268F2', 'important');
                     menu.style.setProperty('box-shadow', '0 16px 45px rgba(0, 0, 0, 0.95), 0 0 25px rgba(194, 104, 242, 0.35)', 'important');
                     menu.style.setProperty('min-width', '190px', 'important');
-                    menu.querySelectorAll('.react-contextmenu-item, [role="menuitem"], button, a, li, span, div').forEach(child => {
+                    menu.style.setProperty('border-radius', '10px', 'important');
+                    menu.querySelectorAll('.react-contextmenu-item, [role="menuitem"], button, a, li, span, p, div').forEach(child => {
                         if (child.tagName === 'SVG' || child.tagName === 'path') {
                             child.style.setProperty('color', '#C268F2', 'important');
                             child.style.setProperty('stroke', '#C268F2', 'important');
                             child.style.setProperty('fill', 'currentColor', 'important');
-                        } else {
+                        } else if (child.children.length === 0 || child.textContent.trim().length > 0) {
                             child.style.setProperty('color', '#ffffff', 'important');
+                            child.style.setProperty('opacity', '1', 'important');
+                            child.style.setProperty('visibility', 'visible', 'important');
                         }
                     });
                 });
 
-                // Also ensure 3-dots action buttons in table rows never have borders
-                target.querySelectorAll('button:has(svg[data-icon="ellipsis-h"]), button:has(svg.fa-ellipsis-h), div[class*="FileObjectRow"] button').forEach(btn => {
-                    btn.style.setProperty('border', 'none', 'important');
-                    btn.style.setProperty('outline', 'none', 'important');
-                    btn.style.setProperty('box-shadow', 'none', 'important');
-                    btn.style.setProperty('background', 'transparent', 'important');
+                // Strictly ensure 3-dots action buttons and their wrappers in table rows are plain and borderless
+                target.querySelectorAll('div[class*="FileObjectRow"] button, div[class*="file_row"] button, div[class*="FileObjectRow"] div[class*="DropdownMenu"], div[class*="FileObjectRow"] div[class*="FileDropdownMenu"], div[class*="file_row"] div[class*="DropdownMenu"], div[class*="style-module_HHpjDvv7"] button, button:has(svg[data-icon="ellipsis-h"]), button:has(svg.fa-ellipsis-h), button:has(svg[class*="ellipsis"])').forEach(btn => {
+                    if (!btn.getAttribute('role') || btn.getAttribute('role') !== 'menu') {
+                        btn.style.setProperty('border', 'none', 'important');
+                        btn.style.setProperty('border-width', '0', 'important');
+                        btn.style.setProperty('outline', 'none', 'important');
+                        btn.style.setProperty('box-shadow', 'none', 'important');
+                        btn.style.setProperty('background', 'transparent', 'important');
+                        btn.style.setProperty('background-color', 'transparent', 'important');
+                        btn.style.setProperty('min-width', '0', 'important');
+                        btn.style.setProperty('width', 'auto', 'important');
+                        btn.style.setProperty('padding', '4px 6px', 'important');
+                    }
                 });
             }
 

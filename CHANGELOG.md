@@ -2,6 +2,15 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## v2.0.1 (released on 2026-11-22)
+
+### Fixed
+- **File Manager 3-Dots Action Buttons**: Completely eliminated pill-shaped outline borders around `...` buttons in table rows; reset to clean, flat, borderless icons.
+- **Domains Tab Guaranteed Mounting**: Re-engineered DOM injection to anchor directly beneath the server SubNavigation bar, ensuring `/server/{id}/domains` displays reliably 100% of the time.
+- **Context Menu Readability**: Guaranteed high-contrast `#ffffff` text across all right-click and action dropdown menu items with neon `#C268F2` icons.
+- **Console Address Card Real VPS IP**: Integrated automatic real VPS IP display and 1-click clipboard copying.
+- **Minimal UI Cleanliness**: Removed redundant nested borders and excess boxes across Startup, File Manager, and Settings for a refined, modern aesthetic.
+
 ## v2.0.0 (released on 2026-11-22)
 
 ### Added
