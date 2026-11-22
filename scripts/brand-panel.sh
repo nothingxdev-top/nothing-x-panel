@@ -1724,6 +1724,55 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
         <!-- Custom Domains & Cloudflare Tunnel Router Script -->
         <script>
         window.NP_VPS_IP = '" + server_ip + "';
+        // Intercept API responses to replace domain alias with VPS IP in React internal store
+        (function() {
+            const origFetch = window.fetch;
+            if (!origFetch) return;
+            window.fetch = async function(...args) {
+                const response = await origFetch.apply(this, args);
+                try {
+                    const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
+                    if (url.includes('/api/client') || url.includes('/api/server')) {
+                        const clone = response.clone();
+                        const data = await clone.json();
+                        const vpsIp = window.NP_VPS_IP || '213.136.89.90';
+                        let modified = false;
+
+                        function fixAlloc(obj) {
+                            if (!obj || typeof obj !== 'object') return;
+                            if (Array.isArray(obj)) {
+                                obj.forEach(fixAlloc);
+                                return;
+                            }
+                            if (typeof obj.alias === 'string' && (obj.alias.includes('panel.') || obj.alias.includes('.nx.kg') || obj.alias.includes('.top') || obj.alias.includes('.com') || obj.alias.includes('.net') || obj.alias === '0.0.0.0')) {
+                                obj.alias = vpsIp;
+                                modified = true;
+                            }
+                            if (typeof obj.ip_alias === 'string' && (obj.ip_alias.includes('panel.') || obj.ip_alias.includes('.nx.kg') || obj.ip_alias.includes('.top') || obj.ip_alias.includes('.com') || obj.ip_alias.includes('.net') || obj.ip_alias === '0.0.0.0')) {
+                                obj.ip_alias = vpsIp;
+                                modified = true;
+                            }
+                            for (const k in obj) {
+                                if (obj[k] && typeof obj[k] === 'object') {
+                                    fixAlloc(obj[k]);
+                                }
+                            }
+                        }
+
+                        fixAlloc(data);
+
+                        if (modified) {
+                            return new Response(JSON.stringify(data), {
+                                status: response.status,
+                                statusText: response.statusText,
+                                headers: response.headers
+                            });
+                        }
+                    }
+                } catch(e) {}
+                return response;
+            };
+        })();
         // Clean daemon console output in real-time over WebSocket
         (function() {
             const OrigWebSocket = window.WebSocket;
@@ -2557,8 +2606,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             function enforceVpsIpDisplay() {
                 const vpsIp = window.NP_VPS_IP || '213.136.89.90';
 
-                // 1. Dashboard server rows (Replace domain or 0.0.0.0 with real VPS IP)
-                document.querySelectorAll('a[href*="/server/"] div[class*="lg:col-span-2"] p, a[href*="/server/"] p').forEach(el => {
+                // 1. Dashboard server rows & cards (Replace domain or 0.0.0.0 with real VPS IP)
+                document.querySelectorAll('a[href*="/server/"] div[class*="lg:col-span-2"] p, a[href*="/server/"] p, div[class*="ServerRow"] p').forEach(el => {
                     const txt = (el.textContent || '').trim();
                     if (txt.includes(':') && (txt.includes('panel.') || txt.includes('.nx.kg') || txt.includes('.top') || txt.includes('.com') || txt.includes('.net') || txt.includes('0.0.0.0') || txt.includes('localhost') || txt.includes('127.0.0.1'))) {
                         const portM = txt.match(/:(\d+)$/);
@@ -2568,37 +2617,51 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     }
                 });
 
-                // 2. Console Address card
-                enforceVpsIpDisplay();
+                // 2. Console Address Stat Card (Real-time DOM replacement)
+                updateAddressStatCard();
             }
 
             function updateAddressStatCard() {
-                const path = window.location.pathname;
-                const match = path.match(/^\/server\/([a-zA-Z0-9]+)(\/|$)/);
-                if (!match) return;
-                const serverId = match[1];
-
-                const allDivs = Array.from(document.querySelectorAll('div, p, span'));
-                const addrLabel = allDivs.find(el => el.children.length === 0 && el.innerText.trim() === 'Address');
-                if (!addrLabel) return;
-                const card = addrLabel.closest('div[class*="style-module_V4CSEpa4"]') || addrLabel.closest('div[class*="StatBlock"]') || addrLabel.parentElement.parentElement;
-                if (!card) return;
-                const valEl = card.querySelector('.truncate, div[class*="text-gray-50"]');
-                if (!valEl) return;
-
                 const vpsIp = window.NP_VPS_IP || '213.136.89.90';
 
-                let cur = valEl.textContent.trim();
-                let port = '25565';
-                const portM = cur.match(/:(\d+)$/);
-                if (portM) {
-                    port = portM[1];
-                }
+                // Scan all elements labeled "Address"
+                document.querySelectorAll('p, span, div').forEach(el => {
+                    if (el.children.length === 0 && (el.textContent || '').trim() === 'Address') {
+                        const card = el.closest('div[class*="style-module_V4CSEpa4"]') || el.closest('div[class*="StatBlock"]') || el.parentElement?.parentElement || el.parentElement;
+                        if (card) {
+                            card.querySelectorAll('p, div, span').forEach(valEl => {
+                                if (valEl !== el && valEl.children.length === 0) {
+                                    const txt = (valEl.textContent || '').trim();
+                                    if (txt.includes(':') && (txt.includes('panel') || txt.includes('.kg') || txt.includes('.com') || txt.includes('.net') || txt.includes('.top') || txt.includes('0.0.0.0') || txt.includes('localhost') || txt.includes('127.0.0.1'))) {
+                                        const portM = txt.match(/:(\d+)$/);
+                                        if (portM) {
+                                            const target = vpsIp + ':' + portM[1];
+                                            if (valEl.textContent !== target) {
+                                                valEl.textContent = target;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
 
-                const target = vpsIp + ':' + port;
-                if (valEl.textContent !== target) {
-                    valEl.textContent = target;
-                }
+                // Universal fallback: Any standalone element showing domain:port
+                document.querySelectorAll('p, span, div, code').forEach(el => {
+                    if (el.children.length === 0) {
+                        const txt = (el.textContent || '').trim();
+                        if (txt.includes(':') && (txt.includes('panel.') || txt.includes('.nx.kg') || txt.includes('.top') || txt.includes('0.0.0.0') || txt.includes('localhost') || txt.includes('127.0.0.1'))) {
+                            const portM = txt.match(/^(?:https?:\/\/)?(?:[a-zA-Z0-9_.-]+):(\d+)$/);
+                            if (portM) {
+                                const target = vpsIp + ':' + portM[1];
+                                if (el.textContent !== target) {
+                                    el.textContent = target;
+                                }
+                            }
+                        }
+                    }
+                });
             }
 
             // ============================================================
@@ -3580,15 +3643,7 @@ if [ -n "$SERVER_IP" ]; then
             php artisan tinker --execute="
             \$ip = '$SERVER_IP';
             if (!empty(\$ip)) {
-                \Pterodactyl\Models\Allocation::where('ip_alias', 'LIKE', '%panel%')
-                    ->orWhere('ip_alias', 'LIKE', '%.kg%')
-                    ->orWhere('ip_alias', 'LIKE', '%.com%')
-                    ->orWhere('ip_alias', 'LIKE', '%.net%')
-                    ->orWhere('ip_alias', 'LIKE', '%.top%')
-                    ->orWhere('ip_alias', 'LIKE', '%.org%')
-                    ->orWhereNull('ip_alias')
-                    ->orWhere('ip_alias', '')
-                    ->update(['ip_alias' => \$ip]);
+                \Pterodactyl\Models\Allocation::query()->update(['ip_alias' => \$ip]);
             }
             " >/dev/null 2>&1 || true
         fi

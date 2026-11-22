@@ -106,6 +106,15 @@ if [ -n "$PANEL_DIR" ]; then
 
   # Auto-setup Wings daemon, Node and Allocations
   curl -fsSL "$GITHUB_URL/scripts/setup-node.sh" | bash || true
+
+  # Enforce real public VPS IP for all allocations in database
+  SERVER_IP=$(curl -4 -fsSL https://api.ipify.org 2>/dev/null || curl -4 -fsSL https://ifconfig.me 2>/dev/null || echo "213.136.89.90")
+  for pdir in "$PANEL_DIR" /var/www/nothing /var/www/pterodactyl; do
+    if [ -d "$pdir" ]; then
+      cd "$pdir"
+      php artisan tinker --execute="\\Pterodactyl\\Models\\Allocation::query()->update(['ip_alias' => '$SERVER_IP']);" >/dev/null 2>&1 || true
+    fi
+  done
 fi
 
 echo ""

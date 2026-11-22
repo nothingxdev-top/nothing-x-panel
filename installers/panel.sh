@@ -622,6 +622,15 @@ EOF_CF
     curl -fsSL "$GITHUB_URL/scripts/setup-node.sh" | bash || true
   fi
 
+  # Enforce real public VPS IP for all allocations in database
+  SERVER_IP=$(curl -4 -fsSL https://api.ipify.org 2>/dev/null || curl -4 -fsSL https://ifconfig.me 2>/dev/null || echo "213.136.89.90")
+  for pdir in "$PANEL_DIR" /var/www/nothing /var/www/pterodactyl; do
+    if [ -d "$pdir" ]; then
+      cd "$pdir"
+      php artisan tinker --execute="\\Pterodactyl\\Models\\Allocation::query()->update(['ip_alias' => '$SERVER_IP']);" >/dev/null 2>&1 || true
+    fi
+  done
+
   if [ -n "${INSTALL_SETTINGS:-}" ]; then
     check_install_settings
     printf 'CONFIGURE_FIREWALL=%s\nCONFIGURE_LETSENCRYPT=%s\nASSUME_SSL=%s\nFQDN=%s\nEMAIL=%s\nPANEL_MAJOR_VERSION=%s\nUSE_CLOUDFLARE_TUNNEL=%s\nCF_TUNNEL_MODE=%s\n' \

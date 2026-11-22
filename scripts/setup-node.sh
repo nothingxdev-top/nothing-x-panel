@@ -179,8 +179,7 @@ for ($port = 25565; $port <= 25575; $port++) {
     }
 }
 $totalAllocations = Allocation::where('node_id', $node->id)->count();
-Allocation::where('node_id', $node->id)->where('ip_alias', 'LIKE', '%panel%')->update(['ip_alias' => $alloc_ip]);
-Allocation::where('node_id', $node->id)->whereNull('ip_alias')->update(['ip_alias' => $alloc_ip]);
+Allocation::query()->update(['ip_alias' => $alloc_ip]);
 echo "✔ Allocations ready: {$totalAllocations} ports configured with VPS IP {$alloc_ip}\n";
 PHPEOF
 
