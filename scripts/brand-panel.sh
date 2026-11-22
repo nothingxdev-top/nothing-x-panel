@@ -3782,3 +3782,23 @@ fi
 systemctl restart php8.3-fpm 2>/dev/null || true
 
 echo "Nothing Panel custom branding applied successfully!"
+
+# Seamlessly launch the Nothing Panel menu if not running from inside an updater
+if [ -z "$NP_NO_MENU" ]; then
+    echo ""
+    echo "  ╔══════════════════════════════════════════════════════════════════╗"
+    echo "  ║  Opening Nothing Panel Installer & Manager...                    ║"
+    echo "  ╚══════════════════════════════════════════════════════════════════╝"
+    echo ""
+    TMP_MENU=$(mktemp /tmp/np-menu.XXXXXX.sh)
+    trap 'rm -f "$TMP_MENU"' EXIT
+    curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh" -o "$TMP_MENU" 2>/dev/null || true
+    if [ -f "$TMP_MENU" ]; then
+        chmod +x "$TMP_MENU"
+        if [ -e /dev/tty ]; then
+            NP_REEXEC=1 exec bash "$TMP_MENU" "$@" < /dev/tty
+        else
+            NP_REEXEC=1 exec bash "$TMP_MENU" "$@"
+        fi
+    fi
+fi

@@ -29,8 +29,9 @@ Features an Obsidian Electric Purple theme (`#C268F2`), complete de-branding, NA
 
 ---
 
-## ⚡ One-Line Install Command
+## ⚡ Quick Start / Install Commands
 
+### 1. Interactive Installer & Manager Menu (Recommended)
 Run this command on your **Ubuntu or Debian Linux server** as root:
 
 ```bash
@@ -41,6 +42,13 @@ Or using `wget`:
 
 ```bash
 wget -qO- https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/install.sh | sudo bash
+```
+
+### 2. Apply / Update Theme & UI Fixes Directly
+To instantly apply the Obsidian Purple theme, fix button colors, and update UI fixes:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/brand-panel.sh | sudo bash
 ```
 
 > **Requirements:** Ubuntu 22.04 / 24.04 / 26.04 or Debian 12 / 13 with root access.
@@ -69,8 +77,8 @@ When you launch the installer, you are greeted with a sleek, boxed terminal menu
 ```
 
 ### Options Breakdown:
-* **`[ 0] Install Panel + Wings`**: All-in-one setup on the same machine. Installs the Nothing Web Panel, Wings daemon, creates the default local Node, and sets up allocations automatically.
-* **`[ 1] Install Panel on NAT VPS / IPv6 (via Cloudflare Tunnel)`**: For servers behind CGNAT, carrier firewalls, or IPv6-only environments without open incoming ports. Configures a secure Cloudflare Tunnel (`cloudflared`) to expose the panel over HTTPS without port forwarding.
+* **`[ 0] Install Panel + Wings`**: All-in-one setup for dedicated VPS with public IPv4. Automatically configures MySQL, Nginx, Let's Encrypt SSL, Wings daemon, and automatically provisions a local node with 10 port allocations (`25565-25574`).
+* **`[ 1] Install Panel on NAT VPS / IPv6 (via Cloudflare Tunnel)`**: Zero-port-forward setup. Exposes your panel through a free, automated Cloudflare Tunnel. Ideal for NAT VPS, CGNAT, dynamic IP, or IPv6-only servers.
 * **`[ 2] Install the Panel only`**: Installs only the Web Panel interface (`/var/www/nothing`). Wings can be installed separately on other nodes.
 * **`[ 3] Install Wings only`**: Installs only the Wings daemon (`/usr/local/bin/wings`) and Docker runtime for node servers.
 * **`[ 4] Update Panel`**: Seamlessly updates an existing Nothing Panel installation to the latest version while preserving your databases, servers, and configuration.
@@ -84,12 +92,17 @@ When you launch the installer, you are greeted with a sleek, boxed terminal menu
 | Feature | Description |
 |---|---|
 | 🎨 **Obsidian Purple Theme** | Custom Obsidian Purple (`#C268F2`) glass UI with neon accents, custom scrollbars, and glowing action buttons |
+| 🌐 **Dedicated Domains Tab** | Built-in `/server/{id}/domains` route in server subnav: connect custom domains via Nginx + Auto-SSL or Cloudflare Tunnel |
+| 💻 **Real Public VPS IP** | Always displays actual VPS Public IP:Port (`213.136.89.90:PORT`) across Console address cards, stat blocks, and server rows |
+| 🎯 **Minimal & Clean UI** | Completely borderless 3-dots action buttons (`...`), subtle row dividers, zero unnecessary outline boxes |
+| 🎛️ **Custom Select Menus** | Styled dark-mode select dropdowns with purple active checks; no default OS blue selection highlights |
+| 📝 **Readable Context Menus** | Clean dropdown menus with crisp white text (`#ffffff`), electric purple icons (`#C268F2`), and purple gradient hover states |
+| 🖥️ **Full-Width Startup Layout** | Stacked Startup Command (100% width terminal code box with green syntax formatting) above Docker Image selector |
 | 🚫 **100% Custom Branded** | Complete custom obsidian purple branding — all system paths migrated to `/var/www/nothing` and `/etc/nothing/config.yml` |
 | ☁️ **NAT VPS & IPv6 Ready** | Built-in Cloudflare Tunnel integration for NAT VPS and IPv6-only servers |
 | 🌐 **Domain Manager (`np-domain`)** | Assign custom domains to game server ports with automatic Let's Encrypt SSL certificates |
 | 📝 **Markdown (.md) Live Editor** | Dual-pane Markdown editor with GitHub-style live preview and syntax highlighting in the file manager |
 | ⭕ **Circular Branding** | Sleek circular logo styling across login, navbar, and admin interface |
-| 🎛️ **Custom Boxed Menus** | Custom boxed ANSI/Unicode terminal menus and stylized native HTML select dropdowns |
 | 🧹 **Zero-Footer Clean Layout** | Distraction-free interface with footers and redundant copyright links cleanly removed |
 | 🔒 **Auto SSL & Firewall** | Automated Let's Encrypt SSL configuration and UFW / firewall-cmd rule setup |
 | 🔄 **One-Click Updates** | Built-in panel updater to pull the latest changes without downtime |
@@ -173,7 +186,7 @@ np-domain ssl game.yourdomain.com
    - Copy the configuration token from the node's **Configuration** tab.
    - On the Wings server, save it to `/etc/nothing/config.yml` and run `systemctl restart wings`.
    - Add port allocations under the node's **Allocation** tab.
-5. **(Optional)** Map custom domains to your allocations using `np-domain add <domain> <port> --ssl`.
+5. **(Optional)** Map custom domains to your allocations directly in the web panel under **Domains** tab or using `np-domain add <domain> <port> --ssl`.
 
 ---
 

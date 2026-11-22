@@ -54,7 +54,7 @@ php artisan migrate --seed --force
 
 # 6. Apply Nothing custom branding & theme
 echo "* Re-applying custom branding and theme..."
-curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/brand-panel.sh" | bash || true
+NP_NO_MENU=1 curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/brand-panel.sh" | NP_NO_MENU=1 bash || true
 
 # 7. Clear caches
 echo "* Clearing application cache..."

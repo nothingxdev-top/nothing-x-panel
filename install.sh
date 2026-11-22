@@ -107,7 +107,7 @@ while [ "$done" == false ]; do
 
   if [ "$action" == "update" ]; then
     echo "* Updating Nothing Panel with latest theme & fixes..."
-    curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | bash
+    NP_NO_MENU=1 curl -fsSL "$GITHUB_URL/scripts/brand-panel.sh" | NP_NO_MENU=1 bash
     exit 0
   fi
 

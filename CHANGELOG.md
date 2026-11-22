@@ -2,6 +2,22 @@
 
 This project follows the [semantic versioning](https://semver.org) convention. Changelog points should be divided into fixed, changed, or added.
 
+## v2.0.0 (released on 2026-11-22)
+
+### Added
+- **Obsidian Electric Purple Theme (#C268F2)**: Full panel redesign with glass cards, neon accents, and glowing action buttons.
+- **Dedicated Domains Tab**: Integrated /server/{id}/domains route with Nginx Reverse Proxy + Auto-SSL, plus Cloudflare Tunnel support for NAT VPS / IPv6.
+- **Real Public VPS IP Enforcement**: Always displays the server's real public VPS IP and port (e.g. 213.136.89.90:PORT) across Console address cards and allocation lists.
+- **Custom Select Menus**: System-wide dark-mode select dropdowns with purple checks, eliminating native OS blue selection highlights.
+- **Markdown Live Preview**: Dual-pane editor with live rendered Markdown preview in the file manager.
+
+### Fixed
+- **Context Menus & File Actions**: Fixed invisible/dark text by enforcing crisp white text (#ffffff), electric purple icons, and purple gradient hover states.
+- **Action Buttons Palette**: Fixed Pterodactyl blue buttons (Upload, New File) to use Obsidian Electric Purple gradient.
+- **3-Dots Action Button Outlines**: Eliminated unnecessary border boxes around ... buttons across all file rows and tables.
+- **Startup Settings Layout**: Stacked Startup Command (100% full width with readable token wrapping) vertically above Docker Image.
+- **Seamless Menu Launch**: Running rand-panel.sh directly applies all branding and immediately opens the interactive installer menu.
+
 ## v1.4.0 (released on 2026-10-10)
 
 ### Fixed
