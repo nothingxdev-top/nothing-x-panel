@@ -404,8 +404,11 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 font-size: 1.85rem !important;
                 margin-bottom: 1.5rem !important;
             }
-            /* Form Labels */
-            label {
+            /* Form Labels — Scoped to label headers only */
+            label.form-label,
+            label[class*="Label"],
+            div[class*="TitledGreyBox"] > div:first-child label,
+            div[class*="FormField"] > label {
                 color: #d1b8eb !important;
                 font-weight: 700 !important;
                 font-size: 0.75rem !important;
@@ -413,6 +416,32 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 text-transform: uppercase !important;
                 margin-bottom: 0.4rem !important;
                 display: block !important;
+            }
+            label {
+                color: #d1b8eb !important;
+                font-weight: 600 !important;
+                margin-bottom: 0.4rem !important;
+            }
+
+            /* PROTECTIVE RULE: STRICTLY PREVENT UPPERCASE ON CODE, INPUTS & HELP TEXT */
+            pre,
+            code,
+            kbd,
+            samp,
+            .font-mono,
+            p.font-mono,
+            p[class*="font-mono"],
+            textarea,
+            input,
+            select,
+            option,
+            [class*="Console"],
+            [class*="terminal"],
+            .xterm,
+            .xterm * {
+                text-transform: none !important;
+                font-variant: normal !important;
+                letter-spacing: normal !important;
             }
             /* Inputs & Textareas — Sleek Obsidian Dark Background (Excluding Checkboxes & Radios) */
             input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
@@ -1202,13 +1231,25 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 padding-bottom: 0.25rem !important;
                 margin-bottom: 0.75rem !important;
             }
-            div[class*="StartupContainer"] div[class*="TitledGreyBox"] p,
-            div[class*="StartupContainer"] p.font-header {
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] > div:first-child p,
+            div[class*="StartupContainer"] p.font-header,
+            div[class*="StartupContainer"] h3 {
                 font-size: 0.9rem !important;
                 font-weight: 800 !important;
                 color: #e2d2f7 !important;
                 letter-spacing: 0.6px !important;
                 text-transform: uppercase !important;
+            }
+
+            /* Descriptive help paragraphs: normal sentence case, UI font, no uppercase */
+            div[class*="StartupContainer"] p:not(.font-header):not([class*="title"]),
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] div:not(:first-child) p,
+            div[class*="StartupContainer"] p[class*="text-neutral"],
+            div[class*="StartupContainer"] p[class*="text-gray"] {
+                text-transform: none !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+                font-variant: normal !important;
+                letter-spacing: normal !important;
             }
 
             /* SERVER CONSOLE: STAT CARDS FIRMLY ON THE RIGHT SIDE */
