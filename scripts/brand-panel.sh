@@ -245,6 +245,11 @@ for path in glob.glob(f'{panel_dir}/public/assets/*.js'):
         content = content.replace('flex flex-col gap-6', 'grid-cols-1 md:grid-cols-4 gap-4')
         changed = True
 
+    # Verify StartupContainer grid target in bundles (layout is styled via CSS)
+    if 'StartupContainer' in content or 'Startup' in content:
+        if 'grid grid-cols-1 md:grid-cols-4 gap-4' not in content and 'grid-cols-4' not in content:
+            print(f"  ⚠ Warning: Startup grid target not found in {os.path.basename(path)}")
+
     if changed:
         with open(path, 'w', encoding='utf-8') as f:
             f.write(content)
@@ -1190,30 +1195,51 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             /* STARTUP PAGE ONLY: STACK STARTUP COMMAND & DOCKER IMAGE VERTICALLY */
-            div[class*="StartupContainer"] div.grid.grid-cols-1.md\:grid-cols-4,
-            div[class*="StartupContainer"] div[class*="grid-cols-4"] {
+            body[data-np-route="startup"] div[class*="StartupContainer"],
+            div[class*="StartupContainer"] {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                overflow-x: clip !important;
+            }
+
+            body[data-np-route="startup"] div.grid,
+            body[data-np-route="startup"] div[class*="grid"],
+            div[class*="StartupContainer"] div.grid,
+            div[class*="StartupContainer"] div[class*="grid-cols-4"],
+            div[class*="StartupContainer"] div[class*="grid"] {
                 display: flex !important;
                 flex-direction: column !important;
-                grid-template-columns: 1fr !important;
                 width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
                 gap: 1.5rem !important;
             }
 
-            div[class*="StartupContainer"] div.grid.grid-cols-1.md\:grid-cols-4 > div,
+            body[data-np-route="startup"] div.grid > div,
+            body[data-np-route="startup"] div[class*="grid"] > div,
+            div[class*="StartupContainer"] div.grid > div,
             div[class*="StartupContainer"] div[class*="grid-cols-4"] > div,
-            div[class*="StartupContainer"] div[class*="md:col-span-1"],
-            div[class*="StartupContainer"] div[class*="md:col-span-3"],
+            div[class*="StartupContainer"] div[class*="col-span"],
             div[class*="StartupContainer"] div[class*="col-span-1"],
-            div[class*="StartupContainer"] div[class*="col-span-3"] {
+            div[class*="StartupContainer"] div[class*="col-span-2"],
+            div[class*="StartupContainer"] div[class*="col-span-3"],
+            div[class*="StartupContainer"] div[class*="col-span-4"],
+            div[class*="StartupContainer"] div[class*="md:col-span-1"],
+            div[class*="StartupContainer"] div[class*="md:col-span-2"],
+            div[class*="StartupContainer"] div[class*="md:col-span-3"],
+            div[class*="StartupContainer"] div[class*="md:col-span-4"] {
                 grid-column: 1 / -1 !important;
                 width: 100% !important;
-                min-width: 100% !important;
+                min-width: 0 !important;
                 max-width: 100% !important;
                 flex: 1 1 100% !important;
                 box-sizing: border-box !important;
             }
 
             /* STARTUP PAGE: REMOVE UNNECESSARY OUTER BOXES AND BORDERS */
+            body[data-np-route="startup"] div[class*="TitledGreyBox"],
             div[class*="StartupContainer"] div[class*="TitledGreyBox"],
             div[class*="StartupContainer"] div.sc-gvsoy-0 {
                 background: transparent !important;
@@ -1222,6 +1248,16 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 box-shadow: none !important;
                 padding: 0 !important;
                 margin-bottom: 1.5rem !important;
+                overflow: visible !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            body[data-np-route="startup"] div[class*="TitledGreyBox"] > div,
+            div[class*="StartupContainer"] div[class*="TitledGreyBox"] > div {
+                overflow: visible !important;
+                box-sizing: border-box !important;
             }
             div[class*="StartupContainer"] div[class*="TitledGreyBox"] > div:first-child,
             div[class*="StartupContainer"] div.sc-gvsoy-1 {
@@ -1291,19 +1327,22 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             /* Startup Command Box: 100% Full Width Legible Terminal */
+            body[data-np-route="startup"] p[class*="font-mono"],
+            body[data-np-route="startup"] p.font-mono,
+            body[data-np-route="startup"] code,
             div[class*="StartupContainer"] p[class*="font-mono"],
             div[class*="StartupContainer"] p.font-mono,
             div[class*="StartupContainer"] code,
             p[class*="StartupContainer___StyledP"] {
                 width: 100% !important;
-                min-width: 100% !important;
+                min-width: 0 !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
                 display: block !important;
                 white-space: pre-wrap !important;
-                word-break: normal !important;
-                overflow-wrap: break-word !important;
-                word-wrap: break-word !important;
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+                overflow-x: auto !important;
                 font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
                 font-size: 0.95rem !important;
                 line-height: 1.6 !important;
@@ -1328,6 +1367,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             /* Startup settings select input (Docker Image selector) */
+            body[data-np-route="startup"] .np-custom-select-wrap,
+            div[class*="StartupContainer"] .np-custom-select-wrap,
             div[class*="StartupContainer"] select,
             div[class*="StartupContainer"] div[class*="Select"],
             div[class*="StartupContainer"] input[type="text"],
@@ -1335,6 +1376,10 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 width: 100% !important;
                 max-width: 100% !important;
                 box-sizing: border-box !important;
+                overflow: visible !important;
+                position: relative !important;
+                z-index: 50 !important;
+                margin-top: 4px !important;
             }
 
             /* Variable box description styling */
@@ -2991,56 +3036,23 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 }
             }
 
-            function fixStartupLayout() {
-                if (!window.location.pathname.includes('/startup')) return;
-
-                // 1. Locate the Startup Command card title
-                let cmdTitle = null;
-                document.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div').forEach(el => {
-                    if (el.children.length === 0 && (el.textContent || '').trim().toUpperCase() === 'STARTUP COMMAND') {
-                        cmdTitle = el;
-                    }
-                });
-
-                if (cmdTitle) {
-                    // Walk up to find the container holding both Startup Command and Docker Image
-                    let gridContainer = cmdTitle.parentElement;
-                    while (gridContainer && gridContainer !== document.body && gridContainer.id !== 'app') {
-                        const text = (gridContainer.textContent || '').toUpperCase();
-                        if (text.includes('STARTUP COMMAND') && text.includes('DOCKER IMAGE') && !text.includes('VARIABLES')) {
-                            break;
-                        }
-                        gridContainer = gridContainer.parentElement;
-                    }
-
-                    if (gridContainer && gridContainer !== document.body) {
-                        gridContainer.style.setProperty('display', 'flex', 'important');
-                        gridContainer.style.setProperty('flex-direction', 'column', 'important');
-                        gridContainer.style.setProperty('width', '100%', 'important');
-                        gridContainer.style.setProperty('gap', '1.5rem', 'important');
-
-                        Array.from(gridContainer.children).forEach(child => {
-                            child.style.setProperty('width', '100%', 'important');
-                            child.style.setProperty('max-width', '100%', 'important');
-                            child.style.setProperty('min-width', '100%', 'important');
-                            child.style.setProperty('flex', '1 1 100%', 'important');
-                            child.style.setProperty('grid-column', '1 / -1', 'important');
-                            child.style.setProperty('display', 'block', 'important');
-                        });
-                    }
+            function updateRouteAttributes() {
+                const path = window.location.pathname || '';
+                let route = 'other';
+                if (path.includes('/startup')) route = 'startup';
+                else if (path.includes('/domains')) route = 'domains';
+                else if (path.includes('/files')) route = 'files';
+                else if (path.includes('/databases')) route = 'databases';
+                else if (path.includes('/schedules')) route = 'schedules';
+                else if (path.includes('/users')) route = 'users';
+                else if (path.includes('/backups')) route = 'backups';
+                else if (path.includes('/network')) route = 'network';
+                else if (path.includes('/settings')) route = 'settings';
+                else if (path.includes('/activity')) route = 'activity';
+                else if (path.match(/\/server\/[^/]+$/) || path.includes('/console')) route = 'console';
+                if (document.body) {
+                    document.body.setAttribute('data-np-route', route);
                 }
-
-                // 2. Ensure terminal code box is full-width, clean pre-wrap
-                document.querySelectorAll('p.font-mono, p[class*="font-mono"], code').forEach(box => {
-                    box.style.setProperty('width', '100%', 'important');
-                    box.style.setProperty('min-width', '100%', 'important');
-                    box.style.setProperty('max-width', '100%', 'important');
-                    box.style.setProperty('box-sizing', 'border-box', 'important');
-                    box.style.setProperty('display', 'block', 'important');
-                    box.style.setProperty('white-space', 'pre-wrap', 'important');
-                    box.style.setProperty('word-break', 'break-all', 'important');
-                    box.style.setProperty('overflow-wrap', 'anywhere', 'important');
-                });
             }
 
             function fixContextMenuColors(root) {
@@ -3087,9 +3099,11 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 });
             }
 
+            updateRouteAttributes();
             function onNavigate() {
+                updateRouteAttributes();
                 sanitizePterodactylText(document.body);
-                fixStartupLayout();
+                updateRouteAttributes();
                 fixContextMenuColors(document.body);
                 injectDomainManager();
                 initCustomSelects();
