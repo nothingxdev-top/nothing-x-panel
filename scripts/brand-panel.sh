@@ -295,6 +295,10 @@ wrapper = re.sub(r"</head>\s*</head>", "</head>", wrapper)
 
 custom_css = """<!-- Nothing Panel Custom UI & Branding -->
         <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
             :root {
                 --np-primary: #C268F2;
                 --np-secondary: #8A2BE2;
@@ -2068,69 +2072,125 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
         (function() {
             let activeMode = 'nginx'; // 'nginx' or 'cloudflared'
 
+            let _domainMountObserver = null;
+            let _domainMountTimeout = null;
+
             function injectDomainManager() {
-                const path = window.location.pathname;
+                const path = window.location.pathname || '';
                 const match = path.match(/^\/server\/([a-zA-Z0-9]+)\/domains/);
-                const existing = document.getElementById('np-domain-manager-card');
+                const existingCard = document.getElementById('np-domain-manager-card');
 
                 if (!match) {
-                    if (existing) existing.remove();
+                    if (_domainMountObserver) {
+                        _domainMountObserver.disconnect();
+                        _domainMountObserver = null;
+                    }
+                    if (_domainMountTimeout) {
+                        clearTimeout(_domainMountTimeout);
+                        _domainMountTimeout = null;
+                    }
+                    if (existingCard) existingCard.remove();
                     const fb = document.getElementById('np-domains-fallback-mount');
                     if (fb) fb.remove();
-                    document.querySelectorAll('[data-np-hidden-by-domains="true"]').forEach(el => {
-                        el.style.display = '';
-                        el.removeAttribute('data-np-hidden-by-domains');
-                    });
                     return;
                 }
-                
+
                 const serverId = match[1];
 
-                const domainsLink = document.querySelector('a[href*="/domains"]');
-                if (!domainsLink) {
+                // If card already mounted for this server and is in the DOM, keep it
+                if (existingCard && existingCard.getAttribute('data-server-id') === serverId && document.body.contains(existingCard)) {
                     return;
                 }
 
-                // Check if React route mounted np-domains-view-mount
-                let mount = document.getElementById('np-domains-view-mount');
-                
-                if (mount) {
-                    const fb = document.getElementById('np-domains-fallback-mount');
-                    if (fb) fb.remove();
-                } else {
-                    const domainsLink = document.querySelector('a[href*="/domains"]');
-                    const subNav = domainsLink ? (domainsLink.closest('div.bg-neutral-900, div[class*="SubNavigation"], div.flex.overflow-x-auto, nav') || domainsLink.parentElement.parentElement) : null;
-                    
-                    let fb = document.getElementById('np-domains-fallback-mount');
-                    if (!fb) {
-                        fb = document.createElement('div');
-                        fb.id = 'np-domains-fallback-mount';
-                        fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                function tryMount() {
+                    let mount = document.getElementById('np-domains-view-mount');
+                    if (!mount) {
+                        const domainsLink = document.querySelector('a[href*="/domains"]');
+                        const subNav = domainsLink ? (domainsLink.closest('div.bg-neutral-900, div[class*="SubNavigation"], div.flex.overflow-x-auto, nav') || (domainsLink.parentElement ? domainsLink.parentElement.parentElement : null)) : null;
+                        if (subNav && subNav.parentElement) {
+                            let fb = document.getElementById('np-domains-fallback-mount');
+                            if (!fb) {
+                                fb = document.createElement('div');
+                                fb.id = 'np-domains-fallback-mount';
+                                fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                            }
+                            if (fb.parentElement !== subNav.parentElement) {
+                                subNav.insertAdjacentElement('afterend', fb);
+                            }
+                            mount = fb;
+                        }
                     }
-                    
-                    if (subNav && subNav.parentElement && fb.parentElement !== subNav.parentElement) {
-                        subNav.insertAdjacentElement('afterend', fb);
-                    } else if (!fb.parentElement) {
-                        const app = document.getElementById('app') || document.body;
-                        app.appendChild(fb);
+
+                    if (!mount) {
+                        return false;
                     }
-                    mount = fb;
+
+                    if (mount.id === 'np-domains-view-mount') {
+                        const fb = document.getElementById('np-domains-fallback-mount');
+                        if (fb) fb.remove();
+                    }
+
+                    mountDomainCard(mount, serverId);
+                    return true;
                 }
 
-                // Ensure mount and all parent containers up to body are fully visible
-                let curr = mount;
-                while (curr && curr !== document.body) {
-                    if (curr.style && curr.style.display === 'none') {
-                        curr.style.display = 'block';
+                if (tryMount()) {
+                    if (_domainMountObserver) {
+                        _domainMountObserver.disconnect();
+                        _domainMountObserver = null;
                     }
-                    curr = curr.parentElement;
+                    if (_domainMountTimeout) {
+                        clearTimeout(_domainMountTimeout);
+                        _domainMountTimeout = null;
+                    }
+                    return;
                 }
+
+                // If not mounted yet, observe DOM for mount point
+                if (!_domainMountObserver) {
+                    const target = document.getElementById('app') || document.body;
+                    _domainMountObserver = new MutationObserver(() => {
+                        if (tryMount()) {
+                            _domainMountObserver.disconnect();
+                            _domainMountObserver = null;
+                            if (_domainMountTimeout) {
+                                clearTimeout(_domainMountTimeout);
+                                _domainMountTimeout = null;
+                            }
+                        }
+                    });
+                    _domainMountObserver.observe(target, { childList: true, subtree: true });
+                }
+
+                // Timeout fallback after 500ms
+                if (!_domainMountTimeout) {
+                    _domainMountTimeout = setTimeout(() => {
+                        _domainMountTimeout = null;
+                        if (_domainMountObserver) {
+                            _domainMountObserver.disconnect();
+                            _domainMountObserver = null;
+                        }
+                        const app = document.getElementById('app') || document.body;
+                        let fb = document.getElementById('np-domains-fallback-mount');
+                        if (!fb) {
+                            fb = document.createElement('div');
+                            fb.id = 'np-domains-fallback-mount';
+                            fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                            app.appendChild(fb);
+                        }
+                        mountDomainCard(fb, serverId);
+                    }, 500);
+                }
+            }
+
+            function mountDomainCard(mount, serverId) {
+                // Ensure mount is visible
                 mount.style.display = 'block';
 
+                let existing = document.getElementById('np-domain-manager-card');
                 if (existing && mount.contains(existing) && existing.getAttribute('data-server-id') === serverId) {
                     return;
                 }
-
                 if (existing) {
                     existing.remove();
                 }
@@ -2139,111 +2199,136 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 card.id = 'np-domain-manager-card';
                 card.setAttribute('data-server-id', serverId);
                 card.style.cssText = 'width: 100% !important; background: #110d22 !important; border: 1.5px solid rgba(194, 104, 242, 0.35) !important; border-radius: 14px !important; padding: 1.75rem !important; box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(194, 104, 242, 0.15) !important; box-sizing: border-box !important; display: block !important;';
+
+                // Header
+                const header = document.createElement('div');
+                header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.15); padding-bottom:0.85rem; margin-bottom:1.25rem;';
                 
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.15); padding-bottom:0.85rem; margin-bottom:1.25rem;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                            <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; letter-spacing:0.5px;">CUSTOM DOMAINS &amp; PORT ROUTING</h3>
-                            <span style="background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.35); text-transform:uppercase; letter-spacing:0.5px;">INSTANT ROUTER</span>
-                        </div>
-                    </div>
+                const headerLeft = document.createElement('div');
+                headerLeft.style.cssText = 'display:flex; align-items:center; gap:10px;';
+                headerLeft.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>';
+                
+                const title = document.createElement('h3');
+                title.style.cssText = 'margin:0; font-size:1.15rem; font-weight:800; color:#ffffff; letter-spacing:0.5px;';
+                title.textContent = 'CUSTOM DOMAINS & PORT ROUTING';
+                headerLeft.appendChild(title);
 
-                    <!-- MODE SELECTOR TABS -->
-                    <div style="display:flex; gap:10px; margin-bottom:1.25rem;">
-                        <button id="np-tab-nginx" type="button" style="padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; border:none; box-shadow:0 2px 10px rgba(194,104,242,0.4); display:inline-flex; align-items:center;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                            CUSTOM DOMAIN (NGINX &amp; SSL)
-                        </button>
-                        <button id="np-tab-cf" type="button" style="padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:#1b1531; color:#c7b4e2; border:1px solid rgba(194,104,242,0.25); display:inline-flex; align-items:center;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
-                            CLOUDFLARE TUNNEL (NAT VPS / IPV6)
-                        </button>
-                    </div>
-                    
-                    <!-- NGINX REVERSE PROXY FORM -->
-                    <div id="np-form-nginx" style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;">
-                        <div style="flex:2; min-width:220px;">
-                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Custom Domain</label>
-                            <input type="text" id="np-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
-                        </div>
-                        <div style="flex:1; min-width:140px;">
-                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
-                            <select id="np-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
-                                <option value="">Loading ports...</option>
-                            </select>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px; height:42px; padding:0 4px;">
-                            <input type="checkbox" id="np-ssl-toggle" checked style="cursor:pointer; accent-color:#C268F2; width:16px; height:16px; margin:0;" />
-                            <label for="np-ssl-toggle" style="font-size:0.82rem; color:#d1b8eb; cursor:pointer; font-weight:600; margin:0; text-transform:none;">Auto-SSL</label>
-                        </div>
-                        <div>
-                            <button id="np-btn-add-domain" type="button" style="height:42px; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(194,104,242,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">+ Connect Domain</button>
-                        </div>
-                    </div>
+                const badge = document.createElement('span');
+                badge.style.cssText = 'background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.72rem; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid rgba(194,104,242,0.35); text-transform:uppercase; letter-spacing:0.5px;';
+                badge.textContent = 'INSTANT ROUTER';
+                headerLeft.appendChild(badge);
+                header.appendChild(headerLeft);
+                card.appendChild(header);
 
-                    <!-- CLOUDFLARE TUNNEL FORM -->
-                    <div id="np-form-cf" style="display:none; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;">
-                        <div style="flex:2; min-width:200px;">
-                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Domain Name</label>
-                            <input type="text" id="np-cf-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
-                        </div>
-                        <div style="flex:2; min-width:200px;">
-                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Cloudflare Tunnel Token</label>
-                            <input type="text" id="np-cf-token-input" placeholder="Tunnel token (leave empty for Quick Tunnel)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
-                        </div>
-                        <div style="flex:1; min-width:140px;">
-                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
-                            <select id="np-cf-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
-                                <option value="">Loading ports...</option>
-                            </select>
-                        </div>
-                        <div>
-                            <button id="np-btn-launch-cf" type="button" style="height:42px; background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(6,182,212,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                                Launch Cloudflare Tunnel
-                            </button>
-                        </div>
+                // Mode Tabs
+                const tabWrap = document.createElement('div');
+                tabWrap.style.cssText = 'display:flex; gap:10px; margin-bottom:1.25rem;';
+
+                const tabNginx = document.createElement('button');
+                tabNginx.id = 'np-tab-nginx';
+                tabNginx.type = 'button';
+                tabNginx.style.cssText = 'padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; border:none; box-shadow:0 2px 10px rgba(194,104,242,0.4); display:inline-flex; align-items:center; gap:7px;';
+                tabNginx.textContent = 'CUSTOM DOMAIN (NGINX & SSL)';
+
+                const tabCf = document.createElement('button');
+                tabCf.id = 'np-tab-cf';
+                tabCf.type = 'button';
+                tabCf.style.cssText = 'padding:8px 18px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; background:#1b1531; color:#c7b4e2; border:1px solid rgba(194,104,242,0.25); display:inline-flex; align-items:center; gap:7px;';
+                tabCf.textContent = 'CLOUDFLARE TUNNEL (NAT VPS / IPV6)';
+
+                tabWrap.appendChild(tabNginx);
+                tabWrap.appendChild(tabCf);
+                card.appendChild(tabWrap);
+
+                // Form Nginx
+                const formNginx = document.createElement('div');
+                formNginx.id = 'np-form-nginx';
+                formNginx.style.cssText = 'display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;';
+                formNginx.innerHTML = `
+                    <div style="flex:2; min-width:220px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Custom Domain</label>
+                        <input type="text" id="np-domain-input" placeholder="e.g. play.yourdomain.com" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
                     </div>
-
-                    <div id="np-domain-msg" style="display:none; margin-bottom:1rem; padding:10px 14px; border-radius:8px; font-size:0.85rem; font-weight:600;"></div>
-
+                    <div style="flex:1; min-width:140px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
+                        <select id="np-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                            <option value="">Loading ports...</option>
+                        </select>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px; height:42px; padding:0 4px;">
+                        <input type="checkbox" id="np-ssl-toggle" checked style="cursor:pointer; accent-color:#C268F2; width:16px; height:16px; margin:0;" />
+                        <label for="np-ssl-toggle" style="font-size:0.82rem; color:#d1b8eb; cursor:pointer; font-weight:600; margin:0; text-transform:none;">Auto-SSL</label>
+                    </div>
                     <div>
-                        <h4 style="margin:0 0 10px 0; font-size:0.8rem; font-weight:700; color:#8e79b0; text-transform:uppercase; letter-spacing:0.8px;">Active Domains &amp; Tunnels</h4>
-                        <div id="np-domains-list">
-                            <div style="color:#7c6999; font-size:0.85rem; font-style:italic; padding:8px 0;">Loading domains &amp; tunnels...</div>
-                        </div>
+                        <button id="np-btn-add-domain" type="button" style="height:42px; background:linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(194,104,242,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">+ Connect Domain</button>
                     </div>
                 `;
-                
-                mount.appendChild(card);
-                loadServerDomains(serverId);
-                
-                const tabNginx = document.getElementById('np-tab-nginx');
-                const tabCf = document.getElementById('np-tab-cf');
-                const formNginx = document.getElementById('np-form-nginx');
-                const formCf = document.getElementById('np-form-cf');
+                card.appendChild(formNginx);
 
-                if (tabNginx && tabCf) {
-                    tabNginx.onclick = function() {
-                        activeMode = 'nginx';
-                        formNginx.style.display = 'flex';
-                        formCf.style.display = 'none';
-                        tabNginx.style.background = 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)';
-                        tabNginx.style.color = '#fff';
-                        tabCf.style.background = '#1b1531';
-                        tabCf.style.color = '#c7b4e2';
-                    };
-                    tabCf.onclick = function() {
-                        activeMode = 'cloudflared';
-                        formNginx.style.display = 'none';
-                        formCf.style.display = 'flex';
-                        tabCf.style.background = 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)';
-                        tabCf.style.color = '#fff';
-                        tabNginx.style.background = '#1b1531';
-                        tabNginx.style.color = '#c7b4e2';
-                    };
-                }
+                // Form Cloudflare
+                const formCf = document.createElement('div');
+                formCf.id = 'np-form-cf';
+                formCf.style.cssText = 'display:none; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;';
+                formCf.innerHTML = `
+                    <div style="flex:2; min-width:200px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Domain Name</label>
+                        <input type="text" id="np-cf-domain-input" placeholder="e.g. play.yourdomain.com (optional)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
+                    </div>
+                    <div style="flex:2; min-width:200px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Cloudflare Tunnel Token</label>
+                        <input type="text" id="np-cf-token-input" placeholder="Tunnel token (leave empty for Quick Tunnel)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
+                    </div>
+                    <div style="flex:1; min-width:140px;">
+                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
+                        <select id="np-cf-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                            <option value="">Loading ports...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button id="np-btn-launch-cf" type="button" style="height:42px; background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(6,182,212,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">
+                            Launch Cloudflare Tunnel
+                        </button>
+                    </div>
+                `;
+                card.appendChild(formCf);
+
+                // Message box
+                const msgBox = document.createElement('div');
+                msgBox.id = 'np-domain-msg';
+                msgBox.style.cssText = 'display:none; margin-bottom:1rem; padding:10px 14px; border-radius:8px; font-size:0.85rem; font-weight:600;';
+                card.appendChild(msgBox);
+
+                // Active List Section
+                const listSection = document.createElement('div');
+                const listHeader = document.createElement('h4');
+                listHeader.style.cssText = 'margin:0 0 10px 0; font-size:0.8rem; font-weight:700; color:#8e79b0; text-transform:uppercase; letter-spacing:0.8px;';
+                listHeader.textContent = 'Active Domains & Tunnels';
+                listSection.appendChild(listHeader);
+
+                const listContainer = document.createElement('div');
+                listContainer.id = 'np-domains-list';
+                listSection.appendChild(listContainer);
+                card.appendChild(listSection);
+
+                mount.appendChild(card);
+
+                // Tab Switch Handlers
+                tabNginx.onclick = function() {
+                    formNginx.style.display = 'flex';
+                    formCf.style.display = 'none';
+                    tabNginx.style.background = 'linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%)';
+                    tabNginx.style.color = '#fff';
+                    tabCf.style.background = '#1b1531';
+                    tabCf.style.color = '#c7b4e2';
+                };
+                tabCf.onclick = function() {
+                    formNginx.style.display = 'none';
+                    formCf.style.display = 'flex';
+                    tabCf.style.background = 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)';
+                    tabCf.style.color = '#fff';
+                    tabNginx.style.background = '#1b1531';
+                    tabNginx.style.color = '#c7b4e2';
+                };
 
                 const btnAdd = document.getElementById('np-btn-add-domain');
                 if (btnAdd) {
@@ -2251,13 +2336,14 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                         addServerDomain(serverId, 'nginx');
                     });
                 }
-
                 const btnLaunchCf = document.getElementById('np-btn-launch-cf');
                 if (btnLaunchCf) {
                     btnLaunchCf.addEventListener('click', function() {
                         addServerDomain(serverId, 'cloudflared');
                     });
                 }
+
+                loadServerDomains(serverId);
             }
 
             function getCsrfToken() {
@@ -2277,24 +2363,49 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             }
 
             function loadServerDomains(serverId) {
-                fetch('/api/server/' + serverId + '/domains', {
+                const list = document.getElementById('np-domains-list');
+                if (list) {
+                    list.replaceChildren();
+                    const loadingBox = document.createElement('div');
+                    loadingBox.style.cssText = 'color:#a794c2; font-size:0.88rem; font-style:italic; padding:16px 0; display:flex; align-items:center; gap:10px;';
+                    loadingBox.innerHTML = '<span style="display:inline-block; width:16px; height:16px; border:2px solid rgba(194,104,242,0.3); border-top-color:#C268F2; border-radius:50%; animation:spin 0.8s linear infinite;"></span><span>Loading domains &amp; tunnels...</span>';
+                    list.appendChild(loadingBox);
+                }
+
+                console.log('[Nothing Panel] Fetching domains for server: ' + serverId);
+                fetch('/api/server/' + encodeURIComponent(serverId) + '/domains', {
                     headers: { 'Accept': 'application/json' }
                 })
-                .then(r => r.json())
+                .then(async response => {
+                    console.log('[Nothing Panel] Domains API response status: ' + response.status);
+                    if (!response.ok) {
+                        let errDetail = 'HTTP ' + response.status;
+                        try {
+                            const errJson = await response.json();
+                            if (errJson && errJson.error) errDetail += ' - ' + errJson.error;
+                        } catch (_) {}
+                        throw new Error(errDetail);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (!data.success) return;
-                    
+                    if (!data.success) {
+                        throw new Error(data.error || 'Request unsuccessful');
+                    }
+
                     const portSelect = document.getElementById('np-port-select');
                     const cfPortSelect = document.getElementById('np-cf-port-select');
                     if (data.allocations && data.allocations.length > 0) {
-                        const optHtml = data.allocations.map(a => 
-                            `<option value="${a.port}">Port ${a.port}${a.is_default ? ' (Primary)' : ''}</option>`
-                        ).join('');
                         [portSelect, cfPortSelect].forEach(sel => {
                             if (!sel) return;
-                            sel.innerHTML = optHtml;
+                            sel.replaceChildren();
+                            data.allocations.forEach(a => {
+                                const opt = document.createElement('option');
+                                opt.value = String(a.port);
+                                opt.textContent = 'Port ' + a.port + (a.is_default ? ' (Primary)' : '');
+                                sel.appendChild(opt);
+                            });
                             sel.selectedIndex = 0;
-                            // Reset custom select attribute & clean up wrap so it immediately re-renders with actual ports
                             sel.removeAttribute('data-np-select');
                             const prevWrap = sel.nextElementSibling;
                             if (prevWrap && prevWrap.classList.contains('np-custom-select-wrap')) {
@@ -2305,38 +2416,87 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                         });
                         initCustomSelects();
                     }
-                    
+
                     const list = document.getElementById('np-domains-list');
                     if (!list) return;
-                    
+                    list.replaceChildren();
+
                     if (!data.domains || data.domains.length === 0) {
-                        list.innerHTML = `<div style="color:#7c6999; font-size:0.85rem; font-style:italic; padding:12px 0;">No active domains or tunnels. Use the controls above to connect your server.</div>`;
+                        const emptyBox = document.createElement('div');
+                        emptyBox.style.cssText = 'color:#8e79b0; font-size:0.88rem; font-style:italic; padding:14px 0;';
+                        emptyBox.textContent = 'No active domains or tunnels. Use the controls above to connect your server.';
+                        list.appendChild(emptyBox);
                         return;
                     }
-                    
-                    list.innerHTML = data.domains.map(d => `
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.12); padding:10px 0;">
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <a href="https://${d.domain}" target="_blank" style="font-weight:700; color:#fff; text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:4px;">${d.domain} <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>
-                                <span style="color:#a895c2; font-size:0.82rem;">Port ${d.port}</span>
-                                ${d.type === 'cloudflared' ? 
-                                    `<span style="display:inline-flex; align-items:center; gap:5px; background:rgba(6,182,212,0.18); color:#06b6d4; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#06b6d4; display:inline-block;"></span>CLOUDFLARE TUNNEL</span>` : 
-                                    `<span style="display:inline-flex; align-items:center; gap:5px; background:rgba(16,185,129,0.18); color:#10b981; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>CONNECTED</span>`
-                                }
-                                ${d.ssl ? `<span style="display:inline-flex; align-items:center; gap:5px; background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>SSL SECURED</span>` : ''}
-                            </div>
-                            <button onclick="window.npRemoveDomain('${serverId}', ${d.port})" style="background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:6px; cursor:pointer; text-transform:uppercase;">Disconnect</button>
-                        </div>
-                    `).join('');
+
+                    data.domains.forEach(d => {
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.12); padding:10px 0;';
+
+                        const left = document.createElement('div');
+                        left.style.cssText = 'display:flex; align-items:center; gap:12px; flex-wrap:wrap;';
+
+                        const link = document.createElement('a');
+                        link.href = 'https://' + encodeURIComponent(d.domain);
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.style.cssText = 'font-weight:700; color:#ffffff; text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:6px;';
+                        link.textContent = String(d.domain);
+
+                        const portBadge = document.createElement('span');
+                        portBadge.style.cssText = 'color:#a895c2; font-size:0.82rem;';
+                        portBadge.textContent = 'Port ' + String(d.port);
+
+                        const typeBadge = document.createElement('span');
+                        typeBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
+                        if (d.type === 'cloudflared') {
+                            typeBadge.style.background = 'rgba(6,182,212,0.18)';
+                            typeBadge.style.color = '#06b6d4';
+                            typeBadge.textContent = 'CLOUDFLARE TUNNEL';
+                        } else {
+                            typeBadge.style.background = 'rgba(16,185,129,0.18)';
+                            typeBadge.style.color = '#10b981';
+                            typeBadge.textContent = 'CONNECTED';
+                        }
+
+                        left.appendChild(link);
+                        left.appendChild(portBadge);
+                        left.appendChild(typeBadge);
+
+                        if (d.ssl) {
+                            const sslBadge = document.createElement('span');
+                            sslBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
+                            sslBadge.textContent = 'SSL SECURED';
+                            left.appendChild(sslBadge);
+                        }
+
+                        const delBtn = document.createElement('button');
+                        delBtn.type = 'button';
+                        delBtn.style.cssText = 'background:transparent; border:1px solid #ef4444; color:#ef4444; font-size:0.75rem; font-weight:700; padding:4px 10px; border-radius:6px; cursor:pointer; text-transform:uppercase;';
+                        delBtn.textContent = 'Disconnect';
+                        delBtn.addEventListener('click', () => {
+                            window.npRemoveDomain(serverId, d.port);
+                        });
+
+                        row.appendChild(left);
+                        row.appendChild(delBtn);
+                        list.appendChild(row);
+                    });
                 })
                 .catch(e => {
-                    console.error('Error loading domains:', e);
+                    console.error('[Nothing Panel] Error loading domains:', e);
                     const list = document.getElementById('np-domains-list');
                     if (list) {
-                        list.innerHTML = `<div style="color:#a794c2; font-size:0.85rem; font-style:italic; padding:12px 0;">No active domains or tunnels. Use the controls above to connect your server.</div>`;
+                        list.replaceChildren();
+                        const errBox = document.createElement('div');
+                        errBox.style.cssText = 'background:rgba(239, 68, 68, 0.15); border:1px solid #ef4444; color:#fca5a5; padding:12px 16px; border-radius:8px; font-size:0.85rem; font-weight:600;';
+                        errBox.textContent = 'Unable to load domains (' + e.message + '). Verify backend route and permissions.';
+                        list.appendChild(errBox);
                     }
                 });
             }
+
+            const RFC1035_DOMAIN_REGEX = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
             function addServerDomain(serverId, mode) {
                 const portSelect = document.getElementById(mode === 'cloudflared' ? 'np-cf-port-select' : 'np-port-select');
@@ -2353,8 +2513,8 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     const input = document.getElementById('np-domain-input');
                     const sslToggle = document.getElementById('np-ssl-toggle');
                     const domain = input ? input.value.trim() : '';
-                    if (!domain) {
-                        showMsg('Please enter a valid domain name.', true);
+                    if (!domain || !RFC1035_DOMAIN_REGEX.test(domain)) {
+                        showMsg('Please enter a valid domain name (e.g. play.yourdomain.com).', true);
                         return;
                     }
                     payload.domain = domain;
@@ -2368,7 +2528,12 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 } else {
                     const cfDomainInput = document.getElementById('np-cf-domain-input');
                     const tokenInput = document.getElementById('np-cf-token-input');
-                    payload.domain = cfDomainInput ? cfDomainInput.value.trim() : '';
+                    const cfDomain = cfDomainInput ? cfDomainInput.value.trim() : '';
+                    if (cfDomain && !RFC1035_DOMAIN_REGEX.test(cfDomain)) {
+                        showMsg('Please enter a valid domain name (e.g. play.yourdomain.com).', true);
+                        return;
+                    }
+                    payload.domain = cfDomain;
                     payload.cf_token = tokenInput ? tokenInput.value.trim() : '';
 
                     const btn = document.getElementById('np-btn-launch-cf');
@@ -2378,7 +2543,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     }
                 }
                 
-                fetch('/api/server/' + serverId + '/domains', {
+                fetch('/api/server/' + encodeURIComponent(serverId) + '/domains', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2392,7 +2557,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     const btn1 = document.getElementById('np-btn-add-domain');
                     const btn2 = document.getElementById('np-btn-launch-cf');
                     if (btn1) { btn1.disabled = false; btn1.textContent = '+ Connect Domain'; }
-                    if (btn2) { btn2.disabled = false; btn2.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Launch Cloudflare Tunnel'; }
+                    if (btn2) { btn2.disabled = false; btn2.textContent = 'Launch Cloudflare Tunnel'; }
 
                     if (res.success) {
                         showMsg(res.message, false);
@@ -2407,7 +2572,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                     const btn1 = document.getElementById('np-btn-add-domain');
                     const btn2 = document.getElementById('np-btn-launch-cf');
                     if (btn1) { btn1.disabled = false; btn1.textContent = '+ Connect Domain'; }
-                    if (btn2) { btn2.disabled = false; btn2.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:7px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>Launch Cloudflare Tunnel'; }
+                    if (btn2) { btn2.disabled = false; btn2.textContent = 'Launch Cloudflare Tunnel'; }
                     showMsg('Error: ' + err.message, true);
                 });
             }
@@ -2415,7 +2580,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
             window.npRemoveDomain = function(serverId, port) {
                 if (!confirm('Are you sure you want to disconnect port ' + port + '?')) return;
                 
-                fetch('/api/server/' + serverId + '/domains/delete', {
+                fetch('/api/server/' + encodeURIComponent(serverId) + '/domains/delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2436,7 +2601,7 @@ custom_css = """<!-- Nothing Panel Custom UI & Branding -->
                 .catch(err => showMsg('Error: ' + err.message, true));
             };
 
-            // Real-time DOM text sanitizer (Guarantees zero Pterodactyl visibility anywhere)
+                        // Real-time DOM text sanitizer (Guarantees zero Pterodactyl visibility anywhere)
             function sanitizePterodactylText(node) {
                 if (!node) return;
                 if (node.nodeType === 3) { // TEXT_NODE
@@ -3141,8 +3306,23 @@ fi
 
 # 4b. Deploy 1-Click Domain Manager Backend Controller & Routes
 mkdir -p "$PANEL_DIR/app/Http/Controllers/Base"
-curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/DomainManagerController.php" -o "$PANEL_DIR/app/Http/Controllers/Base/DomainManagerController.php" 2>/dev/null || true
-chown www-data:www-data "$PANEL_DIR/app/Http/Controllers/Base/DomainManagerController.php" 2>/dev/null || true
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+DM_TARGET="$PANEL_DIR/app/Http/Controllers/Base/DomainManagerController.php"
+if [ -f "$SCRIPT_DIR/DomainManagerController.php" ]; then
+    cp "$SCRIPT_DIR/DomainManagerController.php" "$DM_TARGET"
+elif [ -f "/usr/local/share/nothing-panel/DomainManagerController.php" ]; then
+    cp "/usr/local/share/nothing-panel/DomainManagerController.php" "$DM_TARGET"
+else
+    curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/DomainManagerController.php" -o "$DM_TARGET"
+fi
+
+if [ -s "$DM_TARGET" ]; then
+    chmod 644 "$DM_TARGET"
+    chown www-data:www-data "$DM_TARGET"
+    echo "  ✔ DomainManagerController.php deployed successfully"
+else
+    echo "  ⚠ Warning: Failed to deploy DomainManagerController.php"
+fi
 
 # Add Sudoers rule for www-data to control Nginx & Certbot without password
 cat << 'SUDOEOF' > /etc/sudoers.d/nothing-panel

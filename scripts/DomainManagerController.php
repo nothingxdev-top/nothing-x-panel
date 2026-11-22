@@ -137,6 +137,9 @@ class DomainManagerController extends Controller
 
             $token = trim((string) $request->input('cf_token', ''));
             $customDomain = trim((string) $request->input('domain', ''));
+            if (!empty($customDomain) && !preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/', $customDomain)) {
+                return response()->json(['error' => 'Invalid domain name format.'], 422);
+            }
 
             $svcName = "np-cf-tunnel-{$port}";
             $svcFile = "/etc/systemd/system/{$svcName}.service";
@@ -229,7 +232,7 @@ UNIT;
         $domain = strtolower(trim((string) $request->input('domain', '')));
         $enableSsl = filter_var($request->input('ssl', true), FILTER_VALIDATE_BOOLEAN);
 
-        if (empty($domain) || !preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/', $domain)) {
+        if (empty($domain) || !preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/', $domain)) {
             return response()->json(['error' => 'Invalid domain name format.'], 422);
         }
 
