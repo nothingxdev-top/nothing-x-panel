@@ -143,7 +143,8 @@ window.NP_VPS_IP = '" + server_ip + "';
             let activeMode = 'nginx'; // 'nginx' or 'cloudflared'
 
             let _domainMountObserver = null;
-            let _domainMountTimeout = null;
+            let _domainRetryCount = 0;
+            const MAX_DOMAIN_RETRIES = 20;
 
             function injectDomainManager() {
                 const path = window.location.pathname || '';
@@ -155,10 +156,7 @@ window.NP_VPS_IP = '" + server_ip + "';
                         _domainMountObserver.disconnect();
                         _domainMountObserver = null;
                     }
-                    if (_domainMountTimeout) {
-                        clearTimeout(_domainMountTimeout);
-                        _domainMountTimeout = null;
-                    }
+                    _domainRetryCount = 0;
                     if (existingCard) existingCard.remove();
                     const fb = document.getElementById('np-domains-fallback-mount');
                     if (fb) fb.remove();
@@ -173,19 +171,24 @@ window.NP_VPS_IP = '" + server_ip + "';
                 }
 
                 function tryMount() {
+                    // Try React router mount first
                     let mount = document.getElementById('np-domains-view-mount');
+
+                    // If not found, find main content area or app container without requiring nav links
                     if (!mount) {
-                        const domainsLink = document.querySelector('a[href*="/domains"]');
-                        const subNav = domainsLink ? (domainsLink.closest('div.bg-neutral-900, div[class*="SubNavigation"], div.flex.overflow-x-auto, nav') || (domainsLink.parentElement ? domainsLink.parentElement.parentElement : null)) : null;
-                        if (subNav && subNav.parentElement) {
+                        const mainOutlet = document.getElementById('main-content') ||
+                            document.querySelector('div[class*="ServerContentBlock"]') ||
+                            document.querySelector('#app > div:nth-child(2)') ||
+                            document.querySelector('#app > div');
+                        if (mainOutlet) {
                             let fb = document.getElementById('np-domains-fallback-mount');
                             if (!fb) {
                                 fb = document.createElement('div');
                                 fb.id = 'np-domains-fallback-mount';
                                 fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
                             }
-                            if (fb.parentElement !== subNav.parentElement) {
-                                subNav.insertAdjacentElement('afterend', fb);
+                            if (fb.parentElement !== mainOutlet) {
+                                mainOutlet.prepend(fb);
                             }
                             mount = fb;
                         }
@@ -200,7 +203,11 @@ window.NP_VPS_IP = '" + server_ip + "';
                         if (fb) fb.remove();
                     }
 
-                    mountDomainCard(mount, serverId);
+                    try {
+                        mountDomainCard(mount, serverId);
+                    } catch (renderErr) {
+                        renderFatalDomainError(mount, 'Failed to render domain manager: ' + renderErr.message);
+                    }
                     return true;
                 }
 
@@ -209,51 +216,46 @@ window.NP_VPS_IP = '" + server_ip + "';
                         _domainMountObserver.disconnect();
                         _domainMountObserver = null;
                     }
-                    if (_domainMountTimeout) {
-                        clearTimeout(_domainMountTimeout);
-                        _domainMountTimeout = null;
-                    }
+                    _domainRetryCount = 0;
                     return;
                 }
 
-                // If not mounted yet, observe DOM for mount point
+                // If not mounted yet, observe DOM for mount point (max 20 retries)
                 if (!_domainMountObserver) {
+                    _domainRetryCount = 0;
                     const target = document.getElementById('app') || document.body;
                     _domainMountObserver = new MutationObserver(() => {
-                        if (tryMount()) {
+                        _domainRetryCount++;
+                        if (tryMount() || _domainRetryCount >= MAX_DOMAIN_RETRIES) {
                             _domainMountObserver.disconnect();
                             _domainMountObserver = null;
-                            if (_domainMountTimeout) {
-                                clearTimeout(_domainMountTimeout);
-                                _domainMountTimeout = null;
+                            if (_domainRetryCount >= MAX_DOMAIN_RETRIES && !document.getElementById('np-domain-manager-card')) {
+                                const app = document.getElementById('app') || document.body;
+                                let fb = document.getElementById('np-domains-fallback-mount');
+                                if (!fb) {
+                                    fb = document.createElement('div');
+                                    fb.id = 'np-domains-fallback-mount';
+                                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                                    app.appendChild(fb);
+                                }
+                                mountDomainCard(fb, serverId);
                             }
                         }
                     });
                     _domainMountObserver.observe(target, { childList: true, subtree: true });
                 }
-
-                // Timeout fallback after 500ms
-                if (!_domainMountTimeout) {
-                    _domainMountTimeout = setTimeout(() => {
-                        _domainMountTimeout = null;
-                        if (_domainMountObserver) {
-                            _domainMountObserver.disconnect();
-                            _domainMountObserver = null;
-                        }
-                        const app = document.getElementById('app') || document.body;
-                        let fb = document.getElementById('np-domains-fallback-mount');
-                        if (!fb) {
-                            fb = document.createElement('div');
-                            fb.id = 'np-domains-fallback-mount';
-                            fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
-                            app.appendChild(fb);
-                        }
-                        mountDomainCard(fb, serverId);
-                    }, 500);
-                }
             }
 
-            function mountDomainCard(mount, serverId) {
+            function renderFatalDomainError(container, message) {
+                if (!container) return;
+                const errCard = document.createElement('div');
+                errCard.id = 'np-domain-fatal-error';
+                errCard.style.cssText = 'width: 100% !important; background: rgba(239, 68, 68, 0.15) !important; border: 1.5px solid #ef4444 !important; border-radius: 12px !important; padding: 1.5rem !important; color: #fca5a5 !important; margin: 1.5rem 0 !important; font-size: 0.92rem !important; line-height: 1.6 !important; box-sizing: border-box !important;';
+                errCard.textContent = message;
+                container.appendChild(errCard);
+            }
+
+                        function mountDomainCard(mount, serverId) {
                 // Ensure mount is visible
                 mount.style.display = 'block';
 
@@ -448,15 +450,29 @@ window.NP_VPS_IP = '" + server_ip + "';
                 })
                 .then(async response => {
                     console.log('[Nothing Panel] Domains API response status: ' + response.status);
-                    if (!response.ok) {
-                        let errDetail = 'HTTP ' + response.status;
-                        try {
-                            const errJson = await response.json();
-                            if (errJson && errJson.error) errDetail += ' - ' + errJson.error;
-                        } catch (_) {}
-                        throw new Error(errDetail);
+                    const contentType = (response.headers && typeof response.headers.get === 'function')
+                        ? (response.headers.get('content-type') || '')
+                        : 'application/json';
+                    if (!contentType.includes('application/json')) {
+                        if (response.status === 403) {
+                            throw new Error('Permission Denied (403): You do not have permission to manage domains for this server.');
+                        } else if (response.status === 404) {
+                            throw new Error('Not Found (404): Server was not found or domain routes are not registered.');
+                        } else if (response.status === 419) {
+                            throw new Error('Session Expired (419): CSRF token mismatch. Please refresh the page and sign in again.');
+                        } else if (response.status >= 500) {
+                            throw new Error('Server Error (' + response.status + '): The backend returned an HTML error page. Check Laravel storage/logs.');
+                        } else {
+                            throw new Error('Received non-JSON response from server (HTTP ' + response.status + ').');
+                        }
                     }
-                    return response.json();
+
+                    const data = await response.json();
+                    if (!response.ok || !data.success) {
+                        const err = data.error || ('HTTP ' + response.status + ' request failed');
+                        throw new Error(err);
+                    }
+                    return data;
                 })
                 .then(data => {
                     if (!data.success) {
@@ -1351,8 +1367,6 @@ window.NP_VPS_IP = '" + server_ip + "';
             window.addEventListener('popstate', onNavigate);
             window.addEventListener('np:locationchange', onNavigate);
 
-            setInterval(onNavigate, 120);
-
             const bodyObserver = new MutationObserver((mutations) => {
                 mutations.forEach(m => {
                     m.addedNodes.forEach(node => {
@@ -1364,4 +1378,10 @@ window.NP_VPS_IP = '" + server_ip + "';
                 onNavigate();
             });
             bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', onNavigate);
+            } else {
+                onNavigate();
+            }
         })();

@@ -353,13 +353,13 @@ else
     curl -fsSL "https://raw.githubusercontent.com/nothingxdev-top/nothing-x-panel/master/scripts/DomainManagerController.php" -o "$DM_TARGET"
 fi
 
-if [ -s "$DM_TARGET" ]; then
-    chmod 644 "$DM_TARGET"
-    chown www-data:www-data "$DM_TARGET"
-    echo "  ✔ DomainManagerController.php deployed successfully"
-else
-    echo "  ⚠ Warning: Failed to deploy DomainManagerController.php"
+if [ ! -s "$DM_TARGET" ]; then
+    echo "❌ Error: Failed to deploy DomainManagerController.php (file is empty or missing)!" >&2
+    exit 1
 fi
+chmod 644 "$DM_TARGET"
+chown www-data:www-data "$DM_TARGET"
+echo "  ✔ DomainManagerController.php deployed successfully" 
 
 # Add Sudoers rule for www-data to control Nginx & Certbot without password
 cat << 'SUDOEOF' > /etc/sudoers.d/nothing-panel
@@ -389,7 +389,20 @@ Route::prefix('/api/server/{server}/domains')->group(function () {
         routes_content = routes_content.replace("Route::get('/{react}'", route_block + "\nRoute::get('/{react}'")
     with open(base_routes, "w") as f:
         f.write(routes_content)
+print("  ✔ Domain routes verified in routes/base.php")
 PYEOF
+
+# Verify routes using php artisan route:list
+if command -v php >/dev/null 2>&1 && [ -f "$PANEL_DIR/artisan" ]; then
+    echo "Verifying routes with php artisan..."
+    cd "$PANEL_DIR"
+    php artisan route:clear 2>/dev/null || true
+    if ! php artisan route:list | grep -q "domains"; then
+        echo "❌ Error: Domain routes verification failed in php artisan route:list!" >&2
+        exit 1
+    fi
+    echo "  ✔ Confirmed domain routes active in artisan route:list"
+fi
 
 # 5. Universal Rebranding across all Views, Lang, and Configs & Inject Admin Theme
 python3 - << 'PYEOF'
