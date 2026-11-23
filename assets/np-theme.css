@@ -1625,12 +1625,13 @@
             /* ========================================================= */
             /* ALL MODALS & DIALOGS: OBSIDIAN PURPLE GLASS THEME         */
             /* ========================================================= */
+            div[class*="ModalMask"] {
+                background-color: rgba(0, 0, 0, 0.75) !important;
+                backdrop-filter: blur(4px) !important;
+            }
+            /* ONLY the top-level dialog wrapper gets the border & background */
             div[role="dialog"],
-            div[class*="Modal"] > div,
-            div[class*="Dialog"] > div,
-            div[class*="Modal__Container"],
-            div[class*="Dialog___StyledDiv"],
-            div[class*="ModalMask"] > div,
+            div[class*="ModalMask"] > div:first-child,
             div[class*="ConfirmationModal"] {
                 background: #110d22 !important;
                 background-color: #110d22 !important;
@@ -1638,6 +1639,16 @@
                 border-radius: 14px !important;
                 box-shadow: 0 16px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(194, 104, 242, 0.25) !important;
                 color: #ffffff !important;
+            }
+            /* Eliminate duplicate nested borders, backgrounds, and shadows inside modals */
+            div[role="dialog"] div,
+            div[class*="ModalMask"] div div,
+            div[class*="Dialog___StyledDiv"],
+            div[class*="Modal__Container"] div {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                background-color: transparent !important;
             }
             div[role="dialog"] h2,
             div[role="dialog"] p[class*="font-header"],
@@ -1649,7 +1660,8 @@
             }
             div[role="dialog"] input,
             div[role="dialog"] textarea,
-            div[class*="Modal"] input {
+            div[class*="Modal"] input,
+            div[class*="ModalMask"] input {
                 background: #0b0717 !important;
                 background-color: #0b0717 !important;
                 border: 1.5px solid rgba(194, 104, 242, 0.3) !important;
@@ -1659,7 +1671,8 @@
             }
             div[role="dialog"] input:focus,
             div[role="dialog"] textarea:focus,
-            div[class*="Modal"] input:focus {
+            div[class*="Modal"] input:focus,
+            div[class*="ModalMask"] input:focus {
                 border-color: #C268F2 !important;
                 box-shadow: 0 0 12px rgba(194, 104, 242, 0.5) !important;
             }

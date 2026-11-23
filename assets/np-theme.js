@@ -174,23 +174,38 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                     // Try React router mount first
                     let mount = document.getElementById('np-domains-view-mount');
 
-                    // If not found, find main content area or app container without requiring nav links
+                    // If not found, find SubNavigation bar and anchor directly below it
                     if (!mount) {
-                        const mainOutlet = document.getElementById('main-content') ||
-                            document.querySelector('div[class*="ServerContentBlock"]') ||
-                            document.querySelector('#app > div:nth-child(2)') ||
-                            document.querySelector('#app > div');
-                        if (mainOutlet) {
+                        const subNav = document.querySelector('div[class*="SubNavigation"]') ||
+                                       document.querySelector('div[class*="sc-lfuaoi"]') ||
+                                       document.querySelector('.SubNavigation') ||
+                                       document.querySelector('nav');
+                        if (subNav) {
                             let fb = document.getElementById('np-domains-fallback-mount');
                             if (!fb) {
                                 fb = document.createElement('div');
                                 fb.id = 'np-domains-fallback-mount';
-                                fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                                fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 10 !important;';
                             }
-                            if (fb.parentElement !== mainOutlet) {
-                                mainOutlet.prepend(fb);
+                            if (fb.previousElementSibling !== subNav) {
+                                subNav.insertAdjacentElement('afterend', fb);
                             }
                             mount = fb;
+                        } else {
+                            const mainOutlet = document.getElementById('main-content') ||
+                                document.querySelector('div[class*="ServerContentBlock"]');
+                            if (mainOutlet) {
+                                let fb = document.getElementById('np-domains-fallback-mount');
+                                if (!fb) {
+                                    fb = document.createElement('div');
+                                    fb.id = 'np-domains-fallback-mount';
+                                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 10 !important;';
+                                }
+                                if (fb.parentElement !== mainOutlet) {
+                                    mainOutlet.appendChild(fb);
+                                }
+                                mount = fb;
+                            }
                         }
                     }
 
@@ -230,12 +245,20 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                             _domainMountObserver.disconnect();
                             _domainMountObserver = null;
                             if (_domainRetryCount >= MAX_DOMAIN_RETRIES && !document.getElementById('np-domain-manager-card')) {
-                                const app = document.getElementById('app') || document.body;
+                                const subNav = document.querySelector('div[class*="SubNavigation"]') ||
+                                               document.querySelector('div[class*="sc-lfuaoi"]') ||
+                                               document.querySelector('.SubNavigation') ||
+                                               document.querySelector('nav');
                                 let fb = document.getElementById('np-domains-fallback-mount');
                                 if (!fb) {
                                     fb = document.createElement('div');
                                     fb.id = 'np-domains-fallback-mount';
-                                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 100 !important;';
+                                    fb.style.cssText = 'position: relative !important; width: 100% !important; max-width: 1200px !important; margin: 1.5rem auto 3rem auto !important; padding: 0 1rem !important; box-sizing: border-box !important; display: block !important; clear: both !important; z-index: 10 !important;';
+                                }
+                                if (subNav) {
+                                    subNav.insertAdjacentElement('afterend', fb);
+                                } else {
+                                    const app = document.getElementById('app') || document.body;
                                     app.appendChild(fb);
                                 }
                                 mountDomainCard(fb, serverId);
@@ -1202,17 +1225,22 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
             }
 
             function initMarkdownPreview() {
-                const path = window.location.pathname;
+                const path = window.location.pathname || '';
+                const hash = window.location.hash || '';
                 const isEditPage = path.includes('/files/edit');
-                if (!isEditPage) {
+                const isMarkdown = isEditPage && (/\.(md|markdown)$/i.test(hash) || (document.querySelector('select')?.value || '').includes('markdown'));
+
+                if (!isMarkdown) {
                     const existingBar = document.getElementById('np-md-toolbar');
                     if (existingBar) existingBar.remove();
                     const existingPrev = document.getElementById('np-md-preview-container');
                     if (existingPrev) existingPrev.remove();
+                    const cmEl = document.querySelector('.CodeMirror') || document.querySelector('div[class*="CodemirrorEditor"]');
+                    if (cmEl) cmEl.style.removeProperty('display');
                     return;
                 }
 
-                const editorContainer = document.querySelector('.ace_editor') || document.querySelector('div[class*="FileEditContainer"]') || document.querySelector('div[class*="EditorContainer"]');
+                const editorContainer = document.querySelector('.CodeMirror') || document.querySelector('div[class*="CodemirrorEditor"]') || document.querySelector('.ace_editor');
                 if (!editorContainer) return;
                 const parent = editorContainer.parentElement;
                 if (!parent) return;
@@ -1221,7 +1249,7 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                 if (!toolbar) {
                     toolbar = document.createElement('div');
                     toolbar.id = 'np-md-toolbar';
-                    toolbar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#110d22;border:1px solid rgba(194,104,242,0.25);border-bottom:none;border-radius:10px 10px 0 0;padding:8px 14px;margin-bottom:0;width:100%;box-sizing:border-box;';
+                    toolbar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#110d22;border:1.5px solid rgba(194,104,242,0.3);border-bottom:none;border-radius:10px 10px 0 0;padding:8px 14px;margin-bottom:0;width:100%;box-sizing:border-box;';
 
                     toolbar.innerHTML = `
                         <div style="display:flex;align-items:center;gap:8px;">
@@ -1248,7 +1276,7 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                     if (!previewCont) {
                         previewCont = document.createElement('div');
                         previewCont.id = 'np-md-preview-container';
-                        previewCont.style.cssText = 'display:none;width:100%;min-height:500px;max-height:75vh;overflow-y:auto;background:#0d1117;border:1px solid rgba(194,104,242,0.25);border-radius:0 0 10px 10px;padding:2rem;box-sizing:border-box;color:#e2d4f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;';
+                        previewCont.style.cssText = 'display:none;width:100%;min-height:500px;max-height:75vh;overflow-y:auto;background:#0d1117;border:1.5px solid rgba(194,104,242,0.3);border-radius:0 0 10px 10px;padding:2rem;box-sizing:border-box;color:#e2d4f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;';
                         parent.insertBefore(previewCont, editorContainer.nextSibling);
                     }
 
@@ -1260,8 +1288,8 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         btnEdit.style.color = '#ffffff';
                         btnPreview.style.background = 'transparent';
                         btnPreview.style.color = '#c4b5fd';
-                        editorContainer.style.display = 'block';
-                        previewCont.style.display = 'none';
+                        editorContainer.style.setProperty('display', 'block', 'important');
+                        previewCont.style.setProperty('display', 'none', 'important');
                     };
 
                     btnPreview.onclick = function() {
@@ -1271,7 +1299,10 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         btnEdit.style.color = '#c4b5fd';
 
                         let text = '';
-                        if (window.ace && window.ace.edit) {
+                        const cm = document.querySelector('.CodeMirror');
+                        if (cm && cm.CodeMirror && typeof cm.CodeMirror.getValue === 'function') {
+                            text = cm.CodeMirror.getValue();
+                        } else if (window.ace && window.ace.edit) {
                             try {
                                 const ed = window.ace.edit(editorContainer);
                                 if (ed) text = ed.getValue();
@@ -1281,14 +1312,14 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                             const ta = editorContainer.querySelector('textarea');
                             if (ta) text = ta.value;
                         }
-                        if (!text) {
-                            const lines = Array.from(editorContainer.querySelectorAll('.ace_line'));
-                            if (lines.length > 0) text = lines.map(l => l.innerText).join('\n');
+                        if (!text && cm) {
+                            const lines = Array.from(cm.querySelectorAll('.CodeMirror-line'));
+                            if (lines.length > 0) text = lines.map(l => l.textContent).join('\n');
                         }
 
                         previewCont.innerHTML = simpleMarkdownToHtml(text);
-                        editorContainer.style.display = 'none';
-                        previewCont.style.display = 'block';
+                        editorContainer.style.setProperty('display', 'none', 'important');
+                        previewCont.style.setProperty('display', 'block', 'important');
                     };
                 }
             }
