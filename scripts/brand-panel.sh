@@ -390,6 +390,24 @@ if command -v visudo >/dev/null 2>&1; then
 fi
 echo "  ✔ Secure sudoers rule installed and verified with visudo"
 
+# Allow PHP-FPM processes to write configuration via np-domain-helper
+# By default, systemd php*-fpm services have ProtectSystem=full which mounts /etc as read-only.
+# We create a drop-in override for php-fpm services to grant write access to required directories.
+for fpm_svc in /lib/systemd/system/php*-fpm.service /etc/systemd/system/php*-fpm.service; do
+    if [ -f "$fpm_svc" ]; then
+        svc_name=$(basename "$fpm_svc")
+        override_dir="/etc/systemd/system/${svc_name}.d"
+        mkdir -p "$override_dir"
+        cat << 'OVERRIDE_EOF' > "${override_dir}/override.conf"
+[Service]
+ProtectSystem=false
+ReadWritePaths=/etc/nothing /etc/nginx /etc/systemd/system /var/log/nothing /var/log/nginx /usr/local/bin /etc/letsencrypt
+OVERRIDE_EOF
+        echo "  ✔ Configured systemd write-access override for ${svc_name}"
+    fi
+done
+systemctl daemon-reload 2>/dev/null || true
+
 # Ensure routes are registered in routes/base.php
 python3 - << 'PYEOF'
 import os
@@ -1169,7 +1187,7 @@ fi
 if nginx -t >/dev/null 2>&1; then
   systemctl restart nginx 2>/dev/null || systemctl reload nginx 2>/dev/null || true
 fi
-systemctl restart php8.3-fpm 2>/dev/null || true
+systemctl restart php8.3-fpm 2>/dev/null || systemctl restart 'php*-fpm' 2>/dev/null || true
 
 echo "Nothing Panel custom branding applied successfully!"
 

@@ -261,6 +261,14 @@ enable_services() {
   systemctl enable --now "$CACHE_SERVICE"
   case "$OS" in
   ubuntu | debian)
+    # Configure systemd drop-in override for php-fpm to allow helper write access
+    mkdir -p /etc/systemd/system/php8.3-fpm.service.d
+    cat << 'EOF' > /etc/systemd/system/php8.3-fpm.service.d/override.conf
+[Service]
+ProtectSystem=false
+ReadWritePaths=/etc/nothing /etc/nginx /etc/systemd/system /var/log/nothing /var/log/nginx /usr/local/bin /etc/letsencrypt
+EOF
+    systemctl daemon-reload
     systemctl enable --now php8.3-fpm
     ;;
   esac
