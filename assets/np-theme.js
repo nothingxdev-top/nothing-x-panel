@@ -1,4 +1,4 @@
-window.NP_VPS_IP = '" + server_ip + "';
+window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
         // Intercept API responses to replace domain alias with VPS IP in React internal store
         (function() {
             const origFetch = window.fetch;
