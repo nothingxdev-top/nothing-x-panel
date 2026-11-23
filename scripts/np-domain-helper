@@ -27,7 +27,9 @@ error_exit() {
 [[ "$SERVER_UUID" =~ $UUID_REGEX ]] || error_exit "Invalid Server UUID format"
 
 mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled /var/log/nginx /var/log/nothing /etc/nothing/tunnels
-chmod 700 /etc/nothing /etc/nothing/tunnels /var/log/nothing 2>/dev/null || true
+chown root:www-data /etc/nothing /etc/nothing/tunnels 2>/dev/null || true
+chmod 750 /etc/nothing /etc/nothing/tunnels 2>/dev/null || true
+chmod 700 /var/log/nothing 2>/dev/null || true
 
 # Helper to find panel's own domain to prevent collision/hijack
 get_panel_domains() {
@@ -243,6 +245,7 @@ UNIT
 {"domain": "${DISPLAY_DOMAIN}", "port": ${PORT}, "custom_domain": true, "token_mode": true}
 META
             chmod 644 "$META_FILE"
+            chown root:www-data "$META_FILE" 2>/dev/null || true
             log_msg "SUCCESS: Cloudflare Tunnel successfully launched with token for Port $PORT"
         else
             # Quick Tunnel mode (trycloudflare.com)
@@ -292,6 +295,7 @@ UNIT
 {"domain": "${ASSIGNED_DOMAIN}", "port": ${PORT}, "custom_domain": false, "token_mode": false}
 META
             chmod 644 "$META_FILE"
+            chown root:www-data "$META_FILE" 2>/dev/null || true
             log_msg "SUCCESS: Instant Quick Tunnel active at https://${ASSIGNED_DOMAIN} (routing to Port $PORT)"
         fi
         ;;

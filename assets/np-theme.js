@@ -41,10 +41,12 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         fixAlloc(data);
 
                         if (modified) {
+                            const newHeaders = new Headers(response.headers);
+                            newHeaders.delete('content-length');
                             return new Response(JSON.stringify(data), {
                                 status: response.status,
                                 statusText: response.statusText,
-                                headers: response.headers
+                                headers: newHeaders
                             });
                         }
                     }
