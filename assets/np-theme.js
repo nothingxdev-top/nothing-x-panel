@@ -1235,93 +1235,116 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                     if (existingBar) existingBar.remove();
                     const existingPrev = document.getElementById('np-md-preview-container');
                     if (existingPrev) existingPrev.remove();
-                    const cmEl = document.querySelector('.CodeMirror') || document.querySelector('div[class*="CodemirrorEditor"]');
+                    const cmEl = document.querySelector('div[class*="CodemirrorEditor"]') || document.querySelector('.CodeMirror');
                     if (cmEl) cmEl.style.removeProperty('display');
                     return;
                 }
 
-                const editorContainer = document.querySelector('.CodeMirror') || document.querySelector('div[class*="CodemirrorEditor"]') || document.querySelector('.ace_editor');
-                if (!editorContainer) return;
-                const parent = editorContainer.parentElement;
+                // Locate the outermost EditorContainer (which has fixed height calc(100vh - 20rem))
+                // NOT the inner .CodeMirror instance!
+                let editorWrap = document.querySelector('div[class*="CodemirrorEditor"]');
+                if (!editorWrap) {
+                    const cm = document.querySelector('.CodeMirror');
+                    if (cm && cm.parentElement && cm.parentElement !== document.body) {
+                        editorWrap = cm.parentElement;
+                    }
+                }
+                if (!editorWrap) {
+                    editorWrap = document.querySelector('.ace_editor');
+                }
+                if (!editorWrap) return;
+
+                const parent = editorWrap.parentElement;
                 if (!parent) return;
 
                 let toolbar = document.getElementById('np-md-toolbar');
-                if (!toolbar) {
-                    toolbar = document.createElement('div');
-                    toolbar.id = 'np-md-toolbar';
-                    toolbar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#110d22;border:1.5px solid rgba(194,104,242,0.3);border-bottom:none;border-radius:10px 10px 0 0;padding:8px 14px;margin-bottom:0;width:100%;box-sizing:border-box;';
+                let previewCont = document.getElementById('np-md-preview-container');
 
-                    toolbar.innerHTML = `
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="font-weight:700;font-size:0.85rem;color:#C268F2;display:inline-flex;align-items:center;gap:6px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                MARKDOWN
-                            </span>
-                        </div>
-                        <div style="display:flex;align-items:center;background:#0b0717;border:1px solid rgba(194,104,242,0.3);border-radius:8px;padding:3px;gap:4px;">
-                            <button id="np-md-btn-edit" type="button" style="background:#C268F2;color:#ffffff;border:none;border-radius:6px;padding:5px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s ease;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                                Edit
-                            </button>
-                            <button id="np-md-btn-preview" type="button" style="background:transparent;color:#c4b5fd;border:none;border-radius:6px;padding:5px 12px;font-size:0.82rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s ease;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                Preview
-                            </button>
-                        </div>
-                    `;
+                // If already correctly mounted as direct preceding sibling, don't recreate
+                if (toolbar && editorWrap.previousElementSibling === toolbar) {
+                    return;
+                }
 
-                    parent.insertBefore(toolbar, editorContainer);
+                // If toolbar was misplaced or inside editorWrap, remove to reinsert properly
+                if (toolbar) toolbar.remove();
+                if (previewCont) previewCont.remove();
 
-                    let previewCont = document.getElementById('np-md-preview-container');
-                    if (!previewCont) {
-                        previewCont = document.createElement('div');
-                        previewCont.id = 'np-md-preview-container';
-                        previewCont.style.cssText = 'display:none;width:100%;min-height:500px;max-height:75vh;overflow-y:auto;background:#0d1117;border:1.5px solid rgba(194,104,242,0.3);border-radius:0 0 10px 10px;padding:2rem;box-sizing:border-box;color:#e2d4f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;';
-                        parent.insertBefore(previewCont, editorContainer.nextSibling);
+                toolbar = document.createElement('div');
+                toolbar.id = 'np-md-toolbar';
+                toolbar.style.cssText = 'display:flex !important; align-items:center !important; justify-content:space-between !important; background:#110d22 !important; border:1px solid rgba(194,104,242,0.3) !important; border-bottom:none !important; border-radius:8px 8px 0 0 !important; padding:6px 14px !important; margin:0 !important; width:100% !important; height:42px !important; min-height:42px !important; max-height:42px !important; box-sizing:border-box !important; flex:none !important;';
+
+                toolbar.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:700;font-size:0.85rem;color:#C268F2;display:inline-flex;align-items:center;gap:6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            MARKDOWN
+                        </span>
+                    </div>
+                    <div style="display:flex;align-items:center;background:#0b0717;border:1px solid rgba(194,104,242,0.3);border-radius:8px;padding:3px;gap:4px;">
+                        <button id="np-md-btn-edit" type="button" style="background:#C268F2;color:#ffffff;border:none;border-radius:6px;padding:4px 12px;font-size:0.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s ease;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            Edit
+                        </button>
+                        <button id="np-md-btn-preview" type="button" style="background:transparent;color:#c4b5fd;border:none;border-radius:6px;padding:4px 12px;font-size:0.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s ease;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            Preview
+                        </button>
+                    </div>
+                `;
+
+                parent.insertBefore(toolbar, editorWrap);
+
+                previewCont = document.createElement('div');
+                previewCont.id = 'np-md-preview-container';
+                previewCont.style.cssText = 'display:none;width:100%;min-height:16rem;height:calc(100vh - 20rem);max-height:calc(100vh - 20rem);overflow-y:auto;background:#0d1117;border:1px solid rgba(194,104,242,0.3);border-radius:0 0 8px 8px;padding:1.5rem 2rem;box-sizing:border-box;color:#e2d4f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;';
+                parent.insertBefore(previewCont, editorWrap.nextSibling);
+
+                const btnEdit = document.getElementById('np-md-btn-edit');
+                const btnPreview = document.getElementById('np-md-btn-preview');
+
+                btnEdit.onclick = function() {
+                    btnEdit.style.background = '#C268F2';
+                    btnEdit.style.color = '#ffffff';
+                    btnPreview.style.background = 'transparent';
+                    btnPreview.style.color = '#c4b5fd';
+                    editorWrap.style.removeProperty('display');
+                    editorWrap.style.setProperty('display', 'block', 'important');
+                    previewCont.style.setProperty('display', 'none', 'important');
+                    const cm = document.querySelector('.CodeMirror');
+                    if (cm && cm.CodeMirror && typeof cm.CodeMirror.refresh === 'function') {
+                        cm.CodeMirror.refresh();
+                    }
+                };
+
+                btnPreview.onclick = function() {
+                    btnPreview.style.background = '#C268F2';
+                    btnPreview.style.color = '#ffffff';
+                    btnEdit.style.background = 'transparent';
+                    btnEdit.style.color = '#c4b5fd';
+
+                    let text = '';
+                    const cm = document.querySelector('.CodeMirror');
+                    if (cm && cm.CodeMirror && typeof cm.CodeMirror.getValue === 'function') {
+                        text = cm.CodeMirror.getValue();
+                    } else if (window.ace && window.ace.edit) {
+                        try {
+                            const ed = window.ace.edit(editorWrap);
+                            if (ed) text = ed.getValue();
+                        } catch(e) {}
+                    }
+                    if (!text) {
+                        const ta = editorWrap.querySelector('textarea') || document.querySelector('textarea');
+                        if (ta) text = ta.value;
+                    }
+                    if (!text && cm) {
+                        const lines = Array.from(cm.querySelectorAll('.CodeMirror-line'));
+                        if (lines.length > 0) text = lines.map(l => l.textContent).join('\n');
                     }
 
-                    const btnEdit = document.getElementById('np-md-btn-edit');
-                    const btnPreview = document.getElementById('np-md-btn-preview');
-
-                    btnEdit.onclick = function() {
-                        btnEdit.style.background = '#C268F2';
-                        btnEdit.style.color = '#ffffff';
-                        btnPreview.style.background = 'transparent';
-                        btnPreview.style.color = '#c4b5fd';
-                        editorContainer.style.setProperty('display', 'block', 'important');
-                        previewCont.style.setProperty('display', 'none', 'important');
-                    };
-
-                    btnPreview.onclick = function() {
-                        btnPreview.style.background = '#C268F2';
-                        btnPreview.style.color = '#ffffff';
-                        btnEdit.style.background = 'transparent';
-                        btnEdit.style.color = '#c4b5fd';
-
-                        let text = '';
-                        const cm = document.querySelector('.CodeMirror');
-                        if (cm && cm.CodeMirror && typeof cm.CodeMirror.getValue === 'function') {
-                            text = cm.CodeMirror.getValue();
-                        } else if (window.ace && window.ace.edit) {
-                            try {
-                                const ed = window.ace.edit(editorContainer);
-                                if (ed) text = ed.getValue();
-                            } catch(e) {}
-                        }
-                        if (!text) {
-                            const ta = editorContainer.querySelector('textarea');
-                            if (ta) text = ta.value;
-                        }
-                        if (!text && cm) {
-                            const lines = Array.from(cm.querySelectorAll('.CodeMirror-line'));
-                            if (lines.length > 0) text = lines.map(l => l.textContent).join('\n');
-                        }
-
-                        previewCont.innerHTML = simpleMarkdownToHtml(text);
-                        editorContainer.style.setProperty('display', 'none', 'important');
-                        previewCont.style.setProperty('display', 'block', 'important');
-                    };
-                }
+                    previewCont.innerHTML = simpleMarkdownToHtml(text);
+                    editorWrap.style.setProperty('display', 'none', 'important');
+                    previewCont.style.setProperty('display', 'block', 'important');
+                };
             }
 
             function updateRouteAttributes() {

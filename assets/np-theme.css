@@ -1788,3 +1788,47 @@
                 background: linear-gradient(135deg, #C268F2 0%, #8A2BE2 100%) !important;
                 color: #ffffff !important;
             }
+
+            /* ========================================================= */
+            /* MARKDOWN EDITOR TOOLBAR & PREVIEW CONTAINER               */
+            /* ========================================================= */
+            #np-md-toolbar {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                background: #110d22 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
+                border-bottom: none !important;
+                border-radius: 8px 8px 0 0 !important;
+                padding: 6px 14px !important;
+                margin: 0 !important;
+                width: 100% !important;
+                height: 42px !important;
+                min-height: 42px !important;
+                max-height: 42px !important;
+                box-sizing: border-box !important;
+                flex: none !important;
+            }
+
+            #np-md-preview-container {
+                width: 100% !important;
+                min-height: 16rem !important;
+                height: calc(100vh - 20rem) !important;
+                max-height: calc(100vh - 20rem) !important;
+                overflow-y: auto !important;
+                background: #0d1117 !important;
+                border: 1.5px solid rgba(194, 104, 242, 0.35) !important;
+                border-radius: 0 0 8px 8px !important;
+                padding: 1.5rem 2rem !important;
+                box-sizing: border-box !important;
+                color: #e2d4f8 !important;
+            }
+
+            div[class*="CodemirrorEditor"] {
+                margin-top: 0 !important;
+            }
+            div:has(> #np-md-toolbar) div[class*="CodemirrorEditor"],
+            div:has(> #np-md-toolbar) .CodeMirror {
+                border-top-left-radius: 0 !important;
+                border-top-right-radius: 0 !important;
+            }
