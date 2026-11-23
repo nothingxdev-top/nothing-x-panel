@@ -1865,6 +1865,36 @@
                 color: #fff !important;
             }
 
+            #np-cf-token-toggle {
+                position: absolute !important;
+                right: 10px !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                margin-top: auto !important;
+                margin-bottom: auto !important;
+                height: 28px !important;
+                width: 28px !important;
+                min-width: 28px !important;
+                max-width: 28px !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: transparent !important;
+                border: none !important;
+                color: #a794c2 !important;
+                cursor: pointer !important;
+                z-index: 10 !important;
+                transform: none !important;
+            }
+
+            #np-cf-token-toggle svg {
+                display: block !important;
+                margin: auto !important;
+                width: 18px !important;
+                height: 18px !important;
+            }
+
             #np-cf-token-toggle:hover {
-                color: #fff !important;
+                color: #C268F2 !important;
             }

@@ -370,9 +370,9 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                     <div style="display:flex; gap:12px; align-items:flex-end; width:100%; flex-wrap:wrap;">
                         <div style="flex:3; min-width:260px; position:relative;">
                             <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Tunnel Token</label>
-                            <div style="position:relative; width:100%;">
-                                <input type="password" id="np-cf-token-input" placeholder="Paste Cloudflare Tunnel token or install command" autocomplete="off" spellcheck="false" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 40px 0 14px; font-size:0.9rem; outline:none;" />
-                                <button type="button" id="np-cf-token-toggle" title="Show/Hide Token" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#a794c2; cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center;">
+                            <div style="position:relative; width:100%; display:flex; align-items:center;">
+                                <input type="password" id="np-cf-token-input" placeholder="Paste Cloudflare Tunnel token or install command" autocomplete="off" spellcheck="false" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 42px 0 14px; font-size:0.9rem; outline:none;" />
+                                <button type="button" id="np-cf-token-toggle" title="Show/Hide Token" style="position:absolute; right:10px; top:0; bottom:0; margin:auto 0; height:28px; width:28px; background:transparent; border:none; color:#a794c2; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; z-index:5;">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
@@ -388,9 +388,6 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                                 Launch Cloudflare Tunnel
                             </button>
                         </div>
-                    </div>
-                    <div id="np-cf-helper-text" style="font-size:0.8rem; color:#8e79b0; margin-top:2px; line-height:1.4;">
-                        Create a tunnel in Cloudflare Zero Trust &gt; Networks &gt; Tunnels, add a Public Hostname pointing to <span id="np-cf-helper-url" style="color:#38bdf8; font-family:monospace; font-weight:600;">http://localhost:25565</span>, then paste the token here.
                     </div>
                 `;
                 card.appendChild(formCf);
@@ -504,17 +501,6 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                     });
                 }
 
-                // Dynamic helper text for Cloudflare port
-                const cfPortSel = document.getElementById('np-cf-port-select');
-                if (cfPortSel) {
-                    cfPortSel.addEventListener('change', function() {
-                        const helperUrl = document.getElementById('np-cf-helper-url');
-                        if (helperUrl) {
-                            helperUrl.textContent = 'http://localhost:' + (cfPortSel.value || '25565');
-                        }
-                    });
-                }
-
                 loadServerDomains(serverId);
 
                 // Polling for live status updates while on Domains page
@@ -622,11 +608,6 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                             sel.dispatchEvent(new Event('input', { bubbles: true }));
                         });
                         initCustomSelects();
-
-                        const helperUrl = document.getElementById('np-cf-helper-url');
-                        if (helperUrl && cfPortSelect && cfPortSelect.value) {
-                            helperUrl.textContent = 'http://localhost:' + cfPortSelect.value;
-                        }
                     }
 
                     const list = document.getElementById('np-domains-list');

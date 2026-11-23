@@ -108,10 +108,9 @@ async function runTest() {
   assert.ok(launchBtn, '#np-btn-launch-cf should exist');
   assert.strictEqual(launchBtn.disabled, true, 'Launch button must be disabled when token is empty');
 
-  // D) Helper text must exist under the controls
+  // D) Helper text is removed
   const helperText = window.document.getElementById('np-cf-helper-text');
-  assert.ok(helperText, '#np-cf-helper-text should exist');
-  assert.ok(helperText.textContent.includes('http://localhost:'), 'Helper text must contain http://localhost:<port>');
+  assert.strictEqual(helperText, null, '#np-cf-helper-text should be removed');
 
   // 5. Assert zero console errors
   assert.strictEqual(consoleErrors.length, 0, `Expected 0 console errors, got: ${JSON.stringify(consoleErrors)}`);
