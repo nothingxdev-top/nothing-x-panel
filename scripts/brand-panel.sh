@@ -421,12 +421,22 @@ if os.path.exists(base_routes):
 Route::prefix('/api/server/{server}/domains')->group(function () {
     Route::get('/', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'index']);
     Route::post('/', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'store']);
+    Route::patch('/tunnel', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'setHostname']);
+    Route::post('/set-hostname', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'setHostname']);
     Route::post('/delete', [\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class, 'destroy']);
 });
 """
     if "[Base\\DomainManagerController::class" in routes_content:
         routes_content = routes_content.replace("[Base\\DomainManagerController::class", "[\\Pterodactyl\\Http\\Controllers\\Base\\DomainManagerController::class")
-    if "DomainManagerController" not in routes_content:
+    if "setHostname" not in routes_content and "DomainManagerController" in routes_content:
+        import re
+        routes_content = re.sub(
+            r"Route::prefix\('/api/server/\{server\}/domains'\)->group\(function \(\) \{.*?\n\}\);",
+            route_block.strip(),
+            routes_content,
+            flags=re.DOTALL
+        )
+    elif "DomainManagerController" not in routes_content:
         routes_content = routes_content.replace("Route::get('/{react}'", route_block + "\nRoute::get('/{react}'")
     with open(base_routes, "w") as f:
         f.write(routes_content)

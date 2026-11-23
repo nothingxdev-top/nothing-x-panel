@@ -61,17 +61,33 @@ class DomainManagerController extends Controller
 
             if (file_exists($cfMetaFile)) {
                 $meta = json_decode(@file_get_contents($cfMetaFile), true);
-                if ($meta && !empty($meta['domain'])) {
+                if ($meta && is_array($meta)) {
                     $statusOut = [];
                     exec("sudo /usr/local/sbin/np-domain-helper status-cf " . escapeshellarg($server->uuidShort) . " " . escapeshellarg($port) . " 2>/dev/null", $statusOut);
                     $isActive = trim($statusOut[0] ?? '') === 'active';
+
+                    // Re-read meta file if status-cf refreshed it
+                    $meta = json_decode(@file_get_contents($cfMetaFile), true) ?: $meta;
+
+                    $status = $meta['status'] ?? ($isActive ? 'connected' : 'stopped');
+                    if ($isActive && $status === 'stopped') {
+                        $status = 'connected';
+                    } elseif (!$isActive && $status === 'connected') {
+                        $status = 'stopped';
+                    }
+
                     $domains[] = [
                         'type' => 'cloudflared',
-                        'domain' => $meta['domain'],
+                        'domain' => $meta['hostname'] ?? $meta['domain'] ?? null,
+                        'hostname' => $meta['hostname'] ?? $meta['domain'] ?? null,
                         'port' => (int) $port,
                         'ssl' => true,
                         'active' => $isActive,
-                        'custom_domain' => $meta['custom_domain'] ?? false,
+                        'status' => $status,
+                        'token_masked' => $meta['token_masked'] ?? null,
+                        'error' => $meta['error'] ?? null,
+                        'started_at' => $meta['started_at'] ?? null,
+                        'pid' => $meta['pid'] ?? null,
                     ];
                 }
             }
@@ -126,22 +142,37 @@ class DomainManagerController extends Controller
         // MODE A: CLOUDFLARE TUNNEL (NAT VPS / IPv6 / NO PORT FORWARDING)
         // ========================================================
         if ($mode === 'cloudflared') {
-            $token = trim((string) $request->input('cf_token', ''));
-            $customDomain = trim((string) $request->input('domain', ''));
-
-            if (!empty($token) && !preg_match('/^[A-Za-z0-9=_-]{20,2048}$/', $token)) {
-                return response()->json(['error' => 'Invalid Cloudflare Tunnel token format.'], 422);
+            $cfBin = '/usr/local/bin/cloudflared';
+            $hasCf = file_exists($cfBin) || !empty(shell_exec('which cloudflared 2>/dev/null'));
+            if (!$hasCf) {
+                return response()->json([
+                    'error' => 'cloudflared binary is not installed on this server. Install it by running: curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared && chmod +x /usr/local/bin/cloudflared'
+                ], 400);
             }
 
-            if (!empty($customDomain) && !preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/', $customDomain)) {
-                return response()->json(['error' => 'Invalid custom domain name format.'], 422);
+            $token = trim((string) $request->input('cf_token', ''));
+            if (empty($token)) {
+                return response()->json(['error' => 'Cloudflare Tunnel token is required.'], 400);
+            }
+
+            // Validate token (base64 decodes to JSON containing keys a, t, s)
+            $paddedToken = $token;
+            $missingPadding = strlen($token) % 4;
+            if ($missingPadding > 0) {
+                $paddedToken .= str_repeat('=', 4 - $missingPadding);
+            }
+            $decoded = base64_decode($paddedToken, true);
+            $tokenJson = $decoded ? json_decode($decoded, true) : null;
+            if (!$tokenJson || !is_array($tokenJson) || !isset($tokenJson['a'], $tokenJson['t'], $tokenJson['s'])) {
+                return response()->json([
+                    'error' => 'Invalid Cloudflare Tunnel token. It must be a valid Cloudflare Zero Trust token containing account (a), tunnel (t), and secret (s).'
+                ], 400);
             }
 
             // Execute helper passing token securely via stdin to prevent exposing it in ps aux
             $cmd = "sudo /usr/local/sbin/np-domain-helper add-cf " .
                 escapeshellarg($server->uuidShort) . " " .
-                escapeshellarg((string) $port) . " " .
-                escapeshellarg($customDomain) . " 2>&1";
+                escapeshellarg((string) $port) . " 2>&1";
 
             $descriptors = [
                 0 => ["pipe", "r"], // stdin
@@ -154,9 +185,7 @@ class DomainManagerController extends Controller
             $exitCode = -1;
 
             if (is_resource($process)) {
-                if (!empty($token)) {
-                    fwrite($pipes[0], $token . "\n");
-                }
+                fwrite($pipes[0], $token . "\n");
                 fclose($pipes[0]);
 
                 $outputStr = stream_get_contents($pipes[1]);
@@ -169,24 +198,24 @@ class DomainManagerController extends Controller
             if ($exitCode !== 0) {
                 return response()->json([
                     'error' => 'Cloudflare tunnel creation failed: ' . trim($outputStr)
-                ], 500);
+                ], 400);
             }
 
-            // Read domain from metadata file
+            // Read metadata from file
             $metaFile = "/etc/nothing/tunnels/cf-srv-{$server->uuidShort}-port-{$port}.meta";
-            $assignedDomain = $customDomain ?: "tunnel-port-{$port}.trycloudflare.com";
-            if (file_exists($metaFile)) {
-                $meta = json_decode(@file_get_contents($metaFile), true);
-                if (!empty($meta['domain'])) {
-                    $assignedDomain = $meta['domain'];
-                }
-            }
+            $meta = file_exists($metaFile) ? json_decode(@file_get_contents($metaFile), true) : [];
+            $assignedHostname = $meta['hostname'] ?? $meta['domain'] ?? null;
+            $status = $meta['status'] ?? 'connected';
+            $maskedToken = '••••' . substr($token, -4);
 
             return response()->json([
                 'success' => true,
                 'message' => trim($outputStr),
-                'domain' => $assignedDomain,
+                'domain' => $assignedHostname,
+                'hostname' => $assignedHostname,
                 'port' => $port,
+                'status' => $status,
+                'token_masked' => $maskedToken,
                 'type' => 'cloudflared',
             ]);
         }
@@ -263,6 +292,64 @@ class DomainManagerController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Port {$port} domain mapping / Cloudflare Tunnel disconnected successfully.",
+        ]);
+    }
+
+    /**
+     * Set / update the hostname for an active Cloudflare Tunnel.
+     */
+    public function setHostname(Request $request, string $server_id): JsonResponse
+    {
+        $server = Server::where('uuidShort', $server_id)
+            ->orWhere('uuid', $server_id)
+            ->first();
+
+        if (!$server) {
+            return response()->json(['error' => 'Server not found'], 404);
+        }
+
+        $user = Auth::user();
+        if (!$user || (!$user->root_admin && $server->owner_id !== $user->id)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $port = (int) $request->input('port', 0);
+        $hostname = strtolower(trim((string) ($request->input('hostname') ?? $request->input('domain') ?? '')));
+
+        $allowedPorts = $server->allocations()->pluck('port')->toArray();
+        if (!$user->root_admin && !in_array($port, $allowedPorts)) {
+            return response()->json(['error' => 'Selected port does not belong to this server.'], 403);
+        }
+
+        if ($port < 1024 || $port > 65535) {
+            return response()->json(['error' => 'Invalid port number.'], 422);
+        }
+
+        if (empty($hostname) || !preg_match('/^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/', $hostname)) {
+            return response()->json(['error' => 'Invalid hostname format (e.g. play.yourdomain.com).'], 422);
+        }
+
+        $cmd = "sudo /usr/local/sbin/np-domain-helper set-hostname " .
+            escapeshellarg($server->uuidShort) . " " .
+            escapeshellarg((string) $port) . " " .
+            escapeshellarg($hostname) . " 2>&1";
+
+        $output = [];
+        $exitCode = 0;
+        exec($cmd, $output, $exitCode);
+
+        if ($exitCode !== 0) {
+            return response()->json([
+                'error' => implode(' ', $output) ?: 'Failed to update hostname.'
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Hostname successfully set to {$hostname}",
+            'hostname' => $hostname,
+            'domain' => $hostname,
+            'port' => $port,
         ]);
     }
 }

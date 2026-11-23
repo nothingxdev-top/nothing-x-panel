@@ -365,26 +365,32 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                 // Form Cloudflare
                 const formCf = document.createElement('div');
                 formCf.id = 'np-form-cf';
-                formCf.style.cssText = 'display:none; flex-wrap:wrap; gap:14px; align-items:flex-end; margin-bottom:1.5rem;';
+                formCf.style.cssText = 'display:none; flex-direction:column; gap:8px; margin-bottom:1.5rem; width:100%;';
                 formCf.innerHTML = `
-                    <div style="flex:2; min-width:200px;">
-                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Domain Name</label>
-                        <input type="text" id="np-cf-domain-input" placeholder="e.g. play.yourdomain.com (optional)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
+                    <div style="display:flex; gap:12px; align-items:flex-end; width:100%; flex-wrap:wrap;">
+                        <div style="flex:3; min-width:260px; position:relative;">
+                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Tunnel Token</label>
+                            <div style="position:relative; width:100%;">
+                                <input type="password" id="np-cf-token-input" placeholder="Paste Cloudflare Tunnel token or install command" autocomplete="off" spellcheck="false" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 40px 0 14px; font-size:0.9rem; outline:none;" />
+                                <button type="button" id="np-cf-token-toggle" title="Show/Hide Token" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#a794c2; cursor:pointer; padding:6px; display:flex; align-items:center; justify-content:center;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="flex:1; min-width:140px;">
+                            <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
+                            <select id="np-cf-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
+                                <option value="">Loading ports...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button id="np-btn-launch-cf" type="button" disabled style="height:42px; background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:not-allowed; box-shadow:0 4px 15px rgba(6,182,212,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center; white-space:nowrap; opacity:0.5;">
+                                Launch Cloudflare Tunnel
+                            </button>
+                        </div>
                     </div>
-                    <div style="flex:2; min-width:200px;">
-                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Cloudflare Tunnel Token</label>
-                        <input type="text" id="np-cf-token-input" placeholder="Tunnel token (leave empty for Quick Tunnel)" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 14px; font-size:0.9rem; outline:none;" />
-                    </div>
-                    <div style="flex:1; min-width:140px;">
-                        <label style="display:block; font-size:0.75rem; font-weight:700; color:#d1b8eb; text-transform:uppercase; margin-bottom:6px;">Target Port</label>
-                        <select id="np-cf-port-select" style="width:100%; height:42px; box-sizing:border-box; background:#0b0818; border:1px solid rgba(194,104,242,0.3); color:#fff; border-radius:8px; padding:0 36px 0 14px; font-size:0.9rem; outline:none; cursor:pointer;">
-                            <option value="">Loading ports...</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button id="np-btn-launch-cf" type="button" style="height:42px; background:linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color:#fff; font-weight:700; font-size:0.85rem; padding:0 24px; border-radius:8px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(6,182,212,0.4); text-transform:uppercase; letter-spacing:0.5px; display:inline-flex; align-items:center;">
-                            Launch Cloudflare Tunnel
-                        </button>
+                    <div id="np-cf-helper-text" style="font-size:0.8rem; color:#8e79b0; margin-top:2px; line-height:1.4;">
+                        Create a tunnel in Cloudflare Zero Trust &gt; Networks &gt; Tunnels, add a Public Hostname pointing to <span id="np-cf-helper-url" style="color:#38bdf8; font-family:monospace; font-weight:600;">http://localhost:25565</span>, then paste the token here.
                     </div>
                 `;
                 card.appendChild(formCf);
@@ -440,7 +446,92 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                     });
                 }
 
+                // Password toggle handler
+                const tokenInput = document.getElementById('np-cf-token-input');
+                const tokenToggle = document.getElementById('np-cf-token-toggle');
+                if (tokenToggle && tokenInput) {
+                    tokenToggle.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (tokenInput.type === 'password') {
+                            tokenInput.type = 'text';
+                            tokenToggle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+                            tokenToggle.style.color = '#C268F2';
+                        } else {
+                            tokenInput.type = 'password';
+                            tokenToggle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+                            tokenToggle.style.color = '#a794c2';
+                        }
+                    });
+                }
+
+                // Smart token paste / input extraction
+                function extractCfToken(raw) {
+                    if (!raw) return '';
+                    const str = String(raw).trim();
+                    const m = str.match(/(eyJ[A-Za-z0-9_-]{20,})/);
+                    if (m) return m[1];
+                    return str.replace(/[\r\n\s]+/g, '');
+                }
+
+                function updateLaunchCfBtn() {
+                    const btn = document.getElementById('np-btn-launch-cf');
+                    const inp = document.getElementById('np-cf-token-input');
+                    if (!btn || !inp) return;
+                    const val = (inp.value || '').trim();
+                    if (val.length > 0) {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                    } else {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                        btn.style.cursor = 'not-allowed';
+                    }
+                }
+
+                if (tokenInput) {
+                    tokenInput.addEventListener('paste', function() {
+                        setTimeout(() => {
+                            const cleaned = extractCfToken(tokenInput.value);
+                            if (cleaned !== tokenInput.value) {
+                                tokenInput.value = cleaned;
+                            }
+                            updateLaunchCfBtn();
+                        }, 10);
+                    });
+                    tokenInput.addEventListener('input', function() {
+                        updateLaunchCfBtn();
+                    });
+                }
+
+                // Dynamic helper text for Cloudflare port
+                const cfPortSel = document.getElementById('np-cf-port-select');
+                if (cfPortSel) {
+                    cfPortSel.addEventListener('change', function() {
+                        const helperUrl = document.getElementById('np-cf-helper-url');
+                        if (helperUrl) {
+                            helperUrl.textContent = 'http://localhost:' + (cfPortSel.value || '25565');
+                        }
+                    });
+                }
+
                 loadServerDomains(serverId);
+
+                // Polling for live status updates while on Domains page
+                if (window.__npDomainsPollInterval) {
+                    clearInterval(window.__npDomainsPollInterval);
+                }
+                window.__npDomainsPollInterval = setInterval(() => {
+                    const listEl = document.getElementById('np-domains-list');
+                    if (!listEl || !document.contains(listEl)) {
+                        clearInterval(window.__npDomainsPollInterval);
+                        window.__npDomainsPollInterval = null;
+                        return;
+                    }
+                    if (!listEl.querySelector('input:focus')) {
+                        loadServerDomains(serverId, true);
+                    }
+                }, 4000);
             }
 
             function getCsrfToken() {
@@ -459,9 +550,9 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                 setTimeout(() => { if (msg) msg.style.display = 'none'; }, 7000);
             }
 
-            function loadServerDomains(serverId) {
+            function loadServerDomains(serverId, isSilent) {
                 const list = document.getElementById('np-domains-list');
-                if (list) {
+                if (list && !isSilent) {
                     list.replaceChildren();
                     const loadingBox = document.createElement('div');
                     loadingBox.style.cssText = 'color:#a794c2; font-size:0.88rem; font-style:italic; padding:16px 0; display:flex; align-items:center; gap:10px;';
@@ -469,12 +560,10 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                     list.appendChild(loadingBox);
                 }
 
-                console.log('[Nothing Panel] Fetching domains for server: ' + serverId);
                 fetch('/api/server/' + encodeURIComponent(serverId) + '/domains', {
                     headers: { 'Accept': 'application/json' }
                 })
                 .then(async response => {
-                    console.log('[Nothing Panel] Domains API response status: ' + response.status);
                     const contentType = (response.headers && typeof response.headers.get === 'function')
                         ? (response.headers.get('content-type') || '')
                         : 'application/json';
@@ -504,9 +593,16 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         throw new Error(data.error || 'Request unsuccessful');
                     }
 
+                    // Cache domains for console card
+                    window.__NP_SERVER_DOMAINS = window.__NP_SERVER_DOMAINS || {};
+                    window.__NP_SERVER_DOMAINS[serverId] = {
+                        timestamp: Date.now(),
+                        domains: data.domains || []
+                    };
+
                     const portSelect = document.getElementById('np-port-select');
                     const cfPortSelect = document.getElementById('np-cf-port-select');
-                    if (data.allocations && data.allocations.length > 0) {
+                    if (data.allocations && data.allocations.length > 0 && !isSilent) {
                         [portSelect, cfPortSelect].forEach(sel => {
                             if (!sel) return;
                             sel.replaceChildren();
@@ -526,6 +622,11 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                             sel.dispatchEvent(new Event('input', { bubbles: true }));
                         });
                         initCustomSelects();
+
+                        const helperUrl = document.getElementById('np-cf-helper-url');
+                        if (helperUrl && cfPortSelect && cfPortSelect.value) {
+                            helperUrl.textContent = 'http://localhost:' + cfPortSelect.value;
+                        }
                     }
 
                     const list = document.getElementById('np-domains-list');
@@ -542,49 +643,184 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
 
                     data.domains.forEach(d => {
                         const row = document.createElement('div');
-                        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.12); padding:10px 0;';
+                        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(194,104,242,0.12); padding:12px 0; gap:12px; flex-wrap:wrap;';
 
                         const left = document.createElement('div');
-                        left.style.cssText = 'display:flex; align-items:center; gap:12px; flex-wrap:wrap;';
+                        left.style.cssText = 'display:flex; align-items:center; gap:10px; flex-wrap:wrap;';
 
-                        const link = document.createElement('a');
-                        link.href = 'https://' + encodeURIComponent(d.domain);
-                        link.target = '_blank';
-                        link.rel = 'noopener noreferrer';
-                        link.style.cssText = 'font-weight:700; color:#ffffff; text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:6px;';
-                        link.textContent = String(d.domain);
-
-                        const portBadge = document.createElement('span');
-                        portBadge.style.cssText = 'color:#a895c2; font-size:0.82rem;';
-                        portBadge.textContent = 'Port ' + String(d.port);
-
-                        const typeBadge = document.createElement('span');
-                        typeBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
                         if (d.type === 'cloudflared') {
-                            if (d.active !== false) {
-                                typeBadge.style.background = 'rgba(16,185,129,0.18)';
-                                typeBadge.style.color = '#10b981';
-                                typeBadge.textContent = 'TUNNEL ACTIVE';
+                            // Cloudflare Badge
+                            const cfBadge = document.createElement('span');
+                            cfBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:rgba(6,182,212,0.18); color:#06b6d4; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
+                            cfBadge.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg> Cloudflare';
+                            left.appendChild(cfBadge);
+
+                            // Hostname link or "Hostname not detected" + "Set hostname"
+                            const host = d.hostname || d.domain;
+                            if (host) {
+                                const link = document.createElement('a');
+                                link.href = 'https://' + encodeURIComponent(host);
+                                link.target = '_blank';
+                                link.rel = 'noopener noreferrer';
+                                link.style.cssText = 'font-weight:700; color:#ffffff; text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:6px;';
+                                link.innerHTML = `<span>${host}</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+                                left.appendChild(link);
                             } else {
-                                typeBadge.style.background = 'rgba(239,68,68,0.18)';
-                                typeBadge.style.color = '#ef4444';
-                                typeBadge.textContent = 'TUNNEL DOWN';
+                                const notDetWrap = document.createElement('span');
+                                notDetWrap.style.cssText = 'display:inline-flex; align-items:center; gap:8px;';
+
+                                const notDetText = document.createElement('span');
+                                notDetText.style.cssText = 'color:#f59e0b; font-style:italic; font-size:0.85rem;';
+                                notDetText.textContent = 'hostname not detected';
+
+                                const setHostBtn = document.createElement('button');
+                                setHostBtn.type = 'button';
+                                setHostBtn.textContent = 'Set hostname';
+                                setHostBtn.style.cssText = 'background:#1b1531; border:1px solid #C268F2; color:#C268F2; font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:5px; cursor:pointer;';
+
+                                const editSpan = document.createElement('span');
+                                editSpan.style.cssText = 'display:none; align-items:center; gap:6px;';
+
+                                const editInput = document.createElement('input');
+                                editInput.type = 'text';
+                                editInput.placeholder = 'e.g. play.yourdomain.com';
+                                editInput.style.cssText = 'background:#0b0818; border:1px solid #C268F2; color:#fff; font-size:0.8rem; padding:2px 8px; border-radius:4px; outline:none; width:160px;';
+
+                                const saveBtn = document.createElement('button');
+                                saveBtn.type = 'button';
+                                saveBtn.textContent = 'Save';
+                                saveBtn.style.cssText = 'background:#C268F2; color:#fff; border:none; font-size:0.72rem; font-weight:700; padding:3px 8px; border-radius:4px; cursor:pointer;';
+
+                                const cancelBtn = document.createElement('button');
+                                cancelBtn.type = 'button';
+                                cancelBtn.textContent = '✕';
+                                cancelBtn.style.cssText = 'background:transparent; color:#9ca3af; border:none; font-size:0.75rem; cursor:pointer; padding:2px 4px;';
+
+                                setHostBtn.addEventListener('click', () => {
+                                    notDetText.style.display = 'none';
+                                    setHostBtn.style.display = 'none';
+                                    editSpan.style.display = 'inline-flex';
+                                    editInput.focus();
+                                });
+
+                                cancelBtn.addEventListener('click', () => {
+                                    editSpan.style.display = 'none';
+                                    notDetText.style.display = 'inline';
+                                    setHostBtn.style.display = 'inline-block';
+                                });
+
+                                saveBtn.addEventListener('click', () => {
+                                    const hVal = editInput.value.trim().toLowerCase();
+                                    if (!hVal || !RFC1035_DOMAIN_REGEX.test(hVal)) {
+                                        showMsg('Please enter a valid hostname (e.g. play.yourdomain.com)', true);
+                                        return;
+                                    }
+                                    saveBtn.disabled = true;
+                                    saveBtn.textContent = 'Saving...';
+                                    fetch('/api/server/' + encodeURIComponent(serverId) + '/domains/tunnel', {
+                                        method: 'PATCH',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': getCsrfToken()
+                                        },
+                                        body: JSON.stringify({ port: d.port, hostname: hVal })
+                                    })
+                                    .then(r => r.json())
+                                    .then(res => {
+                                        if (res.success) {
+                                            showMsg(res.message || 'Hostname updated', false);
+                                            if (window.__NP_SERVER_DOMAINS && window.__NP_SERVER_DOMAINS[serverId]) {
+                                                delete window.__NP_SERVER_DOMAINS[serverId];
+                                            }
+                                            loadServerDomains(serverId);
+                                        } else {
+                                            showMsg(res.error || 'Failed to update hostname', true);
+                                            saveBtn.disabled = false;
+                                            saveBtn.textContent = 'Save';
+                                        }
+                                    })
+                                    .catch(err => {
+                                        showMsg('Error: ' + err.message, true);
+                                        saveBtn.disabled = false;
+                                        saveBtn.textContent = 'Save';
+                                    });
+                                });
+
+                                editSpan.appendChild(editInput);
+                                editSpan.appendChild(saveBtn);
+                                editSpan.appendChild(cancelBtn);
+
+                                notDetWrap.appendChild(notDetText);
+                                notDetWrap.appendChild(setHostBtn);
+                                notDetWrap.appendChild(editSpan);
+                                left.appendChild(notDetWrap);
+                            }
+
+                            // Port badge
+                            const portBadge = document.createElement('span');
+                            portBadge.style.cssText = 'color:#a895c2; font-size:0.82rem;';
+                            portBadge.textContent = 'Port ' + String(d.port);
+                            left.appendChild(portBadge);
+
+                            // Live status dot
+                            const statusBadge = document.createElement('span');
+                            statusBadge.style.cssText = 'display:inline-flex; align-items:center; gap:6px; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
+                            const status = d.status || (d.active !== false ? 'connected' : 'stopped');
+                            if (status === 'connected') {
+                                statusBadge.style.background = 'rgba(16,185,129,0.18)';
+                                statusBadge.style.color = '#10b981';
+                                statusBadge.innerHTML = '<span style="width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span> TUNNEL ACTIVE';
+                            } else if (status === 'starting') {
+                                statusBadge.style.background = 'rgba(245,158,11,0.18)';
+                                statusBadge.style.color = '#f59e0b';
+                                statusBadge.innerHTML = '<span style="width:7px; height:7px; border-radius:50%; background:#f59e0b;"></span> STARTING...';
+                            } else if (status === 'failed') {
+                                statusBadge.style.background = 'rgba(239,68,68,0.18)';
+                                statusBadge.style.color = '#ef4444';
+                                if (d.error) statusBadge.title = d.error;
+                                statusBadge.innerHTML = '<span style="width:7px; height:7px; border-radius:50%; background:#ef4444;"></span> TUNNEL FAILED';
+                            } else {
+                                statusBadge.style.background = 'rgba(156,163,175,0.18)';
+                                statusBadge.style.color = '#9ca3af';
+                                statusBadge.innerHTML = '<span style="width:7px; height:7px; border-radius:50%; background:#9ca3af;"></span> STOPPED';
+                            }
+                            left.appendChild(statusBadge);
+
+                            // Masked token
+                            if (d.token_masked) {
+                                const tokenBadge = document.createElement('span');
+                                tokenBadge.style.cssText = 'font-family:monospace; color:#8e79b0; font-size:0.75rem; background:rgba(142,121,176,0.12); padding:2px 6px; border-radius:4px;';
+                                tokenBadge.textContent = d.token_masked;
+                                left.appendChild(tokenBadge);
                             }
                         } else {
-                            typeBadge.style.background = 'rgba(16,185,129,0.18)';
-                            typeBadge.style.color = '#10b981';
+                            // Nginx Domain
+                            const link = document.createElement('a');
+                            link.href = 'https://' + encodeURIComponent(d.domain);
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            link.style.cssText = 'font-weight:700; color:#ffffff; text-decoration:none; font-size:0.95rem; display:inline-flex; align-items:center; gap:6px;';
+                            link.textContent = String(d.domain);
+
+                            const portBadge = document.createElement('span');
+                            portBadge.style.cssText = 'color:#a895c2; font-size:0.82rem;';
+                            portBadge.textContent = 'Port ' + String(d.port);
+
+                            const typeBadge = document.createElement('span');
+                            typeBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px; background:rgba(16,185,129,0.18); color:#10b981;';
                             typeBadge.textContent = 'CONNECTED';
-                        }
 
-                        left.appendChild(link);
-                        left.appendChild(portBadge);
-                        left.appendChild(typeBadge);
+                            left.appendChild(link);
+                            left.appendChild(portBadge);
+                            left.appendChild(typeBadge);
 
-                        if (d.ssl) {
-                            const sslBadge = document.createElement('span');
-                            sslBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
-                            sslBadge.textContent = 'SSL SECURED';
-                            left.appendChild(sslBadge);
+                            if (d.ssl) {
+                                const sslBadge = document.createElement('span');
+                                sslBadge.style.cssText = 'display:inline-flex; align-items:center; gap:5px; background:rgba(194,104,242,0.18); color:#C268F2; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:6px;';
+                                sslBadge.textContent = 'SSL SECURED';
+                                left.appendChild(sslBadge);
+                            }
                         }
 
                         const delBtn = document.createElement('button');
@@ -618,7 +854,7 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
             function addServerDomain(serverId, mode) {
                 const portSelect = document.getElementById(mode === 'cloudflared' ? 'np-cf-port-select' : 'np-port-select');
                 const port = portSelect ? portSelect.value : '';
-                
+
                 if (!port) {
                     showMsg('Please select a target port.', true);
                     return;
@@ -643,15 +879,16 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         btn.textContent = 'Configuring Nginx...';
                     }
                 } else {
-                    const cfDomainInput = document.getElementById('np-cf-domain-input');
                     const tokenInput = document.getElementById('np-cf-token-input');
-                    const cfDomain = cfDomainInput ? cfDomainInput.value.trim() : '';
-                    if (cfDomain && !RFC1035_DOMAIN_REGEX.test(cfDomain)) {
-                        showMsg('Please enter a valid domain name (e.g. play.yourdomain.com).', true);
+                    const rawVal = tokenInput ? tokenInput.value : '';
+                    const m = String(rawVal).trim().match(/(eyJ[A-Za-z0-9_-]{20,})/);
+                    const token = m ? m[1] : String(rawVal).trim().replace(/[\r\n\s]+/g, '');
+
+                    if (!token) {
+                        showMsg('Cloudflare Tunnel token is required.', true);
                         return;
                     }
-                    payload.domain = cfDomain;
-                    payload.cf_token = tokenInput ? tokenInput.value.trim() : '';
+                    payload.cf_token = token;
 
                     const btn = document.getElementById('np-btn-launch-cf');
                     if (btn) {
@@ -659,7 +896,7 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         btn.textContent = 'Starting Tunnel...';
                     }
                 }
-                
+
                 fetch('/api/server/' + encodeURIComponent(serverId) + '/domains', {
                     method: 'POST',
                     headers: {
@@ -680,6 +917,19 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         showMsg(res.message, false);
                         const inp = document.getElementById('np-domain-input');
                         if (inp) inp.value = '';
+                        const tokenInp = document.getElementById('np-cf-token-input');
+                        if (tokenInp) {
+                            tokenInp.value = '';
+                            const launchBtn = document.getElementById('np-btn-launch-cf');
+                            if (launchBtn) {
+                                launchBtn.disabled = true;
+                                launchBtn.style.opacity = '0.5';
+                                launchBtn.style.cursor = 'not-allowed';
+                            }
+                        }
+                        if (window.__NP_SERVER_DOMAINS && window.__NP_SERVER_DOMAINS[serverId]) {
+                            delete window.__NP_SERVER_DOMAINS[serverId];
+                        }
                         loadServerDomains(serverId);
                     } else {
                         showMsg(res.error || 'Operation failed', true);
@@ -696,7 +946,7 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
 
             window.npRemoveDomain = function(serverId, port) {
                 if (!confirm('Are you sure you want to disconnect port ' + port + '?')) return;
-                
+
                 fetch('/api/server/' + encodeURIComponent(serverId) + '/domains/delete', {
                     method: 'POST',
                     headers: {
@@ -710,6 +960,9 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                 .then(res => {
                     if (res.success) {
                         showMsg(res.message, false);
+                        if (window.__NP_SERVER_DOMAINS && window.__NP_SERVER_DOMAINS[serverId]) {
+                            delete window.__NP_SERVER_DOMAINS[serverId];
+                        }
                         loadServerDomains(serverId);
                     } else {
                         showMsg(res.error || 'Failed to remove domain/tunnel', true);
@@ -1126,7 +1379,8 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         if (card) {
                             if (!card.hasAttribute('data-np-vps-copy')) {
                                 card.setAttribute('data-np-vps-copy', 'true');
-                                card.addEventListener('click', () => {
+                                card.addEventListener('click', (e) => {
+                                    if (e.target.closest('.np-console-domains-area')) return;
                                     const portM = card.textContent.match(/:(\d+)/);
                                     if (portM) {
                                         navigator.clipboard.writeText(vpsIp + ':' + portM[1]);
@@ -1134,7 +1388,7 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                                 }, true);
                             }
                             card.querySelectorAll('p, div, span').forEach(valEl => {
-                                if (valEl !== el && valEl.children.length === 0) {
+                                if (valEl !== el && valEl.children.length === 0 && !valEl.closest('.np-console-domains-area')) {
                                     const txt = (valEl.textContent || '').trim();
                                     if (txt.includes(':') && (txt.includes('panel') || txt.includes('.kg') || txt.includes('.com') || txt.includes('.net') || txt.includes('.top') || txt.includes('0.0.0.0') || txt.includes('localhost') || txt.includes('127.0.0.1'))) {
                                         const portM = txt.match(/:(\d+)$/);
@@ -1147,13 +1401,16 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                                     }
                                 }
                             });
+
+                            // Render connected Cloudflare tunnels & Nginx domains inside the Address stat block
+                            renderConsoleDomainsInCard(card);
                         }
                     }
                 });
 
                 // Universal fallback: Any standalone element showing domain:port
                 document.querySelectorAll('p, span, div, code').forEach(el => {
-                    if (el.children.length === 0) {
+                    if (el.children.length === 0 && !el.closest('.np-console-domains-area') && !el.closest('#np-domain-manager-card')) {
                         const txt = (el.textContent || '').trim();
                         if (txt.includes(':') && (txt.includes('panel.') || txt.includes('.nx.kg') || txt.includes('.top') || txt.includes('0.0.0.0') || txt.includes('localhost') || txt.includes('127.0.0.1'))) {
                             const portM = txt.match(/^(?:https?:\/\/)?(?:[a-zA-Z0-9_.-]+):(\d+)$/);
@@ -1166,6 +1423,137 @@ window.NP_VPS_IP = window.NP_VPS_IP || '213.136.89.90';
                         }
                     }
                 });
+            }
+
+            function renderConsoleDomainsInCard(card) {
+                const m = window.location.pathname.match(/\/server\/([a-zA-Z0-9]+)/);
+                if (!m) return;
+                const serverId = m[1];
+
+                window.__NP_SERVER_DOMAINS = window.__NP_SERVER_DOMAINS || {};
+                const cache = window.__NP_SERVER_DOMAINS[serverId];
+
+                const now = Date.now();
+                if (!cache || (now - (cache.timestamp || 0) > 20000 && !cache.fetching)) {
+                    window.__NP_SERVER_DOMAINS[serverId] = window.__NP_SERVER_DOMAINS[serverId] || {};
+                    window.__NP_SERVER_DOMAINS[serverId].fetching = true;
+                    fetch('/api/server/' + encodeURIComponent(serverId) + '/domains', {
+                        headers: { 'Accept': 'application/json' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        window.__NP_SERVER_DOMAINS[serverId] = {
+                            timestamp: Date.now(),
+                            fetching: false,
+                            domains: (data && data.success && Array.isArray(data.domains)) ? data.domains : []
+                        };
+                        updateAddressStatCard();
+                    })
+                    .catch(() => {
+                        if (window.__NP_SERVER_DOMAINS[serverId]) {
+                            window.__NP_SERVER_DOMAINS[serverId].fetching = false;
+                        }
+                    });
+                }
+
+                const domains = (cache && cache.domains) ? cache.domains : [];
+                const activeDomains = domains.filter(d => {
+                    if (d.type === 'cloudflared') {
+                        const isConn = d.status === 'connected' || (d.active !== false && d.status !== 'starting' && d.status !== 'failed');
+                        return isConn && (d.hostname || d.domain);
+                    }
+                    return d.type === 'nginx' && (d.domain || d.hostname);
+                });
+
+                let domArea = card.querySelector('.np-console-domains-area');
+                if (activeDomains.length === 0) {
+                    if (domArea) domArea.remove();
+                    return;
+                }
+
+                if (!domArea) {
+                    domArea = document.createElement('div');
+                    domArea.className = 'np-console-domains-area';
+                    domArea.style.cssText = 'margin-top:6px; display:flex; flex-direction:column; gap:4px; border-top:1px solid rgba(194,104,242,0.18); padding-top:6px; width:100%; cursor:default;';
+                    domArea.addEventListener('click', (e) => e.stopPropagation());
+                    const inner = card.querySelector('div.flex.flex-col') || card;
+                    inner.appendChild(domArea);
+                }
+
+                const isExpanded = window.__NP_ADDRESS_EXPANDED || false;
+                const sig = activeDomains.map(d => `${d.type}:${d.hostname || d.domain}:${d.port}`).join('|') + '|' + (isExpanded ? 'exp' : 'col');
+                if (domArea.getAttribute('data-np-sig') === sig) {
+                    return;
+                }
+                domArea.setAttribute('data-np-sig', sig);
+                domArea.replaceChildren();
+
+                const displayList = (!isExpanded && activeDomains.length > 2) ? activeDomains.slice(0, 2) : activeDomains;
+
+                displayList.forEach(d => {
+                    const isCf = d.type === 'cloudflared';
+                    const host = d.hostname || d.domain;
+                    const tooltip = isCf ? 'via Cloudflare Tunnel' : 'via Custom Domain (Nginx & SSL)';
+
+                    const row = document.createElement('div');
+                    row.className = 'np-address-domain-row';
+                    row.title = tooltip;
+                    row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:6px; background:rgba(194,104,242,0.08); border:1px solid rgba(194,104,242,0.2); padding:3px 8px; border-radius:5px; font-size:0.75rem;';
+                    row.addEventListener('click', (e) => e.stopPropagation());
+
+                    const left = document.createElement('div');
+                    left.style.cssText = 'display:flex; align-items:center; gap:6px; overflow:hidden; min-width:0;';
+
+                    const iconSpan = document.createElement('span');
+                    iconSpan.style.cssText = 'display:inline-flex; align-items:center; flex-shrink:0;';
+                    if (isCf) {
+                        iconSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="#06b6d4"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>';
+                    } else {
+                        iconSpan.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#C268F2" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+                    }
+
+                    const hostSpan = document.createElement('span');
+                    hostSpan.style.cssText = 'font-family:monospace; color:#f3f4f6; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; font-size:0.78rem;';
+                    hostSpan.textContent = host;
+
+                    left.appendChild(iconSpan);
+                    left.appendChild(hostSpan);
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.type = 'button';
+                    copyBtn.title = tooltip;
+                    copyBtn.style.cssText = 'background:transparent; border:none; color:#a794c2; cursor:pointer; padding:2px; display:flex; align-items:center; flex-shrink:0; transition:color 0.15s;';
+                    copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+                    copyBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        navigator.clipboard.writeText(host);
+                        copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+                        }, 1500);
+                    });
+
+                    row.appendChild(left);
+                    row.appendChild(copyBtn);
+                    domArea.appendChild(row);
+                });
+
+                if (activeDomains.length > 2) {
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.type = 'button';
+                    toggleBtn.style.cssText = 'background:transparent; border:none; color:#38bdf8; font-size:0.7rem; font-weight:700; cursor:pointer; padding:2px 4px; text-align:left; align-self:flex-start; margin-top:2px;';
+                    toggleBtn.textContent = isExpanded ? 'Show less' : `+${activeDomains.length - 2} more`;
+                    toggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        window.__NP_ADDRESS_EXPANDED = !isExpanded;
+                        domArea.removeAttribute('data-np-sig');
+                        updateAddressStatCard();
+                    });
+                    domArea.appendChild(toggleBtn);
+                }
             }
 
             // ============================================================

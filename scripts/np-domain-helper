@@ -22,7 +22,7 @@ error_exit() {
 }
 
 # Require action and server UUID
-[ -n "$ACTION" ] || error_exit "Action required (add-nginx, delete-nginx, add-cf, delete-cf, status-cf)"
+[ -n "$ACTION" ] || error_exit "Action required (add-nginx, delete-nginx, add-cf, delete-cf, status-cf, set-hostname)"
 [ -n "$SERVER_UUID" ] || error_exit "Server UUID required"
 [[ "$SERVER_UUID" =~ $UUID_REGEX ]] || error_exit "Invalid Server UUID format"
 
@@ -168,18 +168,36 @@ NGINX_CONF
 
     add-cf)
         PORT="${3:-}"
-        CUSTOM_DOMAIN="${4:-}"
-        # Token is passed securely via stdin (or arg 5 for CLI testing) to prevent ps aux token leakage
-        TOKEN="${5:-}"
+        # Token is passed securely via stdin (or arg 4 for CLI testing) to prevent ps aux token leakage
+        TOKEN="${4:-}"
         if [ -z "$TOKEN" ] && [ ! -t 0 ]; then
             IFS= read -r TOKEN || TOKEN=""
         fi
-        TOKEN=$(echo "$TOKEN" | tr -d '\r\n')
+        TOKEN=$(echo "$TOKEN" | tr -d '\r\n[:space:]')
 
         [ -n "$PORT" ] || error_exit "Port required"
         [[ "$PORT" =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1024 ] && [ "$PORT" -le 65535 ] || error_exit "Port must be an integer between 1024 and 65535"
+        [ -n "$TOKEN" ] || error_exit "Cloudflare tunnel token is required"
 
-        # Determine architecture and ensure cloudflared binary
+        # Validate token: base64-encoded JSON containing keys a, t, s
+        if ! python3 -c '
+import sys, base64, json
+token = sys.argv[1].strip()
+try:
+    missing_padding = len(token) % 4
+    if missing_padding:
+        token += "=" * (4 - missing_padding)
+    decoded = base64.b64decode(token).decode("utf-8")
+    data = json.loads(decoded)
+    if isinstance(data, dict) and "a" in data and "t" in data and "s" in data:
+        sys.exit(0)
+except Exception:
+    pass
+sys.exit(1)
+' "$TOKEN" 2>/dev/null; then
+            error_exit "Invalid Cloudflare Tunnel token (token must decode to JSON containing 'a', 't', and 's')"
+        fi
+
         CF_BIN="/usr/local/bin/cloudflared"
         if [ ! -x "$CF_BIN" ]; then
             ARCH=$(uname -m)
@@ -189,9 +207,12 @@ NGINX_CONF
                 *) error_exit "Unsupported CPU architecture for cloudflared: $ARCH" ;;
             esac
             TMP_CF=$(mktemp)
-            curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${CF_ARCH}" -o "$TMP_CF"
-            chmod +x "$TMP_CF"
-            mv -f "$TMP_CF" "$CF_BIN"
+            if curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${CF_ARCH}" -o "$TMP_CF"; then
+                chmod +x "$TMP_CF"
+                mv -f "$TMP_CF" "$CF_BIN"
+            else
+                error_exit "cloudflared binary is missing and download failed. Please install cloudflared."
+            fi
         fi
 
         SVC_NAME="np-cf-srv-${SERVER_UUID}-port-${PORT}"
@@ -200,25 +221,18 @@ NGINX_CONF
         LOG_FILE="/var/log/nothing/cf-srv-${SERVER_UUID}-port-${PORT}.log"
         META_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.meta"
 
-        # Stop existing service if running
+        # Stop existing service if running for this port
         systemctl stop "$SVC_NAME" 2>/dev/null || true
         rm -f "$LOG_FILE" "$META_FILE" "$ENV_FILE"
 
-        if [ -n "$TOKEN" ]; then
-            # Token mode
-            [[ "$TOKEN" =~ $TOKEN_REGEX ]] || error_exit "Invalid Cloudflare tunnel token format"
-            if [ -n "$CUSTOM_DOMAIN" ]; then
-                [[ "$CUSTOM_DOMAIN" =~ $DOMAIN_REGEX ]] || error_exit "Invalid custom domain name format"
-            fi
-
-            # Store in root-only 0600 EnvironmentFile (no command execution possible)
-            cat << EOF > "$ENV_FILE"
+        # Store in root-only 0600 EnvironmentFile (no command execution possible)
+        cat << EOF > "$ENV_FILE"
 TUNNEL_TOKEN=${TOKEN}
 EOF
-            chmod 600 "$ENV_FILE"
-            chown root:root "$ENV_FILE"
+        chmod 600 "$ENV_FILE"
+        chown root:root "$ENV_FILE"
 
-            cat << UNIT > "$SVC_FILE"
+        cat << UNIT > "$SVC_FILE"
 [Unit]
 Description=Nothing Panel Cloudflare Tunnel (${SERVER_UUID} Port ${PORT})
 After=network.target
@@ -236,68 +250,162 @@ StandardError=append:${LOG_FILE}
 [Install]
 WantedBy=multi-user.target
 UNIT
-            chmod 644 "$SVC_FILE"
-            systemctl daemon-reload
-            systemctl enable --now "$SVC_NAME" 2>&1
+        chmod 644 "$SVC_FILE"
+        systemctl daemon-reload
+        systemctl enable --now "$SVC_NAME" 2>&1
 
-            DISPLAY_DOMAIN="${CUSTOM_DOMAIN:-Cloudflare Tunnel (Token Active)}"
-            cat << META > "$META_FILE"
-{"domain": "${DISPLAY_DOMAIN}", "port": ${PORT}, "custom_domain": true, "token_mode": true}
+        TOKEN_MASKED="••••${TOKEN: -4}"
+        STARTED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+        # Initial starting metadata
+        cat << META > "$META_FILE"
+{"type": "cloudflared", "domain": null, "hostname": null, "port": ${PORT}, "status": "starting", "pid": null, "started_at": "${STARTED_AT}", "token_masked": "${TOKEN_MASKED}", "error": null}
 META
-            chmod 644 "$META_FILE"
-            chown root:www-data "$META_FILE" 2>/dev/null || true
-            log_msg "SUCCESS: Cloudflare Tunnel successfully launched with token for Port $PORT"
-        else
-            # Quick Tunnel mode (trycloudflare.com)
-            cat << UNIT > "$SVC_FILE"
-[Unit]
-Description=Nothing Panel Quick Tunnel (${SERVER_UUID} Port ${PORT})
-After=network.target
+        chmod 644 "$META_FILE"
+        chown root:www-data "$META_FILE" 2>/dev/null || true
 
-[Service]
-Type=simple
-User=root
-ExecStart=${CF_BIN} tunnel --no-autoupdate --url http://127.0.0.1:${PORT}
-Restart=always
-RestartSec=5
-StandardOutput=append:${LOG_FILE}
-StandardError=append:${LOG_FILE}
+        # Poll log file up to 20 seconds to detect hostname and connection status
+        DETECTED_HOSTNAME=""
+        IS_CONNECTED=0
+        LAST_ERROR=""
 
-[Install]
-WantedBy=multi-user.target
-UNIT
-            chmod 644 "$SVC_FILE"
-            systemctl daemon-reload
-            systemctl enable --now "$SVC_NAME" 2>&1
+        for _ in {1..40}; do
+            sleep 0.5
+            if [ -f "$LOG_FILE" ]; then
+                PARSE_RESULT=$(python3 -c '
+import sys, re, json
+log_path = sys.argv[1]
+target_port = int(sys.argv[2])
 
-            # Poll log file up to 6 seconds to capture actual URL
-            ASSIGNED_DOMAIN=""
-            for _ in {1..12}; do
-                sleep 0.5
-                if [ -f "$LOG_FILE" ]; then
-                    MATCH=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' "$LOG_FILE" | head -n 1 || true)
-                    if [ -n "$MATCH" ]; then
-                        ASSIGNED_DOMAIN="${MATCH#https://}"
-                        break
-                    fi
+detected_hostname = None
+is_connected = False
+last_error = None
+
+try:
+    with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+        for line in f:
+            if "Registered tunnel connection" in line:
+                is_connected = True
+            if "Updated to new configuration" in line:
+                m = re.search(r"config=\"((?:\\.|[^\"\\])*)\"", line)
+                if m:
+                    try:
+                        cfg_str = m.group(1).encode("utf-8").decode("unicode_escape")
+                        cfg = json.loads(cfg_str)
+                        ingress = cfg.get("ingress", [])
+                        for rule in ingress:
+                            h = rule.get("hostname")
+                            svc = rule.get("service", "")
+                            if h and (f":{target_port}" in svc or len(ingress) <= 2):
+                                detected_hostname = h
+                                break
+                        if not detected_hostname and ingress:
+                            for rule in ingress:
+                                h = rule.get("hostname")
+                                if h:
+                                    detected_hostname = h
+                                    break
+                    except Exception:
+                        pass
+            if "ERR" in line or "failed to authenticate" in line.lower() or "unauthorized" in line.lower():
+                last_error = line.strip()
+except Exception:
+    pass
+
+print(json.dumps({
+    "connected": is_connected,
+    "hostname": detected_hostname,
+    "error": last_error
+}))
+' "$LOG_FILE" "$PORT" 2>/dev/null || echo '{"connected":false,"hostname":null,"error":null}')
+
+                IS_CONNECTED=$(echo "$PARSE_RESULT" | grep -o '"connected": *true' | wc -l || echo 0)
+                DETECTED_HOSTNAME=$(python3 -c 'import sys, json; print(json.loads(sys.argv[1]).get("hostname") or "")' "$PARSE_RESULT" 2>/dev/null || echo "")
+                LAST_ERROR=$(python3 -c 'import sys, json; print(json.loads(sys.argv[1]).get("error") or "")' "$PARSE_RESULT" 2>/dev/null || echo "")
+
+                # If connected and hostname detected, we can finish polling early
+                if [ "$IS_CONNECTED" -ge 1 ] && [ -n "$DETECTED_HOSTNAME" ]; then
+                    break
                 fi
-            done
-
-            if [ -z "$ASSIGNED_DOMAIN" ]; then
-                systemctl stop "$SVC_NAME" 2>/dev/null || true
-                systemctl disable "$SVC_NAME" 2>/dev/null || true
-                rm -f "$SVC_FILE"
-                systemctl daemon-reload
-                error_exit "Could not capture Quick Tunnel URL from Cloudflare. Check /var/log/nothing/ for details."
             fi
 
-            cat << META > "$META_FILE"
-{"domain": "${ASSIGNED_DOMAIN}", "port": ${PORT}, "custom_domain": false, "token_mode": false}
-META
-            chmod 644 "$META_FILE"
-            chown root:www-data "$META_FILE" 2>/dev/null || true
-            log_msg "SUCCESS: Instant Quick Tunnel active at https://${ASSIGNED_DOMAIN} (routing to Port $PORT)"
+            # Check if process died prematurely
+            if ! systemctl is-active --quiet "$SVC_NAME" 2>/dev/null; then
+                LAST_ERROR="Process terminated unexpectedly. Check credentials or logs."
+                break
+            fi
+        done
+
+        CF_PID=$(systemctl show -p MainPID --value "$SVC_NAME" 2>/dev/null || echo "")
+        [ "$CF_PID" = "0" ] && CF_PID=""
+
+        STATUS="starting"
+        if [ "$IS_CONNECTED" -ge 1 ]; then
+            STATUS="connected"
+        elif ! systemctl is-active --quiet "$SVC_NAME" 2>/dev/null || [ -n "$LAST_ERROR" ]; then
+            STATUS="failed"
         fi
+
+        # Write final metadata
+        python3 -c '
+import sys, json
+meta = {
+    "type": "cloudflared",
+    "domain": sys.argv[1] if sys.argv[1] else None,
+    "hostname": sys.argv[1] if sys.argv[1] else None,
+    "port": int(sys.argv[2]),
+    "status": sys.argv[3],
+    "pid": int(sys.argv[4]) if sys.argv[4].isdigit() else None,
+    "started_at": sys.argv[5],
+    "token_masked": sys.argv[6],
+    "error": sys.argv[7] if sys.argv[7] else None
+}
+with open(sys.argv[8], "w", encoding="utf-8") as f:
+    json.dump(meta, f, indent=2)
+' "$DETECTED_HOSTNAME" "$PORT" "$STATUS" "${CF_PID:-null}" "$STARTED_AT" "$TOKEN_MASKED" "$LAST_ERROR" "$META_FILE"
+
+        chmod 644 "$META_FILE"
+        chown root:www-data "$META_FILE" 2>/dev/null || true
+
+        if [ "$STATUS" = "failed" ]; then
+            error_exit "Cloudflare tunnel failed to start: ${LAST_ERROR:-Check token permissions}"
+        fi
+
+        if [ -n "$DETECTED_HOSTNAME" ]; then
+            log_msg "SUCCESS: Cloudflare Tunnel active at https://${DETECTED_HOSTNAME} (routing to Port $PORT)"
+        else
+            log_msg "SUCCESS: Cloudflare Tunnel connected for Port $PORT (hostname will be detected or can be set manually)"
+        fi
+        ;;
+
+    set-hostname)
+        PORT="${3:-}"
+        NEW_HOSTNAME="${4:-}"
+        [ -n "$PORT" ] || error_exit "Port required"
+        [ -n "$NEW_HOSTNAME" ] || error_exit "Hostname required"
+        [[ "$NEW_HOSTNAME" =~ $DOMAIN_REGEX ]] || error_exit "Invalid hostname format"
+
+        META_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.meta"
+        [ -f "$META_FILE" ] || error_exit "Tunnel metadata not found for port $PORT"
+
+        python3 -c '
+import sys, json
+meta_file = sys.argv[1]
+new_host = sys.argv[2]
+try:
+    with open(meta_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["domain"] = new_host
+    data["hostname"] = new_host
+    with open(meta_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+except Exception as e:
+    sys.exit(1)
+' "$META_FILE" "$NEW_HOSTNAME"
+
+        chmod 644 "$META_FILE"
+        chown root:www-data "$META_FILE" 2>/dev/null || true
+        log_msg "SUCCESS: Hostname updated to ${NEW_HOSTNAME}"
         ;;
 
     delete-cf)
@@ -307,25 +415,78 @@ META
         SVC_FILE="/etc/systemd/system/${SVC_NAME}.service"
         ENV_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.env"
         META_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.meta"
+        LOG_FILE="/var/log/nothing/cf-srv-${SERVER_UUID}-port-${PORT}.log"
 
         LEGACY_SVC="np-cf-tunnel-${PORT}"
         LEGACY_FILE="/etc/systemd/system/${LEGACY_SVC}.service"
 
         systemctl stop "$SVC_NAME" "$LEGACY_SVC" 2>/dev/null || true
         systemctl disable "$SVC_NAME" "$LEGACY_SVC" 2>/dev/null || true
-        rm -f "$SVC_FILE" "$ENV_FILE" "$META_FILE" "$LEGACY_FILE" "/var/log/cf-tunnel-${PORT}.meta" "/var/log/cf-tunnel-${PORT}.log"
+        rm -f "$SVC_FILE" "$ENV_FILE" "$META_FILE" "$LOG_FILE" "$LEGACY_FILE" "/var/log/cf-tunnel-${PORT}.meta" "/var/log/cf-tunnel-${PORT}.log"
         systemctl daemon-reload 2>/dev/null || true
-        pkill -f "cloudflared.*127.0.0.1:${PORT}" 2>/dev/null || true
+        pkill -f "cloudflared.*${PORT}" 2>/dev/null || true
         log_msg "SUCCESS: Cloudflare Tunnel for Port $PORT stopped and removed"
         ;;
 
     status-cf)
         PORT="${3:-}"
         SVC_NAME="np-cf-srv-${SERVER_UUID}-port-${PORT}"
-        LEGACY_SVC="np-cf-tunnel-${PORT}"
-        if systemctl is-active --quiet "$SVC_NAME" 2>/dev/null || systemctl is-active --quiet "$LEGACY_SVC" 2>/dev/null; then
+        META_FILE="/etc/nothing/tunnels/cf-srv-${SERVER_UUID}-port-${PORT}.meta"
+        LOG_FILE="/var/log/nothing/cf-srv-${SERVER_UUID}-port-${PORT}.log"
+
+        if systemctl is-active --quiet "$SVC_NAME" 2>/dev/null; then
+            # If active, check if hostname became known in the meantime
+            if [ -f "$META_FILE" ] && [ -f "$LOG_FILE" ]; then
+                python3 -c '
+import sys, re, json
+meta_file = sys.argv[1]
+log_path = sys.argv[2]
+target_port = int(sys.argv[3])
+try:
+    with open(meta_file, "r") as f:
+        meta = json.load(f)
+    if not meta.get("hostname") or meta.get("status") != "connected":
+        detected = None
+        with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                if "Updated to new configuration" in line:
+                    m = re.search(r"config=\"((?:\\.|[^\"\\])*)\"", line)
+                    if m:
+                        cfg = json.loads(m.group(1).encode("utf-8").decode("unicode_escape"))
+                        for rule in cfg.get("ingress", []):
+                            h = rule.get("hostname")
+                            svc = rule.get("service", "")
+                            if h and (f":{target_port}" in svc or len(cfg.get("ingress", [])) <= 2):
+                                detected = h
+                                break
+        if detected:
+            meta["hostname"] = detected
+            meta["domain"] = detected
+            meta["status"] = "connected"
+            with open(meta_file, "w") as f:
+                json.dump(meta, f, indent=2)
+except Exception:
+    pass
+' "$META_FILE" "$LOG_FILE" "$PORT" 2>/dev/null || true
+            fi
             echo "active"
         else
+            # Mark failed/stopped in meta if not already
+            if [ -f "$META_FILE" ]; then
+                python3 -c '
+import sys, json
+meta_file = sys.argv[1]
+try:
+    with open(meta_file, "r") as f:
+        meta = json.load(f)
+    if meta.get("status") not in ["failed", "stopped"]:
+        meta["status"] = "stopped"
+        with open(meta_file, "w") as f:
+            json.dump(meta, f, indent=2)
+except Exception:
+    pass
+' "$META_FILE" 2>/dev/null || true
+            fi
             echo "inactive"
         fi
         ;;

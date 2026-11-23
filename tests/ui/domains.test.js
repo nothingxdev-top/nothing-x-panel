@@ -90,7 +90,30 @@ async function runTest() {
   assert.ok(domainList.textContent.includes('tunnel-demo.trycloudflare.com'), 'Cloudflare tunnel must be in list');
   assert.ok(domainList.textContent.includes('TUNNEL ACTIVE'), 'Active badge must be rendered for tunnel');
 
-  // 4. Assert zero console errors
+  // 4. Assert Cloudflare Tunnel tab UI requirements
+  // A) Domain Name input must NOT exist in the Cloudflare tab
+  const cfDomainInput = window.document.getElementById('np-cf-domain-input');
+  assert.strictEqual(cfDomainInput, null, '#np-cf-domain-input should be removed');
+
+  // B) Tunnel Token input exists, is type=password, has show/hide toggle
+  const cfTokenInput = window.document.getElementById('np-cf-token-input');
+  assert.ok(cfTokenInput, '#np-cf-token-input should exist');
+  assert.strictEqual(cfTokenInput.type, 'password', '#np-cf-token-input should have type="password"');
+
+  const cfTokenToggle = window.document.getElementById('np-cf-token-toggle');
+  assert.ok(cfTokenToggle, '#np-cf-token-toggle show/hide button should exist');
+
+  // C) Launch button should initially be disabled until token is entered
+  const launchBtn = window.document.getElementById('np-btn-launch-cf');
+  assert.ok(launchBtn, '#np-btn-launch-cf should exist');
+  assert.strictEqual(launchBtn.disabled, true, 'Launch button must be disabled when token is empty');
+
+  // D) Helper text must exist under the controls
+  const helperText = window.document.getElementById('np-cf-helper-text');
+  assert.ok(helperText, '#np-cf-helper-text should exist');
+  assert.ok(helperText.textContent.includes('http://localhost:'), 'Helper text must contain http://localhost:<port>');
+
+  // 5. Assert zero console errors
   assert.strictEqual(consoleErrors.length, 0, `Expected 0 console errors, got: ${JSON.stringify(consoleErrors)}`);
 
   console.log('✔ jsdom domains.test.js passed with 0 console errors!');
